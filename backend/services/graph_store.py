@@ -151,7 +151,7 @@ class Neo4jStore:
         self._ensure_schema()
 
     def _run(self, cypher: str, **params):
-        with self._driver.session() as session:
+        with self._driver.session(database=config.NEO4J_DATABASE) as session:
             return list(session.run(cypher, trace_id=self.trace_id, **params))
 
     def _ensure_schema(self) -> None:

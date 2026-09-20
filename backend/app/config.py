@@ -54,6 +54,7 @@ LABELS_PATH = DATA_DIR / "labels.json"
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "vasptrace2026")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
 # Seconds to wait for a Neo4j connection before giving up and using memory.
 # Short on purpose: a slow database must not become a slow trace.

@@ -9,7 +9,7 @@ Endpoints:
   /demos    - recorded traces available for instant replay
 """
 
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from app import config
 from core import tracer
@@ -178,11 +178,11 @@ def list_demos() -> dict:
 
 
 @router.get("/")
-def root() -> dict:
+def root(request: Request) -> dict:
     """Friendly landing response so a bare localhost:8000 visit isn't a 404."""
     return {
         "service": "vasp-attribution-engine",
-        "version": "0.1.0",
+        "version": request.app.version,
         # Reports only WHETHER a key is configured, never the key itself.
         "live_trace_available": config.has_etherscan_key(),
         "graph": graph_store.status(),

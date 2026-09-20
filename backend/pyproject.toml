@@ -6,10 +6,11 @@ readme = "README.md"
 authors = [
     { name = "qonstellations", email = "aarush.a.pathak@gmail.com" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.141.1",
     "httpx>=0.28.1",
+    "neo4j>=5.0",
     "networkx>=3.6.1",
     "python-dotenv>=1.2.3",
     "reportlab>=5.0.1",

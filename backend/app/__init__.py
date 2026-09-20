@@ -12,13 +12,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from services.etherscan import get_client
-from services.graph_store import reset_driver
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Release the shared httpx pool and the Neo4j driver when the server stops."""
+    from services.etherscan import get_client
+    from services.graph_store import reset_driver
+
     yield
     await get_client().aclose()
     reset_driver()
