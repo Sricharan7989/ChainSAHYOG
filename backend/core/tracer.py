@@ -205,6 +205,12 @@ class TraceResult:
     elapsed_sec: float = 0.0
     backend: str = "memory"  # which graph store served this trace
 
+    # Why the walk stopped where it did, and what we could not follow. Both
+    # exist so that a trace which finds nothing still tells the investigator
+    # something they can act on, instead of an empty graph and no explanation.
+    termination: dict = field(default_factory=dict)
+    token_warnings: list[dict] = field(default_factory=list)
+
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
         return iter((self.graph, self.hops))
@@ -328,6 +334,14 @@ async def trace(
     expanded: set[str] = set()
     queue: deque[tuple[str, int]] = deque([(start, 0)])
 
+    # Why did the walk stop? Counted as it happens, because after the fact the
+    # graph cannot tell you whether a branch ended at a mixer, ran out of depth,
+    # or simply had nothing above the dust threshold.
+    stopped_at: dict[str, int] = {}
+    depth_capped = 0
+    start_had_no_transfers = False
+    start_had_only_dust = False
+
     while queue:
         address, depth = queue.popleft()
 
@@ -336,6 +350,7 @@ async def trace(
         # Depth cap: this wallet is recorded in the graph, we just do not ask
         # where its money went next. This is the boundary of the trace.
         if depth >= max_depth:
+            depth_capped += 1
             continue
         if store.wallet_count() >= config.MAX_NODES_PER_TRACE:
             truncated = True
@@ -354,6 +369,7 @@ async def trace(
             if ident is not None:
                 record(address, ident, depth)
                 if identify.is_terminal(ident):
+                    stopped_at[ident.entity_type] = stopped_at.get(ident.entity_type, 0) + 1
                     continue
 
         expanded.add(address)
@@ -372,6 +388,13 @@ async def trace(
         # to a single larger one-off, even though it received far more overall.
         flows = _aggregate_by_recipient(transfers, dust_threshold)
         ranked = sorted(flows.values(), key=lambda f: f["value_eth"], reverse=True)
+
+        if address == start and not ranked:
+            # Distinguishing "sent nothing" from "sent only dust" matters: the
+            # first is a dead end, the second is a threshold the investigator
+            # can lower and re-run.
+            start_had_no_transfers = not transfers
+            start_had_only_dust = bool(transfers)
 
         if len(ranked) > config.MAX_EDGES_PER_NODE:
             truncated = True
@@ -416,6 +439,9 @@ async def trace(
             if child_ident is not None:
                 record(to_addr, child_ident, child_depth)
                 if identify.is_terminal(child_ident):
+                    stopped_at[child_ident.entity_type] = (
+                        stopped_at.get(child_ident.entity_type, 0) + 1
+                    )
                     # Branch complete: we found where this money came to rest.
                     continue
 
@@ -462,6 +488,24 @@ async def trace(
 
     risk_flags = _collect_risk_flags(store, start, ordered)
 
+    primary = _primary_attribution(ordered)
+    termination = _classify_termination(
+        found_exchange=any(a.entity_type == "exchange" for a in ordered),
+        stopped_at=stopped_at,
+        depth_capped=depth_capped,
+        truncated=truncated,
+        max_depth=max_depth,
+        dust_threshold=dust_threshold,
+        start_had_no_transfers=start_had_no_transfers,
+        start_had_only_dust=start_had_only_dust,
+    )
+
+    # Token probe last, and only along the path the report cites: a few calls,
+    # placed where the answer changes how the finding should be read.
+    token_warnings = await _check_token_activity(
+        client, primary.path if primary is not None else [start], store
+    )
+
     # Materialise a NetworkX view for serialisation and for everything that
     # already speaks DiGraph. With Neo4j this is one query at the end of the
     # walk, not a second traversal engine running alongside the first.
@@ -483,7 +527,143 @@ async def trace(
         cache_hits=client.cache_hits,
         elapsed_sec=round(time.monotonic() - started_at, 2),
         backend=backend,
+        termination=termination,
+        token_warnings=token_warnings,
     )
+
+
+def _classify_termination(
+    *,
+    found_exchange: bool,
+    stopped_at: dict[str, int],
+    depth_capped: int,
+    truncated: bool,
+    max_depth: int,
+    dust_threshold: float,
+    start_had_no_transfers: bool,
+    start_had_only_dust: bool,
+) -> dict:
+    """
+    Say WHY the walk stopped, in terms an investigator can act on.
+
+    A trace that finds nothing used to return an empty graph and no explanation,
+    which is indistinguishable from a broken tool. Each reason below implies a
+    different next step - lower the threshold, raise the depth, accept that the
+    trail is cut, or expand the label set - so the reason is the useful part.
+
+    Ordered by what actually ended the search, most decisive first: a start
+    wallet that never sent anything outranks a depth cap that was never reached.
+    """
+    if start_had_no_transfers:
+        return {
+            "reason": "no_outgoing_transfers",
+            "label": "The suspect wallet has no outgoing transfers",
+            "detail": (
+                "Nothing has left this wallet in the transactions we can see, so "
+                "there is no trail to follow yet. The funds may still be sitting "
+                "here."
+            ),
+        }
+    if start_had_only_dust:
+        return {
+            "reason": "dust_only",
+            "label": f"All outgoing transfers are below {dust_threshold} ETH",
+            "detail": (
+                "Everything leaving this wallet is smaller than the dust "
+                f"threshold of {dust_threshold} ETH, so nothing was followed. "
+                "Lower the threshold and re-run to include them."
+            ),
+        }
+    if found_exchange:
+        return {
+            "reason": "exchange_reached",
+            "label": "The trace stopped because it reached an exchange",
+            "detail": "This is the intended endpoint: a regulated business that holds KYC records.",
+        }
+    if stopped_at.get("mixer"):
+        n = stopped_at["mixer"]
+        return {
+            "reason": "terminated_at_mixer",
+            "label": f"The trail ends at a mixer ({n} branch{'es' if n > 1 else ''})",
+            "detail": (
+                "A mixer deliberately breaks the link between the funds going in "
+                "and coming out, so nothing beyond it can be followed on-chain. "
+                "This is a hard stop, not a gap in our data."
+            ),
+        }
+    if stopped_at.get("bridge"):
+        n = stopped_at["bridge"]
+        return {
+            "reason": "terminated_at_bridge",
+            "label": f"The trail leaves Ethereum via a bridge ({n} branch{'es' if n > 1 else ''})",
+            "detail": (
+                "The funds moved to another blockchain. The trail continues "
+                "there, outside what this tool covers."
+            ),
+        }
+    if truncated:
+        return {
+            "reason": "graph_cap_reached",
+            "label": "The trace hit its size limit before finding an exchange",
+            "detail": (
+                "The wallet fans out too widely to follow completely, so only "
+                "the largest branches were expanded. The exchange may lie down "
+                "a branch that was not taken."
+            ),
+        }
+    if depth_capped:
+        return {
+            "reason": "depth_cap_reached",
+            "label": f"The trace stopped at the {max_depth}-hop limit",
+            "detail": (
+                f"{depth_capped} wallet{'s' if depth_capped > 1 else ''} were "
+                f"reached at {max_depth} hops and not expanded further. Raise the "
+                "hop limit and re-run to follow them."
+            ),
+        }
+    return {
+        "reason": "no_labelled_entity",
+        "label": "The money stopped moving before reaching anything we recognise",
+        "detail": (
+            "Every branch was followed to its end and none arrived at a known "
+            "exchange, mixer or bridge. The funds may still be sitting in "
+            "unhosted wallets, or the exchange may be missing from our label set."
+        ),
+    }
+
+
+async def _check_token_activity(client, addresses: list[str], store) -> list[dict]:
+    """
+    Flag wallets on the attributed path that move tokens we do not follow.
+
+    Scope is deliberate: the wallets on the path the report actually cites, not
+    the whole graph. That is at most a handful of extra API calls per trace
+    instead of hundreds, and it puts the warning exactly where it changes how the
+    finding should be read.
+
+    An unknown answer (None) is skipped rather than reported as "clean" - saying
+    a wallet has no token activity when the lookup failed would be worse than
+    saying nothing.
+    """
+    warnings: list[dict] = []
+    for address in addresses:
+        try:
+            has_tokens = await client.has_token_activity(address)
+        except Exception:  # noqa: BLE001 - a probe must never break a finished trace
+            continue
+        if has_tokens:
+            data = store.wallet(address)
+            warnings.append(
+                {
+                    "address": address,
+                    "hop_distance": data.get("depth", 0),
+                    "note": (
+                        "This wallet also moves ERC-20 tokens, which this build "
+                        "does not follow. The trail may continue in USDT or USDC."
+                    ),
+                }
+            )
+    return warnings
 
 
 def _risk_types_on_path(store, path: list[str]) -> set[str]:
@@ -611,6 +791,18 @@ def _aggregate_by_recipient(transfers: list[Transfer], dust_threshold: float) ->
     return flows
 
 
+# The one-line caveat that travels with every positive finding. Short on purpose:
+# a claim this load-bearing has to be qualified where it is made, not buried in a
+# disclaimer nobody reads. We follow transaction paths, not individual coins - the
+# tracer expands every large outgoing transfer of a wallet regardless of where
+# that value came from, so a connected path is NOT proof the suspect's funds
+# arrived. In the recorded demo 198 ETH enter a wallet that forwards 17,969 ETH.
+CONNECTIVITY_CAVEAT = (
+    "Path connectivity, not value-level taint tracking: transfers link these "
+    "wallets, which does not prove these specific funds arrived."
+)
+
+
 def summarize(result: TraceResult) -> dict:
     """
     The headline finding, ready for the investigator-facing panel.
@@ -636,10 +828,12 @@ def summarize(result: TraceResult) -> dict:
             "found": False,
             "lead": True,
             "headline": (
-                f"No named exchange reached within {result.max_depth} hops. "
-                f"One collection point found {lead.hop_distance} hops away "
-                f"({lead.confidence_score}% confidence) - UNCONFIRMED."
+                f"No named exchange within {result.max_depth} hops. A transaction "
+                f"path connects to one collection point {lead.hop_distance} hops "
+                f"away ({lead.confidence_score}% confidence) - UNCONFIRMED."
             ),
+            "caveat": CONNECTIVITY_CAVEAT,
+            "termination": result.termination,
             "address": lead.address,
             "hop_distance": lead.hop_distance,
             "confidence": round(lead.confidence, 2),
@@ -663,9 +857,10 @@ def summarize(result: TraceResult) -> dict:
             "found": False,
             "lead": False,
             "headline": (
-                "No known exchange reached within "
+                "No transaction path to a known exchange within "
                 f"{result.max_depth} hops of {result.start_address[:10]}..."
             ),
+            "termination": result.termination,
             "recommended_action": (
                 "Widen the trace depth, or expand labels.json. Funds may still "
                 "be sitting in unhosted wallets or have moved via ERC-20 "
@@ -687,15 +882,22 @@ def summarize(result: TraceResult) -> dict:
         "confidence_components": nearest.confidence_components,
         "method": nearest.method,
         "value_received_eth": round(nearest.value_received_eth, 6),
+        "value_received_note": (
+            "Total ETH this wallet received along traced edges - not the amount "
+            "attributable to the suspect."
+        ),
         "headline": (
-            f"Funds reached {nearest.entity}, {nearest.hop_distance} "
-            f"hop{'s' if nearest.hop_distance != 1 else ''} away, "
+            f"Transaction path connects to {nearest.entity}, "
+            f"{nearest.hop_distance} hop{'s' if nearest.hop_distance != 1 else ''}, "
             f"{nearest.confidence_score}% confidence"
         ),
+        "caveat": CONNECTIVITY_CAVEAT,
         "recommended_action": (
             f"Serve a lawful data request to {nearest.entity} via SAHYOG for "
-            f"KYC records on deposits to {nearest.address}."
+            f"KYC records on deposits to {nearest.address}, covering the "
+            f"transactions listed in the traced path."
         ),
+        "termination": result.termination,
         "mixers_or_bridges_crossed": [f.entity for f in flags],
         "other_exchanges_reached": [a.entity for a in exchanges[1:]],
         "unconfirmed_collection_points": [a.address for a in suspected],
@@ -738,7 +940,10 @@ def to_json(result: TraceResult) -> dict:
         }
         for src, dst, data in result.graph.edges(data=True)
     ]
-    edges.sort(key=lambda e: (e["depth"], -e["value_eth"]))
+    # (source, target) is the final tie-break, not decoration: without it equal
+    # depth and value fall back to insertion order, which differs between the
+    # graph backends and made the serialised edge list backend-dependent.
+    edges.sort(key=lambda e: (e["depth"], -e["value_eth"], e["source"], e["target"]))
 
     return {
         "start_address": result.start_address,
@@ -764,6 +969,8 @@ def to_json(result: TraceResult) -> dict:
             "truncated": result.truncated,
             "graph_backend": result.backend,
         },
+        "termination": result.termination,
+        "token_warnings": result.token_warnings,
         "notes": result.notes,
         "nodes": nodes,
         "edges": edges,

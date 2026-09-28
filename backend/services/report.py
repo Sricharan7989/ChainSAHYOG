@@ -277,9 +277,12 @@ DISCLAIMER = (
     "<b>Basis and limitations.</b> This report is derived entirely from public "
     "Ethereum transaction records. No cryptography was broken, no private data "
     "was accessed, and no individual was identified by this tool. It establishes "
-    "that funds moved along the path shown and arrived at a wallet attributed to "
-    "the named entity; it does NOT establish who controlled any intermediate "
-    "wallet. Attribution of the endpoint rests on the method stated above and "
+    "that a chain of transfers connects the suspect address to a wallet "
+    "attributed to the named entity. It does NOT perform value-level taint "
+    "tracking: each wallet's large outgoing transfers are followed regardless of "
+    "where that value came from, so a connected path is not proof that these "
+    "specific funds arrived. It does NOT establish who controlled any "
+    "intermediate wallet. Attribution of the endpoint rests on the method stated above and "
     "carries the confidence score shown, which is never certainty. "
     "Native ETH transfers only: transfers of ERC-20 tokens such as USDT, and "
     "internal contract transfers, are not followed in this version, so the trail "
@@ -341,18 +344,25 @@ def build_report(payload: dict) -> bytes:
 
     if summary.get("found"):
         story.append(Paragraph(
-            f'<b>Funds reached {summary.get("exchange")}</b>, '
+            f'<b>Transaction path connects to {summary.get("exchange")}</b>, '
             f'{summary.get("hop_distance")} hop'
             f'{"" if summary.get("hop_distance") == 1 else "s"} from the suspect '
             f'address, at {summary.get("confidence_score")}% confidence.',
             styles["headline"],
         ))
+        # Immediately under the claim, not down in the disclaimer: the point is
+        # that a reader cannot take the headline without this qualification.
+        if summary.get("caveat"):
+            story.append(Paragraph(f'<b>{summary["caveat"]}</b>', styles["small"]))
         story.append(Spacer(1, 3))
         story.append(_kv_table([
             ("Exchange", str(summary.get("exchange", ""))),
             ("Exchange wallet",
              f'<font face="Courier" size="8">{summary.get("address", "")}</font>'),
-            ("Value traced in", _fmt_eth(summary.get("value_received_eth"))),
+            ("ETH on traced edges",
+             f'{_fmt_eth(summary.get("value_received_eth"))}'
+             f' <font size="7">(total into this wallet along traced transfers;'
+             f' not an amount attributable to the suspect)</font>'),
             ("Identification method",
              "Direct match against known exchange wallets"
              if summary.get("method") == "known_label"
@@ -360,8 +370,8 @@ def build_report(payload: dict) -> bytes:
         ], styles))
     elif summary.get("lead"):
         story.append(Paragraph(
-            f'<b>No named exchange was reached within {params.get("max_depth")} hops.</b> '
-            f'A possible collection point was identified '
+            f'<b>No named exchange within {params.get("max_depth")} hops.</b> '
+            f'A transaction path connects to a possible collection point '
             f'{summary.get("hop_distance")} hops away at '
             f'{summary.get("confidence_score")}% confidence. '
             f'<font color="#b91c1c">This is an UNCONFIRMED lead, not an '
@@ -379,7 +389,7 @@ def build_report(payload: dict) -> bytes:
         ], styles))
     else:
         story.append(Paragraph(
-            f'<b>No known exchange was reached within '
+            f'<b>No transaction path to a known exchange within '
             f'{params.get("max_depth")} hops of the suspect address.</b>',
             styles["headline"],
         ))
@@ -396,6 +406,42 @@ def build_report(payload: dict) -> bytes:
     # --- Risk flags -----------------------------------------------------
     story.append(Paragraph("Risk flags", styles["h2"]))
     story.extend(_risk_section(payload, styles))
+
+    # --- Why the trace stopped ------------------------------------------
+    termination = summary.get("termination") or payload.get("termination") or {}
+    if termination:
+        story.append(Paragraph("Why the trace stopped", styles["h2"]))
+        story.append(Paragraph(f'<b>{termination.get("label", "")}</b>', styles["body"]))
+        if termination.get("detail"):
+            story.append(Paragraph(termination["detail"], styles["small"]))
+
+    # --- Untraced token activity ----------------------------------------
+    token_warnings = payload.get("token_warnings") or []
+    if token_warnings:
+        story.append(Paragraph("Untraced token activity", styles["h2"]))
+        plural = "" if len(token_warnings) == 1 else "s"
+        story.append(Paragraph(
+            f"{len(token_warnings)} wallet{plural} on the traced path also move "
+            f"ERC-20 tokens, which this version does not follow. The trail may "
+            f"continue in USDT or USDC beyond what is shown here.",
+            styles["body"],
+        ))
+        rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in ("Hop", "Wallet")]]
+        for warning in token_warnings:
+            rows.append([
+                Paragraph(str(warning.get("hop_distance", "")), styles["small"]),
+                Paragraph(str(warning.get("address", "")), styles["mono"]),
+            ])
+        table = Table(rows, colWidths=[12 * mm, 154 * mm], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("BACKGROUND", (0, 0), (-1, 0), BAND),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, LINE),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
 
     # --- Recommended action ---------------------------------------------
     action = summary.get("recommended_action", "")

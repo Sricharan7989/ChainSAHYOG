@@ -11,9 +11,9 @@ import {
   ETHERSCAN,
   describeMethod,
   describeRole,
-  findPath,
+  findingPath,
   formatEth,
-  pathAddresses,
+  pathEdges,
   shortAddress,
 } from '../trace-path.js'
 
@@ -90,11 +90,13 @@ function AddressLink({ address, children }) {
   )
 }
 
-function TracedPath({ data, targetAddress }) {
-  const path = findPath(data.edges, data.start_address, targetAddress)
+function TracedPath({ data }) {
+  // Straight from the payload: the same route the PDF prints.
+  const addresses = findingPath(data)
+  const incomingEdges = pathEdges(data, addresses)
   const nodesById = new Map(data.nodes.map((n) => [n.id, n]))
 
-  if (path.length === 0) {
+  if (addresses.length === 0) {
     return (
       <p className="muted">
         No direct route could be reconstructed to this address.
@@ -102,13 +104,11 @@ function TracedPath({ data, targetAddress }) {
     )
   }
 
-  const addresses = pathAddresses(path, data.start_address)
-
   return (
     <ol className="path">
       {addresses.map((address, index) => {
         const node = nodesById.get(address) ?? {}
-        const incoming = index === 0 ? null : path[index - 1]
+        const incoming = index === 0 ? null : incomingEdges[index - 1]
         const isStart = index === 0
         const isEnd = index === addresses.length - 1
 
@@ -215,6 +215,57 @@ function ReportActions({ data }) {
   )
 }
 
+// The caveat sits directly under the headline, never in a footnote. The tool
+// follows transaction paths, not individual coins: it expands every large
+// outgoing transfer of a wallet regardless of where that value came from. A
+// connected path therefore does not prove the suspect's funds arrived.
+function Caveat({ text }) {
+  if (!text) return null
+  return <p className="caveat">{text}</p>
+}
+
+// Why the walk stopped. Without this, a trace that finds nothing is
+// indistinguishable from a broken tool - and each reason implies a different
+// next step (lower the threshold, raise the hop limit, accept a hard stop).
+function Termination({ termination }) {
+  if (!termination?.label) return null
+  return (
+    <section className="block">
+      <h3>Why the trace stopped</h3>
+      <div className={`termination term-${termination.reason ?? 'unknown'}`}>
+        <div className="termination-label">{termination.label}</div>
+        {termination.detail && <p className="termination-detail">{termination.detail}</p>}
+      </div>
+    </section>
+  )
+}
+
+// Wallets on the traced path that move ERC-20 tokens we do not follow. Shown
+// because the alternative is silence: the trail just ends and the panel implies
+// the money stopped, when it may have continued in USDT or USDC.
+function TokenWarning({ warnings }) {
+  if (!warnings || warnings.length === 0) return null
+  return (
+    <section className="block">
+      <h3>Untraced token activity</h3>
+      <div className="token-warning">
+        <p>
+          {warnings.length} wallet{warnings.length === 1 ? '' : 's'} on this path also
+          move ERC-20 tokens, which this version does not follow. The trail may
+          continue in USDT or USDC beyond what is shown.
+        </p>
+        <ul>
+          {warnings.map((w) => (
+            <li key={w.address}>
+              hop {w.hop_distance} · <AddressLink address={w.address} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
 function SourceBadge({ data }) {
   if (data.source !== 'cache') return null
   return (
@@ -282,7 +333,6 @@ export default function FindingPanel({ data, loading, error, onToast }) {
   }
 
   const summary = data.summary ?? {}
-  const target = summary.address ?? null
   const handleRoute = () => {
     setRouted(true)
     onToast(
@@ -298,13 +348,15 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <header className="finding-head none">
           <SourceBadge data={data} />
           <div className="eyebrow">Finding</div>
-          <h2 className="finding-none">No exchange reached</h2>
+          <h2 className="finding-none">No path to a known exchange</h2>
           <p className="finding-sub">
-            The funds did not arrive at any exchange we recognise within{' '}
+            No transaction path reached an exchange we recognise within{' '}
             {data.params.max_depth} hops.
           </p>
         </header>
         <div className="panel-body">
+          <Termination termination={summary.termination ?? data.termination} />
+          <TokenWarning warnings={data.token_warnings} />
           <RiskFlags flags={data.risk_flags} />
           <section className="block">
             <h3>What to do next</h3>
@@ -324,23 +376,26 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           <SourceBadge data={data} />
           <div className="eyebrow">Finding · unconfirmed</div>
           <h2 className="finding-title">
-            A collection point was found {summary.hop_distance} hop
+            A transaction path connects to a collection point {summary.hop_distance} hop
             {summary.hop_distance === 1 ? '' : 's'} away
           </h2>
           <p className="finding-sub">
             This is a lead, not an identified exchange. It has not been named and
             must be verified before any request is raised.
           </p>
+          <Caveat text={summary.caveat} />
           <ConfidenceBar summary={summary} />
         </header>
 
         <div className="panel-body">
           <section className="block">
             <h3>Traced path</h3>
-            <TracedPath data={data} targetAddress={target} />
+            <TracedPath data={data} />
           </section>
 
           <MethodNote method={summary.method} />
+          <Termination termination={summary.termination ?? data.termination} />
+          <TokenWarning warnings={data.token_warnings} />
           <RiskFlags flags={data.risk_flags} />
 
           <section className="block">
@@ -362,24 +417,28 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <SourceBadge data={data} />
         <div className="eyebrow">Finding</div>
         <h2 className="finding-title">
-          Funds reached <strong>{summary.exchange}</strong>
+          Transaction path connects to <strong>{summary.exchange}</strong>
           <span className="finding-hops">
-            {summary.hop_distance} hop{summary.hop_distance === 1 ? '' : 's'} away
+            {summary.hop_distance} hop{summary.hop_distance === 1 ? '' : 's'}
           </span>
         </h2>
+        <Caveat text={summary.caveat} />
         <ConfidenceBar summary={summary} />
         <div className="finding-amount">
-          {formatEth(summary.value_received_eth)} traced into this exchange
+          {formatEth(summary.value_received_eth)} received by this wallet on traced
+          transfers — not an amount attributable to the suspect
         </div>
       </header>
 
       <div className="panel-body">
         <section className="block">
           <h3>Traced path</h3>
-          <TracedPath data={data} targetAddress={target} />
+          <TracedPath data={data} />
         </section>
 
         <MethodNote method={summary.method} />
+        <Termination termination={summary.termination ?? data.termination} />
+        <TokenWarning warnings={data.token_warnings} />
         <RiskFlags flags={data.risk_flags} />
 
         {summary.other_exchanges_reached?.length > 0 && (

@@ -6,57 +6,40 @@
 // the server, since the edge list already contains everything required.
 
 /**
- * Shortest path of hops from `start` to `target`, following edge direction.
+ * The traced route to the headline finding, as addresses, straight from the payload.
  *
- * Breadth-first, which matters: the backend reports hop distance from a BFS
- * walk, so the path shown to the investigator has to be the shortest one too.
- * Anything else would contradict the "N hops away" headline.
+ * The backend already computed this (tracer.trace -> store.shortest_path) and it
+ * is what the PDF prints, so the frontend MUST NOT recompute it. It used to run
+ * its own BFS here, which agreed only by luck: the recorded Binance demo has
+ * three equally short two-hop routes, and nothing forced both sides to break the
+ * tie the same way. The graph could then highlight a different route from the one
+ * the report cited. One computation, one source of truth.
  *
- * Returns an array of edge objects in order, or [] if no route exists.
+ * Returns [] when nothing was identified, or when no route was reconstructed.
  */
-export function findPath(edges, start, target) {
-  if (!start || !target || start === target) return []
-
-  const outgoing = new Map()
-  for (const edge of edges) {
-    if (!outgoing.has(edge.source)) outgoing.set(edge.source, [])
-    outgoing.get(edge.source).push(edge)
-  }
-
-  const queue = [start]
-  const cameFrom = new Map() // node -> edge that reached it
-  const seen = new Set([start])
-
-  while (queue.length > 0) {
-    const current = queue.shift()
-    if (current === target) break
-
-    for (const edge of outgoing.get(current) ?? []) {
-      if (seen.has(edge.target)) continue
-      seen.add(edge.target)
-      cameFrom.set(edge.target, edge)
-      queue.push(edge.target)
-    }
-  }
-
-  if (!cameFrom.has(target)) return []
-
-  const path = []
-  let node = target
-  while (node !== start) {
-    const edge = cameFrom.get(node)
-    if (!edge) return []
-    path.unshift(edge)
-    node = edge.source
-  }
-  return path
+export function findingPath(data) {
+  const target = data?.summary?.address
+  if (!target) return []
+  const attribution = (data.attributions ?? []).find((a) => a.address === target)
+  return attribution?.path ?? []
 }
 
-/** Every address touched by a path, including the starting wallet. */
-export function pathAddresses(path, start) {
-  const addresses = [start]
-  for (const edge of path) addresses.push(edge.target)
-  return addresses
+/**
+ * The transfer edges between consecutive addresses of a path.
+ *
+ * Index i is the edge INTO addresses[i + 1], so the panel can show what each
+ * wallet received. Missing edges become null rather than throwing - a payload
+ * whose path and edge list disagree should degrade, not blank the panel.
+ */
+export function pathEdges(data, addresses) {
+  const byPair = new Map(
+    (data.edges ?? []).map((e) => [`${e.source}->${e.target}`, e]),
+  )
+  const edges = []
+  for (let i = 0; i < addresses.length - 1; i += 1) {
+    edges.push(byPair.get(`${addresses[i]}->${addresses[i + 1]}`) ?? null)
+  }
+  return edges
 }
 
 /**

@@ -78,6 +78,9 @@ class EtherscanClient:
         self._client: httpx.AsyncClient | None = None
         # address -> transfers sent BY that address
         self._cache: dict[str, list[Transfer]] = {}
+        # address -> "does this wallet move ERC-20 tokens?"; separate from the
+        # transfer cache because it answers a different question with one row.
+        self._token_cache: dict[str, bool] = {}
         self._lock = asyncio.Lock()
         self._last_request_at = 0.0
         self.api_calls = 0
@@ -99,6 +102,7 @@ class EtherscanClient:
 
     def clear_cache(self) -> None:
         self._cache.clear()
+        self._token_cache.clear()
 
     async def _request(self, params: dict) -> object:
         """
@@ -195,6 +199,51 @@ class EtherscanClient:
 
         self._cache[key] = transfers
         return transfers
+
+
+    async def has_token_activity(self, address: str) -> bool | None:
+        """
+        Does this wallet move ERC-20 tokens we are NOT following?
+
+        WHY THIS EXISTS: the tracer follows native ETH only. A laundering route
+        that converts to USDT or USDC leaves the ETH graph entirely, and until
+        now it did so silently - the trail simply ended and the report said
+        nothing. This cannot fix that, but it can stop the silence: knowing a
+        wallet has token transfers tells an investigator the trail may continue
+        somewhere this build does not look.
+
+        THE CHEAPEST CHECK THAT WORKS: `tokentx` with offset=1 asks Etherscan for
+        a single row and we only care whether one exists. It is one call per
+        address, cached like every other fetch, and the caller applies it to the
+        few wallets on the attributed path rather than to the whole graph.
+
+        Returns True / False, or None when the lookup itself failed - None means
+        "unknown", and must not be reported as "no token activity".
+        """
+        key = normalize_address(address)
+        if key in self._token_cache:
+            self.cache_hits += 1
+            return self._token_cache[key]
+
+        try:
+            raw = await self._request(
+                {
+                    "module": "account",
+                    "action": "tokentx",
+                    "address": key,
+                    "page": 1,
+                    "offset": 1,
+                    "sort": "desc",
+                }
+            )
+        except EtherscanError:
+            # An unknown answer is not a negative one; leave it uncached so a
+            # later attempt can still succeed.
+            return None
+
+        found = bool(isinstance(raw, list) and raw)
+        self._token_cache[key] = found
+        return found
 
 
 def _parse_transfer(tx: dict, sender: str) -> Transfer | None:

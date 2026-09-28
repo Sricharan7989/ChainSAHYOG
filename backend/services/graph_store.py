@@ -116,10 +116,20 @@ class MemoryStore:
         return [dict(d) for _, _, d in self._g.in_edges(address, data=True)]
 
     def shortest_path(self, start: str, target: str) -> list[str]:
+        """
+        Fewest-hops route, and always the SAME one for a given graph.
+
+        `nx.shortest_path` returns an arbitrary winner when several routes tie,
+        as does Cypher's shortestPath - and they pick differently. Since this
+        path is what the report cites and what the UI highlights, an arbitrary
+        winner means the two graph backends can describe different routes for
+        the same trace. Tie-breaking on the lexicographically smallest address
+        sequence is itself arbitrary but it is DEFINED, so both stores agree.
+        """
         if start == target:
             return [start]
         try:
-            return nx.shortest_path(self._g, start, target)
+            return min(nx.all_shortest_paths(self._g, start, target))
         except (nx.NetworkXNoPath, nx.NodeNotFound):
             return []
 
@@ -279,14 +289,23 @@ class Neo4jStore:
         return {row["a"] for row in rows}
 
     def in_degrees(self) -> list[int]:
-        """Distinct-sender counts for every wallet, for the adaptive fan-in floor."""
+        """
+        Distinct-sender count for EVERY wallet, for the adaptive fan-in floor.
+
+        One row per wallet, which is what MemoryStore returns. Grouping is the
+        whole point: `RETURN count(DISTINCT p)` on its own aggregates over every
+        row in the match and yields a single number for the entire graph. The
+        fan-in floor then becomes that graph-wide total, no individual wallet can
+        exceed it, and consolidation detection silently stops firing. Naming
+        `w.address` as a grouping key is what makes the count per wallet.
+        """
         self.flush()
         rows = self._run(
             """
             MATCH (w:Wallet {trace_id: $trace_id})
             OPTIONAL MATCH (p:Wallet)-[:SENT {trace_id: $trace_id}]->(w)
             WHERE p.address <> w.address
-            RETURN count(DISTINCT p) AS indeg
+            RETURN w.address AS address, count(DISTINCT p) AS indeg
             """
         )
         return [row["indeg"] for row in rows]
@@ -304,7 +323,13 @@ class Neo4jStore:
 
     def shortest_path(self, start: str, target: str) -> list[str]:
         """
-        Fewest-hops route, computed by Cypher's shortestPath.
+        Fewest-hops route, computed by Cypher.
+
+        allShortestPaths + ORDER BY, not shortestPath: when several routes tie,
+        shortestPath returns an arbitrary one and NetworkX returns a different
+        arbitrary one, so the same trace could be described two ways depending on
+        the backend. Ordering the address lists and taking the first applies the
+        same defined tie-break MemoryStore uses.
 
         The hop bound is required, not cosmetic: an unbounded variable-length
         pattern on a graph with cycles is how a query becomes a full traversal.
@@ -316,8 +341,11 @@ class Neo4jStore:
             f"""
             MATCH (a:Wallet {{trace_id: $trace_id, address: $start}}),
                   (b:Wallet {{trace_id: $trace_id, address: $target}})
-            MATCH path = shortestPath((a)-[:SENT*..{MAX_PATH_HOPS}]->(b))
-            RETURN [n IN nodes(path) | n.address] AS addresses
+            MATCH path = allShortestPaths((a)-[:SENT*..{MAX_PATH_HOPS}]->(b))
+            WITH [n IN nodes(path) | n.address] AS addresses
+            ORDER BY addresses
+            LIMIT 1
+            RETURN addresses
             """,
             start=start,
             target=target,
@@ -342,7 +370,9 @@ class Neo4jStore:
     def close(self) -> None:
         try:
             self.flush()
-        except Exception:  # noqa: BLE001 - never let cleanup mask a real error
+        except _fallback_errors():
+            # Cleanup must not mask a real error, but a lost final flush means
+            # the persisted graph is incomplete - that deserves a warning.
             log.warning("Neo4j flush failed during close", exc_info=True)
 
 
@@ -350,6 +380,20 @@ class Neo4jStore:
 
 _driver = None
 _driver_checked = False
+_database_ok: bool | None = None
+
+# The failures that mean "fall back to the in-memory graph", rather than a bug
+# on our side. ImportError covers the driver not being installed at all, OSError
+# covers DNS and socket failures, and neo4j.exceptions.Neo4jError covers auth,
+# a missing database, and an unreachable service. Anything outside this tuple is
+# a programming error and must propagate rather than be disguised as "no Neo4j".
+def _fallback_errors() -> tuple[type[BaseException], ...]:
+    try:
+        from neo4j.exceptions import DriverError, Neo4jError
+
+        return (ImportError, OSError, ValueError, DriverError, Neo4jError)
+    except ImportError:
+        return (ImportError, OSError, ValueError)
 
 
 def _get_driver():
@@ -380,11 +424,59 @@ def _get_driver():
         driver.verify_connectivity()
         _driver = driver
         log.info("Connected to Neo4j at %s", config.NEO4J_URI)
-    except Exception as exc:  # noqa: BLE001 - any failure means fall back
-        log.info("Neo4j unavailable (%s); using in-memory graph", exc)
+    except _fallback_errors() as exc:
+        # WARNING, not INFO: uvicorn hides INFO from application loggers by
+        # default, so this is the difference between an operator seeing "your
+        # password is wrong" and seeing nothing at all while every trace quietly
+        # runs in memory.
+        log.warning(
+            "Neo4j unavailable at %s (%s: %s); using in-memory graph",
+            config.NEO4J_URI, type(exc).__name__, exc,
+        )
         _driver = None
 
     return _driver
+
+
+def _database_usable(driver) -> bool:
+    """
+    Can we actually open a session on the CONFIGURED database?
+
+    Connecting and using are different things: the driver's connectivity check
+    says nothing about NEO4J_DATABASE, which is only applied when a session is
+    opened. A wrong or missing database name therefore passes _get_driver() and
+    fails later, which is exactly how /health came to report "neo4j" while every
+    trace silently used the in-memory store. Probed once and cached, so this
+    costs one trivial query per process rather than one per request.
+    """
+    global _database_ok
+
+    if _database_ok is not None:
+        return _database_ok
+
+    try:
+        with driver.session(database=config.NEO4J_DATABASE) as session:
+            session.run("RETURN 1").consume()
+        _database_ok = True
+    except _fallback_errors() as exc:
+        log.warning(
+            "Neo4j database %r is not usable (%s: %s); using in-memory graph",
+            config.NEO4J_DATABASE, type(exc).__name__, exc,
+        )
+        _database_ok = False
+
+    return _database_ok
+
+
+def _neo4j_available() -> bool:
+    """
+    True only when Neo4j is BOTH reachable and usable for the configured database.
+
+    get_store() and status() must answer from the same predicate; when they did
+    not, /health could advertise a backend that no trace actually used.
+    """
+    driver = _get_driver()
+    return driver is not None and _database_usable(driver)
 
 
 def get_store(trace_id: str | None = None, prefer: str | None = None):
@@ -398,34 +490,43 @@ def get_store(trace_id: str | None = None, prefer: str | None = None):
     if prefer == "memory":
         return MemoryStore(trace_id)
 
-    driver = _get_driver()
-    if driver is None:
+    if not _neo4j_available():
         return MemoryStore(trace_id)
 
     try:
-        return Neo4jStore(driver, trace_id)
-    except Exception as exc:  # noqa: BLE001
-        log.warning("Neo4j store unusable (%s); using in-memory graph", exc)
+        return Neo4jStore(_driver, trace_id)
+    except _fallback_errors() as exc:
+        log.warning(
+            "Neo4j store unusable (%s: %s); using in-memory graph",
+            type(exc).__name__, exc,
+        )
         return MemoryStore(trace_id)
 
 
 def reset_driver() -> None:
     """Drop the cached driver so the next call re-probes. For tests."""
-    global _driver, _driver_checked
+    global _driver, _driver_checked, _database_ok
     if _driver is not None:
         try:
             _driver.close()
-        except Exception:  # noqa: BLE001
-            pass
+        except _fallback_errors() as exc:
+            log.warning("Closing the Neo4j driver failed (%s: %s)", type(exc).__name__, exc)
     _driver = None
     _driver_checked = False
+    _database_ok = None
 
 
 def status() -> dict:
-    """What the /health endpoint reports about the graph backend."""
-    driver = _get_driver()
+    """
+    What the /health endpoint reports about the graph backend.
+
+    Deliberately routed through the same _neo4j_available() predicate get_store()
+    uses, so /health can never advertise a backend that traces are not using.
+    """
+    available = _neo4j_available()
     return {
-        "backend": "neo4j" if driver is not None else "memory",
-        "uri": config.NEO4J_URI if driver is not None else None,
+        "backend": "neo4j" if available else "memory",
+        "uri": config.NEO4J_URI if available else None,
+        "database": config.NEO4J_DATABASE if available else None,
         "disabled": config.NEO4J_DISABLED,
     }

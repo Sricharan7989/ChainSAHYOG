@@ -359,3 +359,30 @@ body {
 }
 .download:hover { background: #eff6ff; }
 .dot-sanctioned { background: #7f1d1d; }
+
+/* --- Honesty blocks ----------------------------------------------------- */
+
+/* The connectivity caveat: printed with the claim, quiet but not hidden. */
+.caveat {
+  margin: 0 0 12px; font-size: 12px; line-height: 1.45; color: var(--caution);
+  border-left: 3px solid var(--caution); padding-left: 9px;
+}
+
+.termination {
+  border-left: 3px solid var(--line); padding: 2px 0 2px 12px;
+}
+.termination-label { font-size: 13px; font-weight: 600; }
+.termination-detail { margin: 3px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+/* Hard stops read differently from "we ran out of room": colour says which. */
+.term-terminated_at_mixer, .term-terminated_at_bridge { border-left-color: var(--warn); }
+.term-depth_cap_reached, .term-graph_cap_reached { border-left-color: var(--accent); }
+.term-exchange_reached { border-left-color: var(--good); }
+.term-no_outgoing_transfers, .term-dust_only { border-left-color: var(--ink-faint); }
+
+.token-warning {
+  background: var(--warn-soft); border: 1px solid #fed7aa;
+  border-radius: 8px; padding: 11px 13px;
+}
+.token-warning p { margin: 0; font-size: 12.5px; color: #9a3412; }
+.token-warning ul { margin: 8px 0 0; padding-left: 18px; }
+.token-warning li { font-size: 12px; color: #9a3412; }

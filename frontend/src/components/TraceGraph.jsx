@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react'
 import cytoscape from 'cytoscape'
-import { findPath, pathAddresses } from '../trace-path.js'
+import { findingPath, pathEdges } from '../trace-path.js'
 
 const STYLE = [
   {
@@ -80,10 +80,15 @@ export default function TraceGraph({ data }) {
   useEffect(() => {
     if (!container.current || !data) return
 
-    const target = data.summary?.address ?? null
-    const path = target ? findPath(data.edges, data.start_address, target) : []
-    const onPath = new Set(pathAddresses(path, data.start_address))
-    const pathEdges = new Set(path.map((e) => `${e.source}->${e.target}`))
+    // The route comes from the backend payload, so the highlighted path and the
+    // path printed in the PDF are always the same route.
+    const routeAddresses = findingPath(data)
+    const onPath = new Set(routeAddresses)
+    const routeEdges = new Set(
+      pathEdges(data, routeAddresses)
+        .filter(Boolean)
+        .map((e) => `${e.source}->${e.target}`),
+    )
 
     const elements = [
       ...data.nodes.map((node) => ({
@@ -105,7 +110,7 @@ export default function TraceGraph({ data }) {
           id: `${edge.source}->${edge.target}`,
           source: edge.source,
           target: edge.target,
-          onPath: pathEdges.has(`${edge.source}->${edge.target}`) ? 1 : 0,
+          onPath: routeEdges.has(`${edge.source}->${edge.target}`) ? 1 : 0,
         },
       })),
     ]
