@@ -111,7 +111,10 @@ class FakeClient:
         self.api_calls = 0
         self.cache_hits = 0
 
-    async def get_outgoing_transfers(self, address):
+    async def has_token_activity(self, address, chain_id=None):
+        return False  # offline: no token probe in these suites
+
+    async def get_outgoing_transfers(self, address, chain_id=None):
         self.api_calls += 1
         self.fetched.append(address)
         return self.book.get(address, [])

@@ -8,11 +8,13 @@
 import { useState } from 'react'
 import { reportUrl } from '../api.js'
 import {
-  ETHERSCAN,
+  chainName,
   describeMethod,
   describeRole,
+  explorerAddressUrl,
   findingPath,
   formatEth,
+  nativeSymbol,
   pathEdges,
   shortAddress,
 } from '../trace-path.js'
@@ -76,11 +78,12 @@ function ConfidenceBar({ summary }) {
   )
 }
 
-function AddressLink({ address, children }) {
+// Takes `data` so the link points at the right explorer for the traced chain.
+function AddressLink({ address, children, data }) {
   return (
     <a
       className="addr"
-      href={`${ETHERSCAN}${address}`}
+      href={explorerAddressUrl(data, address)}
       target="_blank"
       rel="noreferrer"
       title={address}
@@ -135,10 +138,10 @@ function TracedPath({ data }) {
                   <span className="path-hop">hop {index}</span>
                 )}
               </div>
-              <AddressLink address={address} />
+              <AddressLink address={address} data={data} />
               {incoming && (
                 <div className="path-value">
-                  received {formatEth(incoming.value_eth)}
+                  received {formatEth(incoming.value_eth, nativeSymbol(data))}
                   {incoming.tx_count > 1 && ` across ${incoming.tx_count} transactions`}
                 </div>
               )}
@@ -153,7 +156,7 @@ function TracedPath({ data }) {
 // Risk flags come from the backend already sorted worst-first, with the ones
 // sitting on the actual money trail ahead of those on side branches - a mixer
 // the funds went through means something quite different from one they didn't.
-function RiskFlags({ flags }) {
+function RiskFlags({ flags, data }) {
   if (!flags || flags.length === 0) return null
 
   const onPath = flags.filter((f) => f.on_primary_path)
@@ -170,8 +173,8 @@ function RiskFlags({ flags }) {
         </div>
         <div className="flag-note">{flag.note}</div>
         <div className="flag-meta">
-          {formatEth(flag.value_received_eth)} · hop {flag.hop_distance} ·{' '}
-          <AddressLink address={flag.address} />
+          {formatEth(flag.value_received_eth, nativeSymbol(data))} · hop {flag.hop_distance} ·{' '}
+          <AddressLink address={flag.address} data={data} />
         </div>
       </div>
     </li>
@@ -243,7 +246,7 @@ function Termination({ termination }) {
 // Wallets on the traced path that move ERC-20 tokens we do not follow. Shown
 // because the alternative is silence: the trail just ends and the panel implies
 // the money stopped, when it may have continued in USDT or USDC.
-function TokenWarning({ warnings }) {
+function TokenWarning({ warnings, data }) {
   if (!warnings || warnings.length === 0) return null
   return (
     <section className="block">
@@ -257,7 +260,7 @@ function TokenWarning({ warnings }) {
         <ul>
           {warnings.map((w) => (
             <li key={w.address}>
-              hop {w.hop_distance} · <AddressLink address={w.address} />
+              hop {w.hop_distance} · <AddressLink address={w.address} data={data} />
             </li>
           ))}
         </ul>
@@ -347,7 +350,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
       <aside className="panel">
         <header className="finding-head none">
           <SourceBadge data={data} />
-          <div className="eyebrow">Finding</div>
+          <div className="eyebrow">Finding · {chainName(data)}</div>
           <h2 className="finding-none">No path to a known exchange</h2>
           <p className="finding-sub">
             No transaction path reached an exchange we recognise within{' '}
@@ -356,8 +359,8 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         </header>
         <div className="panel-body">
           <Termination termination={summary.termination ?? data.termination} />
-          <TokenWarning warnings={data.token_warnings} />
-          <RiskFlags flags={data.risk_flags} />
+          <TokenWarning warnings={data.token_warnings} data={data} />
+          <RiskFlags flags={data.risk_flags} data={data} />
           <section className="block">
             <h3>What to do next</h3>
             <p className="muted">{summary.recommended_action}</p>
@@ -374,7 +377,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
       <aside className="panel">
         <header className="finding-head lead">
           <SourceBadge data={data} />
-          <div className="eyebrow">Finding · unconfirmed</div>
+          <div className="eyebrow">Finding · {chainName(data)} · unconfirmed</div>
           <h2 className="finding-title">
             A transaction path connects to a collection point {summary.hop_distance} hop
             {summary.hop_distance === 1 ? '' : 's'} away
@@ -395,8 +398,8 @@ export default function FindingPanel({ data, loading, error, onToast }) {
 
           <MethodNote method={summary.method} />
           <Termination termination={summary.termination ?? data.termination} />
-          <TokenWarning warnings={data.token_warnings} />
-          <RiskFlags flags={data.risk_flags} />
+          <TokenWarning warnings={data.token_warnings} data={data} />
+          <RiskFlags flags={data.risk_flags} data={data} />
 
           <section className="block">
             <h3>Recommended action</h3>
@@ -415,7 +418,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
     <aside className="panel">
       <header className="finding-head found">
         <SourceBadge data={data} />
-        <div className="eyebrow">Finding</div>
+        <div className="eyebrow">Finding · {chainName(data)}</div>
         <h2 className="finding-title">
           Transaction path connects to <strong>{summary.exchange}</strong>
           <span className="finding-hops">
@@ -425,7 +428,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <Caveat text={summary.caveat} />
         <ConfidenceBar summary={summary} />
         <div className="finding-amount">
-          {formatEth(summary.value_received_eth)} received by this wallet on traced
+          {formatEth(summary.value_received_eth, nativeSymbol(data))} received by this wallet on traced
           transfers — not an amount attributable to the suspect
         </div>
       </header>
@@ -438,8 +441,8 @@ export default function FindingPanel({ data, loading, error, onToast }) {
 
         <MethodNote method={summary.method} />
         <Termination termination={summary.termination ?? data.termination} />
-        <TokenWarning warnings={data.token_warnings} />
-        <RiskFlags flags={data.risk_flags} />
+        <TokenWarning warnings={data.token_warnings} data={data} />
+        <RiskFlags flags={data.risk_flags} data={data} />
 
         {summary.other_exchanges_reached?.length > 0 && (
           <section className="block">
@@ -457,7 +460,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
             <p>
               Route a lawful data request to <strong>{summary.exchange}</strong>{' '}
               via SAHYOG for the KYC records behind deposits to{' '}
-              <AddressLink address={summary.address} />.
+              <AddressLink address={summary.address} data={data} />.
             </p>
             <button
               className="sahyog"

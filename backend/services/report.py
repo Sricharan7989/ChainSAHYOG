@@ -273,22 +273,33 @@ def _risk_section(payload: dict, styles: dict) -> list:
     return [table, *notes]
 
 
-DISCLAIMER = (
-    "<b>Basis and limitations.</b> This report is derived entirely from public "
-    "Ethereum transaction records. No cryptography was broken, no private data "
-    "was accessed, and no individual was identified by this tool. It establishes "
-    "that a chain of transfers connects the suspect address to a wallet "
-    "attributed to the named entity. It does NOT perform value-level taint "
-    "tracking: each wallet's large outgoing transfers are followed regardless of "
-    "where that value came from, so a connected path is not proof that these "
-    "specific funds arrived. It does NOT establish who controlled any "
-    "intermediate wallet. Attribution of the endpoint rests on the method stated above and "
-    "carries the confidence score shown, which is never certainty. "
-    "Native ETH transfers only: transfers of ERC-20 tokens such as USDT, and "
-    "internal contract transfers, are not followed in this version, so the trail "
-    "may continue beyond what is shown. Identity can only be established by the "
-    "named exchange, from its own KYC records, in response to a lawful request."
-)
+def disclaimer(chain_name: str = "Ethereum", native: str = "ETH") -> str:
+    """
+    The basis-and-limitations paragraph, named for the chain actually traced.
+
+    A function rather than a constant because this paragraph makes factual claims
+    about WHICH network and WHICH token were examined. A Polygon report stating
+    "public Ethereum transaction records" and "native ETH transfers only" would be
+    wrong on both counts, in the one part of the document whose whole purpose is
+    to be accurate about scope.
+    """
+    return (
+        f"<b>Basis and limitations.</b> This report is derived entirely from "
+        f"public {chain_name} transaction records. No cryptography was broken, no "
+        f"private data was accessed, and no individual was identified by this "
+        f"tool. It establishes that a chain of transfers connects the suspect "
+        f"address to a wallet attributed to the named entity. It does NOT perform "
+        f"value-level taint tracking: each wallet's large outgoing transfers are "
+        f"followed regardless of where that value came from, so a connected path "
+        f"is not proof that these specific funds arrived. It does NOT establish "
+        f"who controlled any intermediate wallet. Attribution of the endpoint "
+        f"rests on the method stated above and carries the confidence score shown, "
+        f"which is never certainty. Native {native} transfers only: transfers of "
+        f"ERC-20 tokens such as USDT, and internal contract transfers, are not "
+        f"followed in this version, so the trail may continue beyond what is "
+        f"shown. Identity can only be established by the named exchange, from its "
+        f"own KYC records, in response to a lawful request."
+    )
 
 
 def build_report(payload: dict) -> bytes:
@@ -319,7 +330,8 @@ def build_report(payload: dict) -> bytes:
     # --- Header ---------------------------------------------------------
     story.append(Paragraph("Cryptocurrency Attribution Report", styles["title"]))
     story.append(Paragraph(
-        "Wallet-to-VASP tracing · prepared for lawful request via SAHYOG / I4C",
+        f"Wallet-to-VASP tracing on {params.get('chain_name') or 'Ethereum'} · "
+        f"prepared for lawful request via SAHYOG / I4C",
         styles["subtitle"],
     ))
     story.append(_rule())
@@ -330,12 +342,17 @@ def build_report(payload: dict) -> bytes:
         recorded = payload.get("recorded_at", "unknown time")
         source_text = f"Recorded trace (captured {recorded})"
 
+    chain_name = params.get("chain_name") or "Ethereum"
+    chain_id = params.get("chain_id", 1)
+    native = params.get("native_symbol") or "ETH"
+
     story.append(_kv_table([
         ("Suspect address", f'<font face="Courier" size="8">{payload.get("start_address", "")}</font>'),
+        ("Network", f"{chain_name} (chain id {chain_id}), native token {native}"),
         ("Report generated", generated),
-        ("Data source", f"Ethereum mainnet via Etherscan · {source_text}"),
+        ("Data source", f"{chain_name} via Etherscan V2 · {source_text}"),
         ("Trace depth", f'{params.get("max_depth", "?")} hops '
-                        f'(dust threshold {params.get("dust_threshold_eth", "?")} ETH)'),
+                        f'(dust threshold {params.get("dust_threshold_eth", "?")} {native})'),
         ("Wallets examined", f'{stats.get("nodes", 0)} wallets, {stats.get("edges", 0)} transfers'),
     ], styles))
 
@@ -454,7 +471,7 @@ def build_report(payload: dict) -> bytes:
     # --- Disclaimer -----------------------------------------------------
     story.append(Spacer(1, 10))
     story.append(_rule())
-    story.append(Paragraph(DISCLAIMER, styles["disclaimer"]))
+    story.append(Paragraph(disclaimer(chain_name, native), styles["disclaimer"]))
 
     def _footer(canvas, document):
         canvas.saveState()

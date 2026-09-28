@@ -1,11 +1,12 @@
 // Talks to the FastAPI backend. Requests go through Vite's /api proxy, so no
 // host is hardcoded here and the API key never comes near the browser.
 
-export async function runTrace(address, { maxDepth = 4, mode = 'auto' } = {}) {
+export async function runTrace(address, { maxDepth = 4, mode = 'auto', chainId = 1 } = {}) {
   const query = new URLSearchParams({
     address,
     max_depth: String(maxDepth),
     mode,
+    chain_id: String(chainId),
   })
   const response = await fetch(`/api/trace?${query}`)
 
@@ -46,7 +47,29 @@ export async function listDemos() {
  * Content-Disposition with a filed-ready filename, so the browser's own
  * download handling gives the investigator the right name for free.
  */
-export function reportUrl(address, { maxDepth = 4 } = {}) {
-  const query = new URLSearchParams({ address, max_depth: String(maxDepth) })
+export function reportUrl(address, { maxDepth = 4, chainId = 1 } = {}) {
+  const query = new URLSearchParams({
+    address,
+    max_depth: String(maxDepth),
+    chain_id: String(chainId),
+  })
   return `/api/report?${query}`
+}
+
+/**
+ * Chains this backend can trace, for the selector.
+ *
+ * Read from /health rather than hardcoded in the UI: the backend's registry is
+ * the authority on what is supported, and offering a chain the server rejects
+ * would be worse than offering none.
+ */
+export async function listChains() {
+  try {
+    const response = await fetch('/api/health')
+    if (!response.ok) return []
+    const body = await response.json()
+    return body.chains?.supported ?? []
+  } catch {
+    return []
+  }
 }

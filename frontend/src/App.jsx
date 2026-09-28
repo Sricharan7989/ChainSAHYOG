@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listDemos, runTrace } from './api.js'
+import { listChains, listDemos, runTrace } from './api.js'
 import FindingPanel from './components/FindingPanel.jsx'
 import TraceGraph from './components/TraceGraph.jsx'
 
@@ -21,11 +21,16 @@ export default function App() {
   const [error, setError] = useState(null)
   const [toast, setToast] = useState(null)
   const [demos, setDemos] = useState([])
+  // The chain is part of the query, so it lives with the address, not in the
+  // payload. Defaults to Ethereum (1) so existing behaviour is unchanged.
+  const [chainId, setChainId] = useState(1)
+  const [chains, setChains] = useState([])
   // Live mode forces a fresh trace even for an address that has a recording.
   // Off by default so the demo is fast and cannot be broken by the network.
   const [forceLive, setForceLive] = useState(false)
 
   useEffect(() => {
+    listChains().then(setChains)
     listDemos().then(setDemos)
   }, [])
 
@@ -40,7 +45,13 @@ export default function App() {
     setError(null)
     setData(null)
     try {
-      setData(await runTrace(target, { maxDepth: useDepth, mode: live ? 'live' : 'auto' }))
+      setData(
+        await runTrace(target, {
+          maxDepth: useDepth,
+          mode: live ? 'live' : 'auto',
+          chainId,
+        }),
+      )
     } catch (err) {
       setError(err.message)
     } finally {
@@ -71,6 +82,23 @@ export default function App() {
         </div>
 
         <form className="search" onSubmit={submit}>
+          <select
+            value={chainId}
+            onChange={(e) => setChainId(Number(e.target.value))}
+            aria-label="Blockchain network"
+            className="chain-select"
+            disabled={loading}
+          >
+            {(chains.length > 0
+              ? chains
+              : [{ chain_id: 1, name: 'Ethereum' }]
+            ).map((c) => (
+              <option key={c.chain_id} value={c.chain_id}>
+                {c.name}
+                {c.requires_paid_plan ? ' (paid API plan)' : ''}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             value={address}

@@ -36,9 +36,78 @@ ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY", "")
 
 # Etherscan API V2. The old V1 endpoint (api.etherscan.io/api) is retired and
 # now answers every request with a "deprecated V1 endpoint" error, so V2 plus an
-# explicit chainid is the only thing that works. We are Ethereum-mainnet only.
+# explicit chainid is the only thing that works.
 ETHERSCAN_BASE_URL = "https://api.etherscan.io/v2/api"
-ETHERSCAN_CHAIN_ID = 1  # 1 = Ethereum mainnet
+
+# --- Chains -------------------------------------------------------------------
+#
+# V2 is multichain: ONE key and ONE endpoint serve every chain, selected per
+# request by `chainid`. That is why the chain is a request parameter here and not
+# a deployment setting - the same running instance can trace any of these.
+#
+# `native` is the gas token, used only for display; `explorer` is where a wallet
+# link should point. Adding a chain means adding a row, nothing else - but read
+# the "still assumes Ethereum" notes before trusting a new one, because the
+# LABELS are what make a trace useful and they are curated per chain.
+CHAINS: dict[int, dict] = {
+    1: {
+        "slug": "ethereum",
+        "name": "Ethereum",
+        "native": "ETH",
+        "explorer": "https://etherscan.io",
+    },
+    137: {
+        "slug": "polygon",
+        "name": "Polygon",
+        "native": "POL",  # renamed from MATIC in 2024
+        "explorer": "https://polygonscan.com",
+    },
+    56: {
+        "slug": "bnb",
+        "name": "BNB Chain",
+        "native": "BNB",
+        "explorer": "https://bscscan.com",
+        # Verified 2026-09: Etherscan's FREE tier refuses chainid=56 with
+        # "Free API access is not supported for this chain". The code path works;
+        # the key does not cover it. Flagged rather than hidden so the UI can say
+        # so instead of returning a 502 that looks like our bug.
+        "requires_paid_plan": True,
+    },
+    42161: {
+        "slug": "arbitrum",
+        "name": "Arbitrum One",
+        "native": "ETH",
+        "explorer": "https://arbiscan.io",
+    },
+}
+
+# Ethereum stays the default so every existing caller, recording and script
+# behaves exactly as before.
+DEFAULT_CHAIN_ID = 1
+
+# Kept as an alias: older code and scripts referred to a single chain id.
+ETHERSCAN_CHAIN_ID = DEFAULT_CHAIN_ID
+
+
+def chain(chain_id: int | None = None) -> dict:
+    """
+    The chain descriptor, with its id included, or the default chain's.
+
+    Raises ValueError on an unsupported id so callers can turn that into a 422
+    rather than silently tracing the wrong network.
+    """
+    resolved = DEFAULT_CHAIN_ID if chain_id is None else int(chain_id)
+    if resolved not in CHAINS:
+        raise ValueError(
+            f"Unsupported chain id {resolved}. Supported: "
+            + ", ".join(f"{cid} ({meta['name']})" for cid, meta in CHAINS.items())
+        )
+    return {"chain_id": resolved, **CHAINS[resolved]}
+
+
+def supported_chains() -> list[dict]:
+    """Every chain this build can trace, for /health and the frontend selector."""
+    return [{"chain_id": cid, **meta} for cid, meta in CHAINS.items()]
 
 # address -> entity mapping (exchanges, mixers, bridges). Method (a) of
 # exchange identification — the known-label lookup — reads from here.

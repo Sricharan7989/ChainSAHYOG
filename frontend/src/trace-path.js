@@ -105,11 +105,44 @@ export function describeRole(node, isStart) {
   return 'Intermediate wallet'
 }
 
-export function formatEth(value) {
+/**
+ * Format a native-token amount. `symbol` defaults to ETH for older payloads.
+ *
+ * Note the field it reads is still named `value_eth` throughout the API; only
+ * the displayed unit is chain-aware. See the multi-chain notes in the README.
+ */
+export function formatEth(value, symbol = 'ETH') {
   if (value === null || value === undefined) return '—'
-  if (value >= 1000) return `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })} ETH`
-  if (value >= 1) return `${value.toFixed(2)} ETH`
-  return `${value.toFixed(4)} ETH`
+  if (value >= 1000) {
+    return `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })} ${symbol}`
+  }
+  if (value >= 1) return `${value.toFixed(2)} ${symbol}`
+  return `${value.toFixed(4)} ${symbol}`
 }
 
-export const ETHERSCAN = 'https://etherscan.io/address/'
+/**
+ * Block-explorer base for the chain a trace actually ran on.
+ *
+ * Read from the payload rather than hardcoded: on a Polygon trace an Etherscan
+ * link sends the investigator to a page for an address that may not exist there,
+ * which looks like the tool being wrong about the finding. Falls back to
+ * Etherscan for recordings made before chains were tracked.
+ */
+export function explorerBase(data) {
+  const base = data?.params?.explorer ?? 'https://etherscan.io'
+  return base.replace(/\/$/, '')
+}
+
+export function explorerAddressUrl(data, address) {
+  return `${explorerBase(data)}/address/${address}`
+}
+
+/** Display name of the chain a payload describes. */
+export function chainName(data) {
+  return data?.params?.chain_name ?? 'Ethereum'
+}
+
+/** The chain's gas-token symbol, for value formatting. */
+export function nativeSymbol(data) {
+  return data?.params?.native_symbol ?? 'ETH'
+}

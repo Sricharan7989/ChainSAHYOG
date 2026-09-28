@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react'
 import cytoscape from 'cytoscape'
-import { findingPath, pathEdges } from '../trace-path.js'
+import { explorerAddressUrl, findingPath, pathEdges } from '../trace-path.js'
 
 const STYLE = [
   {
@@ -131,7 +131,8 @@ export default function TraceGraph({ data }) {
     })
 
     cy.on('tap', 'node', (evt) => {
-      window.open(`https://etherscan.io/address/${evt.target.id()}`, '_blank')
+      // Chain-aware: a Polygon wallet must not open an Etherscan page.
+      window.open(explorerAddressUrl(data, evt.target.id()), '_blank')
     })
 
     cyRef.current = cy

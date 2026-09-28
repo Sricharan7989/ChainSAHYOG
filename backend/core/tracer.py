@@ -211,6 +211,10 @@ class TraceResult:
     termination: dict = field(default_factory=dict)
     token_warnings: list[dict] = field(default_factory=list)
 
+    # Which network this trace ran on. Every consumer (panel, PDF, explorer
+    # links) needs it, so it travels with the result rather than being inferred.
+    chain: dict = field(default_factory=dict)
+
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
         return iter((self.graph, self.hops))
@@ -253,6 +257,7 @@ async def trace(
     max_depth: int = 4,
     dust_threshold: float = 0.001,
     client: EtherscanClient | None = None,
+    chain_id: int | None = None,
 ) -> TraceResult:
     """
     Walk the money forward from `start_address` until it reaches a known entity.
@@ -288,6 +293,10 @@ async def trace(
     client = client or get_client()
     client.reset_stats()
 
+    # Resolved here so an unsupported chain raises before we spend an API call,
+    # and so every downstream fetch and label lookup uses the same chain.
+    chain = config.chain(chain_id)
+
     start = normalize_address(start_address)
     if len(start) != 42 or not start.startswith("0x"):
         raise ValueError(f"Not a valid Ethereum address: {start_address!r}")
@@ -319,7 +328,7 @@ async def trace(
     # If the suspect address is ITSELF a known entity, that is worth reporting -
     # but we still expand it. Stopping at depth 0 would return an empty graph
     # and tell the investigator nothing about where the money went.
-    start_ident = identify.known_label_lookup(start)
+    start_ident = identify.known_label_lookup(start, chain=chain["slug"])
     if start_ident is not None:
         record(start, start_ident, 0)
         notes.append(
@@ -365,7 +374,7 @@ async def trace(
         # already answered - expanding an exchange hot wallet would be both
         # pointless and ruinously expensive.
         if depth > 0:
-            ident = identify.identify(address, store)
+            ident = identify.identify(address, store, chain=chain["slug"])
             if ident is not None:
                 record(address, ident, depth)
                 if identify.is_terminal(ident):
@@ -375,7 +384,9 @@ async def trace(
         expanded.add(address)
 
         try:
-            transfers = await client.get_outgoing_transfers(address)
+            transfers = await client.get_outgoing_transfers(
+                address, chain_id=chain["chain_id"]
+            )
         except Exception as exc:  # noqa: BLE001 - one bad wallet must not kill the trace
             if address == start:
                 # No data for the suspect wallet means there is nothing to show.
@@ -435,7 +446,7 @@ async def trace(
 
             # Label lookup the moment the wallet is discovered - it needs only
             # the address, so there is no reason to wait.
-            child_ident = identify.known_label_lookup(to_addr)
+            child_ident = identify.known_label_lookup(to_addr, chain=chain["slug"])
             if child_ident is not None:
                 record(to_addr, child_ident, child_depth)
                 if identify.is_terminal(child_ident):
@@ -454,7 +465,7 @@ async def trace(
     for address, data in store.wallets():
         if address in attributions or address == start:
             continue
-        late = identify.consolidation_identify(address, store)
+        late = identify.consolidation_identify(address, store)  # chain-agnostic
         if late is not None:
             record(address, late, data.get("depth", 0))
             notes.append(
@@ -503,7 +514,10 @@ async def trace(
     # Token probe last, and only along the path the report cites: a few calls,
     # placed where the answer changes how the finding should be read.
     token_warnings = await _check_token_activity(
-        client, primary.path if primary is not None else [start], store
+        client,
+        primary.path if primary is not None else [start],
+        store,
+        chain_id=chain["chain_id"],
     )
 
     # Materialise a NetworkX view for serialisation and for everything that
@@ -529,6 +543,7 @@ async def trace(
         backend=backend,
         termination=termination,
         token_warnings=token_warnings,
+        chain=chain,
     )
 
 
@@ -632,7 +647,9 @@ def _classify_termination(
     }
 
 
-async def _check_token_activity(client, addresses: list[str], store) -> list[dict]:
+async def _check_token_activity(
+    client, addresses: list[str], store, chain_id: int | None = None
+) -> list[dict]:
     """
     Flag wallets on the attributed path that move tokens we do not follow.
 
@@ -648,7 +665,7 @@ async def _check_token_activity(client, addresses: list[str], store) -> list[dic
     warnings: list[dict] = []
     for address in addresses:
         try:
-            has_tokens = await client.has_token_activity(address)
+            has_tokens = await client.has_token_activity(address, chain_id=chain_id)
         except Exception:  # noqa: BLE001 - a probe must never break a finished trace
             continue
         if has_tokens:
@@ -950,6 +967,11 @@ def to_json(result: TraceResult) -> dict:
         "params": {
             "max_depth": result.max_depth,
             "dust_threshold_eth": result.dust_threshold,
+            "chain_id": result.chain.get("chain_id"),
+            "chain": result.chain.get("slug"),
+            "chain_name": result.chain.get("name"),
+            "native_symbol": result.chain.get("native"),
+            "explorer": result.chain.get("explorer"),
         },
         "summary": summarize(result),
         "attributions": [a.to_dict() for a in result.attributions],

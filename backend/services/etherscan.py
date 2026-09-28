@@ -76,11 +76,13 @@ class EtherscanClient:
 
     def __init__(self) -> None:
         self._client: httpx.AsyncClient | None = None
-        # address -> transfers sent BY that address
-        self._cache: dict[str, list[Transfer]] = {}
-        # address -> "does this wallet move ERC-20 tokens?"; separate from the
-        # transfer cache because it answers a different question with one row.
-        self._token_cache: dict[str, bool] = {}
+        # (chain_id, address) -> transfers sent BY that address. The chain is
+        # part of the key because the same address on another network is another
+        # wallet entirely; a flat cache would answer with the wrong chain's data.
+        self._cache: dict[tuple[int, str], list[Transfer]] = {}
+        # (chain_id, address) -> "does this wallet move ERC-20 tokens?"; separate
+        # from the transfer cache because it answers a different question.
+        self._token_cache: dict[tuple[int, str], bool] = {}
         self._lock = asyncio.Lock()
         self._last_request_at = 0.0
         self.api_calls = 0
@@ -104,7 +106,7 @@ class EtherscanClient:
         self._cache.clear()
         self._token_cache.clear()
 
-    async def _request(self, params: dict) -> object:
+    async def _request(self, params: dict, chain_id: int | None = None) -> object:
         """
         One throttled Etherscan V2 call.
 
@@ -120,7 +122,7 @@ class EtherscanClient:
 
         query = {
             **params,
-            "chainid": config.ETHERSCAN_CHAIN_ID,
+            "chainid": config.chain(chain_id)["chain_id"],
             "apikey": config.ETHERSCAN_API_KEY,
         }
 
@@ -160,7 +162,9 @@ class EtherscanClient:
         # result field usually carries the human-readable reason.
         raise EtherscanError(f"Etherscan error: {message or 'unknown'} / {result}")
 
-    async def get_outgoing_transfers(self, address: str) -> list[Transfer]:
+    async def get_outgoing_transfers(
+        self, address: str, chain_id: int | None = None
+    ) -> list[Transfer]:
         """
         Every ETH transfer SENT BY `address`, most recent first.
 
@@ -168,11 +172,13 @@ class EtherscanClient:
         this wallet is the recipient tell us where the funds came from, which is
         backwards from what the investigator needs here.
 
-        SCOPE: external ETH transactions only (Etherscan's `txlist`). Internal
-        transactions (contract-driven moves) and ERC-20 token transfers such as
-        USDT are not covered yet - see the scope note in tracer.py.
+        SCOPE: external NATIVE-token transactions only (Etherscan's `txlist`) on
+        the chain given. Internal transactions (contract-driven moves) and ERC-20
+        token transfers such as USDT are not covered yet - see the scope note in
+        tracer.py.
         """
-        key = normalize_address(address)
+        resolved = config.chain(chain_id)["chain_id"]
+        key = (resolved, normalize_address(address))
         if key in self._cache:
             self.cache_hits += 1
             return self._cache[key]
@@ -181,19 +187,20 @@ class EtherscanClient:
             {
                 "module": "account",
                 "action": "txlist",
-                "address": key,
+                "address": key[1],
                 "startblock": 0,
                 "endblock": 99999999,
                 "page": 1,
                 "offset": config.MAX_TXNS_PER_ADDRESS,
                 "sort": "desc",
-            }
+            },
+            chain_id=resolved,
         )
 
         transfers: list[Transfer] = []
         if isinstance(raw, list):
             for tx in raw:
-                transfer = _parse_transfer(tx, sender=key)
+                transfer = _parse_transfer(tx, sender=key[1])
                 if transfer is not None:
                     transfers.append(transfer)
 
@@ -201,7 +208,9 @@ class EtherscanClient:
         return transfers
 
 
-    async def has_token_activity(self, address: str) -> bool | None:
+    async def has_token_activity(
+        self, address: str, chain_id: int | None = None
+    ) -> bool | None:
         """
         Does this wallet move ERC-20 tokens we are NOT following?
 
@@ -220,7 +229,8 @@ class EtherscanClient:
         Returns True / False, or None when the lookup itself failed - None means
         "unknown", and must not be reported as "no token activity".
         """
-        key = normalize_address(address)
+        resolved = config.chain(chain_id)["chain_id"]
+        key = (resolved, normalize_address(address))
         if key in self._token_cache:
             self.cache_hits += 1
             return self._token_cache[key]
@@ -230,11 +240,12 @@ class EtherscanClient:
                 {
                     "module": "account",
                     "action": "tokentx",
-                    "address": key,
+                    "address": key[1],
                     "page": 1,
                     "offset": 1,
                     "sort": "desc",
-                }
+                },
+                chain_id=resolved,
             )
         except EtherscanError:
             # An unknown answer is not a negative one; leave it uncached so a
