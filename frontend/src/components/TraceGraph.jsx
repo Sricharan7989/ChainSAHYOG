@@ -41,6 +41,10 @@ const STYLE = [
     style: { 'background-color': '#7c3aed', width: 26, height: 26, color: '#6d28d9', 'font-size': '10px', 'font-weight': 'bold' },
   },
   {
+    selector: 'node[kind = "sanctioned"]',
+    style: { 'background-color': '#7f1d1d', 'border-color': '#fecaca', 'border-width': 2, width: 24, height: 24, color: '#7f1d1d', 'font-size': '10px', 'font-weight': 'bold' },
+  },
+  {
     selector: 'edge',
     style: {
       width: 1,
@@ -61,6 +65,7 @@ const STYLE = [
 
 function nodeKind(node) {
   if (node.is_start) return 'start'
+  if (node.entity_type === 'sanctioned') return 'sanctioned'
   if (node.is_mixer) return 'mixer'
   if (node.is_bridge) return 'bridge'
   if (node.entity_type === 'suspected_exchange') return 'suspect_vasp'
@@ -145,6 +150,7 @@ export default function TraceGraph({ data }) {
         <span><i className="dot dot-vasp" /> Exchange</span>
         <span><i className="dot dot-mixer" /> Mixer</span>
         <span><i className="dot dot-bridge" /> Bridge</span>
+        <span><i className="dot dot-sanctioned" /> Sanctioned</span>
         <span className="legend-hint">
           {data.stats.nodes} wallets · {data.stats.edges} transfers · click a wallet to open Etherscan
         </span>

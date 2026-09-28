@@ -118,7 +118,7 @@ function TracedPath({ data, targetAddress }) {
           ? 'start'
           : node.is_vasp
             ? 'vasp'
-            : node.is_mixer || node.is_bridge
+            : node.is_mixer || node.is_bridge || node.entity_type === 'sanctioned'
               ? 'flag'
               : 'plain'
 

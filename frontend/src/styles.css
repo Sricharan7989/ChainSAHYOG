@@ -358,3 +358,4 @@ body {
   font-size: 13.5px; font-weight: 600; text-align: center; text-decoration: none;
 }
 .download:hover { background: #eff6ff; }
+.dot-sanctioned { background: #7f1d1d; }

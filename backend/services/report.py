@@ -151,6 +151,8 @@ def _path_section(payload: dict, styles: dict) -> list:
             role = f"{node.get('label')} (mixer)"
         elif node.get("is_bridge"):
             role = f"{node.get('label')} (bridge)"
+        elif node.get("entity_type") == "sanctioned":
+            role = f"{node.get('label')} (OFAC sanctioned)"
         else:
             role = "Intermediate wallet"
 

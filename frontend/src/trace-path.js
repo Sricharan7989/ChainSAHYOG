@@ -118,6 +118,7 @@ export function describeRole(node, isStart) {
   if (node.is_vasp) return node.label ?? 'Exchange'
   if (node.is_mixer) return `${node.label} · mixer`
   if (node.is_bridge) return `${node.label} · bridge`
+  if (node.entity_type === 'sanctioned') return `${node.label} · OFAC sanctioned`
   return 'Intermediate wallet'
 }
 
