@@ -387,6 +387,27 @@ body {
 .token-warning ul { margin: 8px 0 0; padding-left: 18px; }
 .token-warning li { font-size: 12px; color: #9a3412; }
 
+/* A skipped token wearing a followed asset's name. Called out loudly, because
+   the alternative reading - that the trace lost real USDT - is much worse than
+   the truth, which is that the contract check refused a fake. */
+.impostor-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #7f1d1d;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  vertical-align: middle;
+}
+.impostor-note {
+  margin: 8px 0 0 !important;
+  font-size: 11.5px !important;
+  font-style: italic;
+}
+
 /* Chain selector: same visual weight as the depth select, left of the address. */
 .chain-select {
   padding: 8px 9px; border: 1px solid var(--line); border-radius: 6px;

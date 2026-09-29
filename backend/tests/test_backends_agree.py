@@ -41,7 +41,7 @@ def A(n):
 
 def tx(frm, to, val, h=None):
     return Transfer(hash=h or f"0x{abs(hash((frm,to,val)))%10**16:016x}",
-                    from_addr=frm, to_addr=to, value_eth=val,
+                    from_addr=frm, to_addr=to, value=val,
                     timestamp=1700000000, block=1)
 
 

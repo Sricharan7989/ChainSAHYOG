@@ -105,12 +105,7 @@ export function describeRole(node, isStart) {
   return 'Intermediate wallet'
 }
 
-/**
- * Format a native-token amount. `symbol` defaults to ETH for older payloads.
- *
- * Note the field it reads is still named `value_eth` throughout the API; only
- * the displayed unit is chain-aware. See the multi-chain notes in the README.
- */
+/** Format one amount of one asset. Use formatAssets() for a per-asset map. */
 export function formatEth(value, symbol = 'ETH') {
   if (value === null || value === undefined) return '—'
   if (value >= 1000) {
@@ -145,4 +140,21 @@ export function chainName(data) {
 /** The chain's gas-token symbol, for value formatting. */
 export function nativeSymbol(data) {
   return data?.params?.native_symbol ?? 'ETH'
+}
+
+/**
+ * Render a per-asset total map as one line: "12.5 ETH + 40,000 USDT".
+ *
+ * Assets are never added together - there is no price feed in this build, so a
+ * combined figure would be invented. Falls back to the legacy scalar so
+ * recordings made before token support still display.
+ */
+export function formatAssets(totals, fallback, symbol = 'ETH') {
+  if (!totals || typeof totals !== 'object' || Object.keys(totals).length === 0) {
+    return fallback === undefined || fallback === null ? '—' : formatEth(fallback, symbol)
+  }
+  return Object.entries(totals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([asset, amount]) => formatEth(amount, asset))
+    .join(' + ')
 }

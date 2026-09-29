@@ -87,7 +87,7 @@ class Cluster:
     members: list[str] = field(default_factory=list)
     member_hops: dict[str, int] = field(default_factory=dict)
     hop_distance: int = 0
-    value_received_eth: float = 0.0
+    value_received: dict = field(default_factory=dict)
     confidence_score: int = 0
     named: bool = True
     hub: str | None = None  # suspected clusters only: the wallet they sweep into
@@ -112,14 +112,19 @@ class Cluster:
             "member_hops": self.member_hops,
             "hop_distance": self.hop_distance,
             "hop_distance_rule": HOP_RULE,
-            "value_received_eth": round(self.value_received_eth, 6),
+            "value_received": {k: round(v, 8) for k, v in self.value_received.items()},
             "confidence_score": self.confidence_score,
             "hub": self.hub,
         }
 
 
-def _value_into(store, address: str) -> float:
-    return sum(edge.get("value_eth", 0.0) for edge in store.incoming(address))
+def _value_into(store, address: str) -> dict[str, float]:
+    """Per-asset totals into one wallet. Assets are kept apart, never summed."""
+    totals: dict[str, float] = {}
+    for edge in store.incoming(address):
+        for symbol, entry in (edge.get("assets") or {}).items():
+            totals[symbol] = totals.get(symbol, 0.0) + entry.get("value", 0.0)
+    return totals
 
 
 def build_clusters(store, attributions, chain: str | None = None) -> list[Cluster]:
@@ -164,7 +169,10 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
                     continue
                 cluster.members.append(member)
                 cluster.member_hops[member] = store.wallet(member).get("depth", depth)
-                cluster.value_received_eth += _value_into(store, member)
+                for symbol, amount in _value_into(store, member).items():
+                    cluster.value_received[symbol] = (
+                        cluster.value_received.get(symbol, 0.0) + amount
+                    )
             continue
 
         # Named: every wallet resolving to the same entity on this chain.
@@ -183,7 +191,10 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
         if address not in cluster.members:
             cluster.members.append(address)
             cluster.member_hops[address] = depth
-            cluster.value_received_eth += _value_into(store, address)
+            for symbol, amount in _value_into(store, address).items():
+                cluster.value_received[symbol] = (
+                    cluster.value_received.get(symbol, 0.0) + amount
+                )
         # Best confidence among members represents the cluster.
         cluster.confidence_score = max(cluster.confidence_score, attribution.confidence_score)
 
@@ -195,7 +206,8 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
         cluster.hop_distance = min(cluster.member_hops.values(), default=0)
 
     clusters.sort(
-        key=lambda c: (c.hop_distance, -c.confidence_score, -c.value_received_eth)
+        key=lambda c: (c.hop_distance, -c.confidence_score,
+                       -max(c.value_received.values(), default=0.0))
     )
     return clusters
 

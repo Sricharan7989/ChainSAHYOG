@@ -85,17 +85,24 @@ class Hop:
     depth: int  # hops from the start address; the first hop out is depth 1
     from_addr: str
     to_addr: str
-    value_eth: float
+    value: float
     tx_count: int
     timestamp: int  # most recent transaction on this edge, unix epoch
     tx_hash: str  # the single largest transaction, as a citable example
+    asset: str = "ETH"
+    contract: str | None = None
 
     def to_dict(self) -> dict:
         return {
             "depth": self.depth,
             "from": self.from_addr,
             "to": self.to_addr,
-            "value_eth": round(self.value_eth, 6),
+            "value": round(self.value, 8),
+            "asset": self.asset,
+            "contract": self.contract,
+            # Kept so older consumers still read a number; native only, and 0 for
+            # a token hop - read `value` and `asset` instead.
+            "value_eth": round(self.value, 8) if self.contract is None else 0.0,
             "tx_count": self.tx_count,
             "timestamp": self.timestamp,
             "tx_hash": self.tx_hash,
@@ -120,6 +127,10 @@ class Attribution:
     confidence: float
     hop_distance: int
     evidence: str
+    # Per-asset totals into this wallet. `value_received_eth` is kept as the
+    # NATIVE portion only, so an older consumer reads a real number rather than
+    # an ETH/USDT sum that means nothing.
+    value_received: dict = field(default_factory=dict)
     value_received_eth: float = 0.0
 
     # The shortest route from the suspect wallet to this address, and the label
@@ -147,6 +158,8 @@ class Attribution:
             "confidence_components": self.confidence_components,
             "hop_distance": self.hop_distance,
             "evidence": self.evidence,
+            "value_received": {k: round(v, 8) for k, v in self.value_received.items()},
+            "value_received_display": format_assets(self.value_received),
             "value_received_eth": round(self.value_received_eth, 6),
             "path": self.path,
             "crossed": sorted(self.path_risk_types),
@@ -170,6 +183,7 @@ class RiskFlag:
     severity: str  # critical | high | medium
     hop_distance: int
     on_primary_path: bool
+    value_received: dict
     value_received_eth: float
     note: str
 
@@ -181,6 +195,8 @@ class RiskFlag:
             "severity": self.severity,
             "hop_distance": self.hop_distance,
             "on_primary_path": self.on_primary_path,
+            "value_received": {k: round(v, 8) for k, v in self.value_received.items()},
+            "value_received_display": format_assets(self.value_received),
             "value_received_eth": round(self.value_received_eth, 6),
             "note": self.note,
         }
@@ -213,7 +229,7 @@ class TraceResult:
     # exist so that a trace which finds nothing still tells the investigator
     # something they can act on, instead of an empty graph and no explanation.
     termination: dict = field(default_factory=dict)
-    token_warnings: list[dict] = field(default_factory=list)
+    token_warnings: dict = field(default_factory=dict)
 
     # Which network this trace ran on. Every consumer (panel, PDF, explorer
     # links) needs it, so it travels with the result rather than being inferred.
@@ -255,9 +271,24 @@ def _mark_node(store, address: str, ident: identify.Identification) -> None:
     )
 
 
-def _value_received(store, address: str) -> float:
-    """Total ETH that reached this address along traced edges."""
-    return sum(edge.get("value_eth", 0.0) for edge in store.incoming(address))
+def _native_total(totals: dict[str, float], chain: dict | None) -> float:
+    """The native-token portion of a per-asset total, for the legacy scalar field."""
+    symbol = (chain or {}).get("native", "ETH")
+    return float(totals.get(symbol, totals.get("ETH", 0.0)))
+
+
+def _value_received(store, address: str) -> dict[str, float]:
+    """
+    Per-asset totals that reached this address along traced edges.
+
+    Returns {symbol: amount}. Deliberately not a single number: with several
+    assets in play a scalar total would have no unit and no meaning.
+    """
+    totals: dict[str, float] = {}
+    for edge in store.incoming(address):
+        for symbol, entry in (edge.get("assets") or {}).items():
+            totals[symbol] = totals.get(symbol, 0.0) + entry.get("value", 0.0)
+    return totals
 
 
 async def trace(
@@ -406,7 +437,7 @@ async def trace(
         # transactions would let one counterparty paid in 50 small slices lose
         # to a single larger one-off, even though it received far more overall.
         flows = _aggregate_by_recipient(transfers, dust_threshold)
-        ranked = sorted(flows.values(), key=lambda f: f["value_eth"], reverse=True)
+        ranked = sorted(flows.values(), key=_flow_rank, reverse=True)
 
         if address == start and not ranked:
             # Distinguishing "sent nothing" from "sent only dust" matters: the
@@ -430,27 +461,42 @@ async def trace(
             if not store.has(to_addr):
                 store.add_wallet(to_addr, depth=child_depth, is_start=False)
 
+            assets = {
+                symbol: {k: v for k, v in entry.items() if not k.startswith("_")}
+                for symbol, entry in flow["assets"].items()
+            }
+            primary = _primary_asset(flow["assets"]) or {}
+
             store.add_transfer(
                 address,
                 to_addr,
-                value_eth=flow["value_eth"],
+                # Per-asset detail is the truth; the scalar fields below describe
+                # the edge's PRIMARY asset only, for callers that need one number.
+                assets=assets,
+                value=primary.get("value", 0.0),
+                asset=primary.get("asset", ""),
                 tx_count=flow["tx_count"],
                 timestamp=flow["timestamp"],
-                tx_hash=flow["tx_hash"],
+                tx_hash=primary.get("tx_hash", ""),
                 depth=child_depth,
             )
 
-            hops.append(
-                Hop(
-                    depth=child_depth,
-                    from_addr=address,
-                    to_addr=to_addr,
-                    value_eth=flow["value_eth"],
-                    tx_count=flow["tx_count"],
-                    timestamp=flow["timestamp"],
-                    tx_hash=flow["tx_hash"],
+            # One hop row per asset moved: an ETH hop and a USDT hop between the
+            # same pair are two different facts an investigator may cite.
+            for entry in assets.values():
+                hops.append(
+                    Hop(
+                        depth=child_depth,
+                        from_addr=address,
+                        to_addr=to_addr,
+                        value=entry["value"],
+                        asset=entry["asset"],
+                        contract=entry.get("contract"),
+                        tx_count=entry["tx_count"],
+                        timestamp=entry["timestamp"],
+                        tx_hash=entry["tx_hash"],
+                    )
                 )
-            )
 
             # Label lookup the moment the wallet is discovered - it needs only
             # the address, so there is no reason to wait.
@@ -483,7 +529,9 @@ async def trace(
 
     # Attach how much value actually reached each identified endpoint.
     for attribution in attributions.values():
-        attribution.value_received_eth = _value_received(store, attribution.address)
+        totals = _value_received(store, attribution.address)
+        attribution.value_received = totals
+        attribution.value_received_eth = _native_total(totals, chain)
 
     # Reconstruct each attribution's route and score it. This has to happen
     # after the walk: a path is only knowable once the graph is complete, and
@@ -526,14 +574,10 @@ async def trace(
         start_had_only_dust=start_had_only_dust,
     )
 
-    # Token probe last, and only along the path the report cites: a few calls,
-    # placed where the answer changes how the finding should be read.
-    token_warnings = await _check_token_activity(
-        client,
-        primary.path if primary is not None else [start],
-        store,
-        chain_id=chain["chain_id"],
-    )
+    # What we deliberately did not follow, reported so the gap is visible.
+    # No extra API calls: the walk already fetched every wallet's token rows, so
+    # what we declined to follow is known from data in hand.
+    token_warnings = _unfollowed_token_note(client, chain["chain_id"])
 
     # Materialise a NetworkX view for serialisation and for everything that
     # already speaks DiGraph. With Neo4j this is one query at the end of the
@@ -663,40 +707,69 @@ def _classify_termination(
     }
 
 
-async def _check_token_activity(
-    client, addresses: list[str], store, chain_id: int | None = None
-) -> list[dict]:
+def _unfollowed_token_note(client, chain_id: int) -> dict:
     """
-    Flag wallets on the attributed path that move tokens we do not follow.
+    What token movement we chose NOT to follow, and why.
 
-    Scope is deliberate: the wallets on the path the report actually cites, not
-    the whole graph. That is at most a handful of extra API calls per trace
-    instead of hundreds, and it puts the warning exactly where it changes how the
-    finding should be read.
+    Phase 2 warned "this wallet has token transfers we do not follow" because the
+    tracer followed native transfers only. That warning is now WRONG for
+    allowlisted assets - USDT, USDC, DAI, WETH and WBTC are followed end to end.
 
-    An unknown answer (None) is skipped rather than reported as "clean" - saying
-    a wallet has no token activity when the lookup failed would be worse than
-    saying nothing.
+    What remains true is narrower: transfers of tokens OUTSIDE the allowlist are
+    still skipped, deliberately, to keep airdrop spam out of the graph. This
+    reports exactly that, counted during the walk from data we already fetched -
+    so it costs no extra API calls, where the old probe cost one per wallet.
+
+    One entry needs reading carefully. Because the allowlist matches on contract
+    address, a skipped token may claim the symbol of an asset we DO follow - a
+    fake "USDT". That is not coverage we lack; it is an impostor the contract
+    check caught, so it is flagged rather than left to look like a missed trail.
     """
-    warnings: list[dict] = []
-    for address in addresses:
-        try:
-            has_tokens = await client.has_token_activity(address, chain_id=chain_id)
-        except Exception:  # noqa: BLE001 - a probe must never break a finished trace
-            continue
-        if has_tokens:
-            data = store.wallet(address)
-            warnings.append(
-                {
-                    "address": address,
-                    "hop_distance": data.get("depth", 0),
-                    "note": (
-                        "This wallet also moves ERC-20 tokens, which this build "
-                        "does not follow. The trail may continue in USDT or USDC."
-                    ),
-                }
-            )
-    return warnings
+    tally = dict(getattr(client, "skipped_tokens", {}) or {})
+    # Only this chain's skips belong in this trace's note.
+    skipped: dict[str, int] = {}
+    for key, count in tally.items():
+        row_chain, symbol = key if isinstance(key, tuple) else (chain_id, key)
+        if row_chain == chain_id:
+            skipped[symbol] = skipped.get(symbol, 0) + count
+    total = sum(skipped.values())
+    if not total:
+        return {}
+
+    top = sorted(skipped.items(), key=lambda kv: (-kv[1], kv[0]))[:8]
+    impersonated = sorted(
+        symbol
+        for symbol in skipped
+        if config.impersonates_followed_asset(chain_id, symbol)
+    )
+    note = {
+        "skipped_transfers": total,
+        "distinct_tokens": len(skipped),
+        "followed_assets": config.followed_assets(chain_id),
+        "top_skipped": [
+            {
+                "asset": asset,
+                "transfers": count,
+                "impersonating": config.impersonates_followed_asset(chain_id, asset),
+            }
+            for asset, count in top
+        ],
+        "reason": (
+            "Transfers of tokens outside the followed list were not traced. Most "
+            "are airdrop spam, which would add wallets and edges without adding "
+            "signal - but a genuine trail in one of these assets would not be "
+            "followed either."
+        ),
+    }
+    if impersonated:
+        note["impersonated_symbols"] = impersonated
+        note["impersonation_note"] = (
+            "Some skipped tokens call themselves "
+            + ", ".join(impersonated)
+            + " but are not the real contract for that asset on this chain. They "
+            "were refused for that reason, not overlooked."
+        )
+    return note
 
 
 def _risk_types_on_path(store, path: list[str]) -> set[str]:
@@ -768,7 +841,8 @@ def _collect_risk_flags(store, start: str, attributions: list[Attribution]) -> l
                 severity=severity,
                 hop_distance=data.get("depth", 0),
                 on_primary_path=address in primary_path,
-                value_received_eth=_value_received(store, address),
+                value_received=_value_received(store, address),
+                value_received_eth=_native_total(_value_received(store, address), None),
                 note=scoring.risk_note(entity_type, entity),
             )
         )
@@ -785,43 +859,108 @@ def _collect_risk_flags(store, start: str, attributions: list[Attribution]) -> l
     return flags
 
 
-def _aggregate_by_recipient(transfers: list[Transfer], dust_threshold: float) -> dict:
+def _aggregate_by_recipient(
+    transfers: list[Transfer], dust_threshold: float
+) -> dict[str, dict]:
     """
-    Collapse many transactions into one flow per recipient, dropping dust.
+    Collapse transactions into one flow per RECIPIENT AND ASSET.
 
-    Dust is filtered per TRANSACTION, before summing, on purpose: a thousand
-    0.0001 ETH spam sends are still spam even though they total 0.1 ETH, and
-    letting them sum past the threshold would reopen the noise the threshold
-    exists to shut out.
+    Per asset, not just per recipient: 5 ETH and 5,000 USDT are not 5,005 of
+    anything. Summing across assets produces a number with no unit, which would
+    then be used to rank branches and to report "value received" - both wrong.
+    Each recipient therefore holds an `assets` map, and the totals stay separate
+    all the way to the report.
+
+    Dust is filtered per TRANSACTION and PER ASSET, before summing: a thousand
+    0.0001 ETH spam sends are still spam even though they total 0.1 ETH, and a
+    threshold meant for ETH says nothing about what counts as dust in USDT.
     """
     flows: dict[str, dict] = {}
 
     for t in transfers:
-        if t.value_eth < dust_threshold:
+        if t.value < config.dust_threshold_for(t.asset, dust_threshold):
             continue
 
-        flow = flows.get(t.to_addr)
-        if flow is None:
-            flows[t.to_addr] = {
-                "to": t.to_addr,
-                "value_eth": t.value_eth,
+        flow = flows.setdefault(
+            t.to_addr,
+            {"to": t.to_addr, "assets": {}, "tx_count": 0, "timestamp": 0},
+        )
+        entry = flow["assets"].get(t.asset)
+        if entry is None:
+            flow["assets"][t.asset] = {
+                "asset": t.asset,
+                "contract": t.contract,
+                "decimals": t.decimals,
+                "value": t.value,
                 "tx_count": 1,
                 "timestamp": t.timestamp,
                 "tx_hash": t.hash,
-                "_max_value": t.value_eth,
+                "_max_value": t.value,
             }
-            continue
+        else:
+            entry["value"] += t.value
+            entry["tx_count"] += 1
+            entry["timestamp"] = max(entry["timestamp"], t.timestamp)
+            # Keep the largest single transaction of THAT asset as the citable
+            # example - the one an investigator would look up first.
+            if t.value > entry["_max_value"]:
+                entry["_max_value"] = t.value
+                entry["tx_hash"] = t.hash
 
-        flow["value_eth"] += t.value_eth
         flow["tx_count"] += 1
         flow["timestamp"] = max(flow["timestamp"], t.timestamp)
-        # Keep the largest single transaction as the edge's citable example -
-        # it is the one an investigator would look up on Etherscan first.
-        if t.value_eth > flow["_max_value"]:
-            flow["_max_value"] = t.value_eth
-            flow["tx_hash"] = t.hash
 
     return flows
+
+
+def _flow_rank(flow: dict) -> tuple:
+    """
+    How to order branches when we can only expand the biggest ones.
+
+    Assets cannot be summed, and this build has no price feed, so there is no
+    honest "total value". Ranking is therefore: native first (it is the asset the
+    trace is denominated in), then the largest single-asset amount. Stated here
+    because it decides which branches get followed at all.
+    """
+    native = max(
+        (a["value"] for a in flow["assets"].values() if a["contract"] is None),
+        default=0.0,
+    )
+    largest = max((a["value"] for a in flow["assets"].values()), default=0.0)
+    return (native, largest)
+
+
+def _primary_asset(assets: dict) -> dict | None:
+    """The asset an edge is best described by: native if present, else largest."""
+    if not assets:
+        return None
+    native = [a for a in assets.values() if a["contract"] is None]
+    if native:
+        return max(native, key=lambda a: a["value"])
+    return max(assets.values(), key=lambda a: a["value"])
+
+
+def format_assets(totals: dict[str, float], limit: int = 3) -> str:
+    """
+    Render per-asset totals as one readable string, e.g. "12.5 ETH + 40,000 USDT".
+
+    Used wherever a single line has to stand in for several assets; the full
+    breakdown always travels alongside it in the payload.
+    """
+    if not totals:
+        return "0"
+    ordered = sorted(totals.items(), key=lambda kv: -kv[1])
+    parts = []
+    for asset, amount in ordered[:limit]:
+        if amount >= 1000:
+            parts.append(f"{amount:,.0f} {asset}")
+        elif amount >= 1:
+            parts.append(f"{amount:,.2f} {asset}")
+        else:
+            parts.append(f"{amount:.4f} {asset}")
+    if len(ordered) > limit:
+        parts.append(f"+{len(ordered) - limit} more")
+    return " + ".join(parts)
 
 
 # The one-line caveat that travels with every positive finding. Short on purpose:
@@ -874,6 +1013,8 @@ def summarize(result: TraceResult) -> dict:
             "confidence_breakdown": lead.confidence_breakdown,
             "confidence_components": lead.confidence_components,
             "method": lead.method,
+            "value_received": {k: round(v, 8) for k, v in lead.value_received.items()},
+            "value_received_display": format_assets(lead.value_received),
             "value_received_eth": round(lead.value_received_eth, 6),
             "recommended_action": (
                 f"Do NOT treat {lead.address} as an exchange yet. Many wallets "
@@ -914,10 +1055,13 @@ def summarize(result: TraceResult) -> dict:
         "confidence_breakdown": nearest.confidence_breakdown,
         "confidence_components": nearest.confidence_components,
         "method": nearest.method,
+        "value_received": {k: round(v, 8) for k, v in nearest.value_received.items()},
+        "value_received_display": format_assets(nearest.value_received),
         "value_received_eth": round(nearest.value_received_eth, 6),
         "value_received_note": (
-            "Total ETH this wallet received along traced edges - not the amount "
-            "attributable to the suspect."
+            "Per-asset totals this wallet received along traced edges - not "
+            "amounts attributable to the suspect. Assets are never summed "
+            "together; there is no price feed in this build."
         ),
         "headline": (
             f"Transaction path connects to {nearest.entity}, "
@@ -970,7 +1114,17 @@ def to_json(result: TraceResult) -> dict:
         {
             "source": src,
             "target": dst,
-            "value_eth": round(data.get("value_eth", 0.0), 6),
+            "assets": [
+                {k: (round(v, 8) if isinstance(v, float) else v) for k, v in entry.items()}
+                for entry in (data.get("assets") or {}).values()
+            ],
+            "asset": data.get("asset", ""),
+            "value": round(data.get("value", 0.0), 8),
+            # Legacy scalar: the primary asset's amount, and 0 when that asset is
+            # a token. Read `assets` for the truth.
+            "value_eth": round(data.get("value", 0.0), 6)
+            if not data.get("asset") or data.get("asset") in ("ETH", "POL", "BNB")
+            else 0.0,
             "tx_count": data.get("tx_count", 1),
             "timestamp": data.get("timestamp", 0),
             "tx_hash": data.get("tx_hash", ""),
@@ -981,7 +1135,10 @@ def to_json(result: TraceResult) -> dict:
     # (source, target) is the final tie-break, not decoration: without it equal
     # depth and value fall back to insertion order, which differs between the
     # graph backends and made the serialised edge list backend-dependent.
-    edges.sort(key=lambda e: (e["depth"], -e["value_eth"], e["source"], e["target"]))
+    # Sort by the primary asset's amount, with (source, target) as the final
+    # deterministic tie-break. Amounts of different assets are not comparable, so
+    # this is an ordering convention, not a value judgement.
+    edges.sort(key=lambda e: (e["depth"], -e["value"], e["source"], e["target"]))
 
     return {
         "start_address": result.start_address,

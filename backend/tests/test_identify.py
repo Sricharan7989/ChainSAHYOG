@@ -33,7 +33,7 @@ def A(n):
 
 
 def tx(frm, to, val, h="0xh", ts=1700000000):
-    return Transfer(hash=h, from_addr=frm, to_addr=to, value_eth=val, timestamp=ts, block=1)
+    return Transfer(hash=h, from_addr=frm, to_addr=to, value=val, timestamp=ts, block=1)
 
 
 # --- (a) known_label_lookup ---------------------------------------------------

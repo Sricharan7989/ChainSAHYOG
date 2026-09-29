@@ -37,14 +37,30 @@ class EtherscanError(RuntimeError):
 
 @dataclass(frozen=True)
 class Transfer:
-    """One value-bearing ETH transaction, normalised out of Etherscan's raw JSON."""
+    """
+    One value-bearing transfer - native or ERC-20 - normalised from Etherscan.
+
+    `value` is in WHOLE UNITS of `asset`, already scaled by that token's own
+    decimals. Assuming 18 everywhere would report a 100 USDT payment as
+    0.0000000000001 USDT, because USDT and USDC use 6.
+
+    `contract` is None for the chain's native token and the token address
+    otherwise, which is what makes two tokens sharing a symbol distinguishable.
+    """
 
     hash: str
     from_addr: str
     to_addr: str
-    value_eth: float
+    value: float
     timestamp: int  # unix epoch seconds
     block: int
+    asset: str = "ETH"
+    contract: str | None = None
+    decimals: int = 18
+
+    @property
+    def is_native(self) -> bool:
+        return self.contract is None
 
 
 def normalize_address(address: str) -> str:
@@ -80,13 +96,14 @@ class EtherscanClient:
         # part of the key because the same address on another network is another
         # wallet entirely; a flat cache would answer with the wrong chain's data.
         self._cache: dict[tuple[int, str], list[Transfer]] = {}
-        # (chain_id, address) -> "does this wallet move ERC-20 tokens?"; separate
-        # from the transfer cache because it answers a different question.
-        self._token_cache: dict[tuple[int, str], bool] = {}
         self._lock = asyncio.Lock()
         self._last_request_at = 0.0
         self.api_calls = 0
         self.cache_hits = 0
+        # (chain_id, claimed symbol) -> how many transfers we declined to
+        # follow, for the payload. Keyed by chain because a symbol that is a
+        # real asset on one chain can be an impostor on another.
+        self.skipped_tokens: dict[tuple[int, str], int] = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -101,10 +118,10 @@ class EtherscanClient:
         """Zero the per-trace counters. The cache itself deliberately survives."""
         self.api_calls = 0
         self.cache_hits = 0
+        self.skipped_tokens = {}
 
     def clear_cache(self) -> None:
         self._cache.clear()
-        self._token_cache.clear()
 
     async def _request(self, params: dict, chain_id: int | None = None) -> object:
         """
@@ -172,12 +189,18 @@ class EtherscanClient:
         this wallet is the recipient tell us where the funds came from, which is
         backwards from what the investigator needs here.
 
-        SCOPE: external NATIVE-token transactions only (Etherscan's `txlist`) on
-        the chain given. Internal transactions (contract-driven moves) and ERC-20
-        token transfers such as USDT are not covered yet - see the scope note in
-        tracer.py.
+        Covers BOTH native transfers (`txlist`) and ERC-20 transfers (`tokentx`),
+        merged into one stream. They have to be merged rather than chosen between:
+        a wallet that receives ETH and forwards USDT is a single step in the
+        trail, and a native-only view shows it as a dead end.
+
+        SCOPE: internal transactions (value moved by contract execution) are still
+        not covered. Token transfers outside the allowlist are counted and
+        reported, not followed - see `skipped_tokens`.
         """
-        resolved = config.chain(chain_id)["chain_id"]
+        chain = config.chain(chain_id)
+        resolved = chain["chain_id"]
+        native_symbol = chain["native"]
         key = (resolved, normalize_address(address))
         if key in self._cache:
             self.cache_hits += 1
@@ -200,98 +223,155 @@ class EtherscanClient:
         transfers: list[Transfer] = []
         if isinstance(raw, list):
             for tx in raw:
-                transfer = _parse_transfer(tx, sender=key[1])
+                transfer = _parse_native_transfer(tx, sender=key[1], asset=native_symbol)
                 if transfer is not None:
                     transfers.append(transfer)
+
+        # Second call: ERC-20 movements out of the same wallet. This doubles the
+        # calls per wallet, which the throttle already covers - it serialises on
+        # elapsed time, not on call count, so the 5/sec ceiling still holds.
+        token_raw = await self._request(
+            {
+                "module": "account",
+                "action": "tokentx",
+                "address": key[1],
+                "startblock": 0,
+                "endblock": 99999999,
+                "page": 1,
+                "offset": config.MAX_TXNS_PER_ADDRESS,
+                "sort": "desc",
+            },
+            chain_id=resolved,
+        )
+
+        if isinstance(token_raw, list):
+            for tx in token_raw:
+                transfer, skipped_symbol = _parse_token_transfer(
+                    tx, sender=key[1], chain_id=resolved
+                )
+                if transfer is not None:
+                    transfers.append(transfer)
+                elif skipped_symbol:
+                    # Counted, never followed: the payload reports how much token
+                    # movement we chose not to trace and why.
+                    tally_key = (resolved, skipped_symbol)
+                    self.skipped_tokens[tally_key] = (
+                        self.skipped_tokens.get(tally_key, 0) + 1
+                    )
 
         self._cache[key] = transfers
         return transfers
 
 
-    async def has_token_activity(
-        self, address: str, chain_id: int | None = None
-    ) -> bool | None:
-        """
-        Does this wallet move ERC-20 tokens we are NOT following?
-
-        WHY THIS EXISTS: the tracer follows native ETH only. A laundering route
-        that converts to USDT or USDC leaves the ETH graph entirely, and until
-        now it did so silently - the trail simply ended and the report said
-        nothing. This cannot fix that, but it can stop the silence: knowing a
-        wallet has token transfers tells an investigator the trail may continue
-        somewhere this build does not look.
-
-        THE CHEAPEST CHECK THAT WORKS: `tokentx` with offset=1 asks Etherscan for
-        a single row and we only care whether one exists. It is one call per
-        address, cached like every other fetch, and the caller applies it to the
-        few wallets on the attributed path rather than to the whole graph.
-
-        Returns True / False, or None when the lookup itself failed - None means
-        "unknown", and must not be reported as "no token activity".
-        """
-        resolved = config.chain(chain_id)["chain_id"]
-        key = (resolved, normalize_address(address))
-        if key in self._token_cache:
-            self.cache_hits += 1
-            return self._token_cache[key]
-
-        try:
-            raw = await self._request(
-                {
-                    "module": "account",
-                    "action": "tokentx",
-                    "address": key[1],
-                    "page": 1,
-                    "offset": 1,
-                    "sort": "desc",
-                },
-                chain_id=resolved,
-            )
-        except EtherscanError:
-            # An unknown answer is not a negative one; leave it uncached so a
-            # later attempt can still succeed.
-            return None
-
-        found = bool(isinstance(raw, list) and raw)
-        self._token_cache[key] = found
-        return found
+def _common_fields(tx: dict, sender: str) -> tuple[str, str] | None:
+    """Shared row checks; returns (from, to) or None when the row is unusable."""
+    to_addr = (tx.get("to") or "").strip().lower()
+    from_addr = (tx.get("from") or "").strip().lower()
+    if not to_addr or from_addr != sender or to_addr == sender:
+        return None
+    return from_addr, to_addr
 
 
-def _parse_transfer(tx: dict, sender: str) -> Transfer | None:
+def _parse_native_transfer(tx: dict, sender: str, asset: str = "ETH") -> Transfer | None:
     """
-    Turn one raw Etherscan row into a Transfer, or None if it is not usable.
+    One `txlist` row as a native-token Transfer, or None if unusable.
 
-    Dropped rows: failed transactions (they moved nothing), contract creations
-    (no recipient), self-sends, incoming transactions, and zero-value calls.
-    A zero-value row is normally a contract interaction - including an ERC-20
-    transfer, whose real value lives in the token contract rather than in the
-    ETH value field - so it carries no ETH flow for us to follow.
+    Dropped rows: reverted transactions, contract creations, self-sends, incoming
+    transactions, and zero-value calls. A zero-value row here is a contract
+    interaction carrying no native value - very often an ERC-20 transfer, whose
+    real value lives in the token contract. Those are NOT lost any more: the same
+    movement arrives through `tokentx` with its true amount.
     """
     try:
-        to_addr = (tx.get("to") or "").strip().lower()
-        from_addr = (tx.get("from") or "").strip().lower()
-        if not to_addr or from_addr != sender or to_addr == sender:
+        pair = _common_fields(tx, sender)
+        if pair is None:
             return None
+        from_addr, to_addr = pair
 
         # isError is "1" on a reverted transaction; no value actually moved.
         if str(tx.get("isError", "0")) == "1":
             return None
 
-        value_eth = int(tx.get("value", "0")) / 1e18
-        if value_eth <= 0:
+        value = int(tx.get("value", "0")) / 1e18
+        if value <= 0:
             return None
 
         return Transfer(
             hash=tx.get("hash", ""),
             from_addr=from_addr,
             to_addr=to_addr,
-            value_eth=value_eth,
+            value=value,
             timestamp=int(tx.get("timeStamp", "0")),
             block=int(tx.get("blockNumber", "0")),
+            asset=asset,
+            contract=None,
+            decimals=18,
         )
     except (TypeError, ValueError):
         # A malformed row should skip, not kill an entire investigation.
         return None
+
+
+def _parse_token_transfer(
+    tx: dict, sender: str, chain_id: int
+) -> tuple[Transfer | None, str | None]:
+    """
+    One `tokentx` row as an ERC-20 Transfer.
+
+    Returns (transfer, skipped_symbol). A token that is not on this chain's
+    allowlist yields (None, CLAIMED_SYMBOL) so the caller can count what was
+    deliberately not followed - silence there would recreate the exact blind spot
+    this work removes.
+
+    THE ALLOWLIST IS MATCHED ON `contractAddress`, NOT ON `tokenSymbol`. The
+    symbol in this row is whatever the token's author wrote: anyone can deploy a
+    contract calling itself USDT and send it to the suspect. Matching on it would
+    make the tracer follow that token and report its amount as dollars in a police
+    report. The contract address is the identity; the symbol we attach afterwards
+    is a display label, taken from our own verified table rather than from the row.
+
+    DECIMALS LIKEWISE COME FROM OUR TABLE, not from `tokenDecimal`, for the same
+    reason - and they are not uniform: USDT and USDC use 6 decimals on Ethereum
+    and 18 on BNB Chain. Dividing a 100 USDT payment by 1e18 would understate it
+    by twelve orders of magnitude, and it would then be discarded as dust.
+    """
+    try:
+        pair = _common_fields(tx, sender)
+        if pair is None:
+            return None, None
+        from_addr, to_addr = pair
+
+        contract = (tx.get("contractAddress") or "").strip().lower()
+        allowed = config.token_asset(chain_id, contract)
+        if allowed is None:
+            # Not followed. Report it under the symbol it CLAIMS, so an
+            # investigator sees what was refused; truncated because that string
+            # comes from the token's author and ends up in our JSON payload.
+            claimed = (tx.get("tokenSymbol") or "").strip()[:20]
+            return None, claimed or "(unnamed token)"
+        symbol, decimals = allowed
+
+        raw = int(tx.get("value", "0"))
+        value = raw / (10 ** decimals)
+        if value <= 0:
+            return None, None
+
+        return (
+            Transfer(
+                hash=tx.get("hash", ""),
+                from_addr=from_addr,
+                to_addr=to_addr,
+                value=value,
+                timestamp=int(tx.get("timeStamp", "0")),
+                block=int(tx.get("blockNumber", "0")),
+                asset=symbol,
+                contract=contract or None,
+                decimals=decimals,
+            ),
+            None,
+        )
+    except (TypeError, ValueError):
+        return None, None
 
 
 # Process-wide singleton so the cache is shared across requests and traces.

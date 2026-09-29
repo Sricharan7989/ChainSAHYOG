@@ -33,7 +33,7 @@ def A(n):
 
 
 def tx(frm, to, val, h="0xh"):
-    return Transfer(hash=h, from_addr=frm, to_addr=to, value_eth=val, timestamp=1700000000, block=1)
+    return Transfer(hash=h, from_addr=frm, to_addr=to, value=val, timestamp=1700000000, block=1)
 
 
 class Stub:

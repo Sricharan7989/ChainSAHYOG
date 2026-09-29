@@ -13,6 +13,7 @@ import {
   describeRole,
   explorerAddressUrl,
   findingPath,
+  formatAssets,
   formatEth,
   nativeSymbol,
   pathEdges,
@@ -141,7 +142,11 @@ function TracedPath({ data }) {
               <AddressLink address={address} data={data} />
               {incoming && (
                 <div className="path-value">
-                  received {formatEth(incoming.value_eth, nativeSymbol(data))}
+                  received {formatAssets(
+                    Object.fromEntries((incoming.assets ?? []).map((a) => [a.asset, a.value])),
+                    incoming.value_eth,
+                    nativeSymbol(data),
+                  )}
                   {incoming.tx_count > 1 && ` across ${incoming.tx_count} transactions`}
                 </div>
               )}
@@ -173,7 +178,8 @@ function RiskFlags({ flags, data }) {
         </div>
         <div className="flag-note">{flag.note}</div>
         <div className="flag-meta">
-          {formatEth(flag.value_received_eth, nativeSymbol(data))} · hop {flag.hop_distance} ·{' '}
+          {formatAssets(flag.value_received, flag.value_received_eth, nativeSymbol(data))} ·
+          hop {flag.hop_distance} ·{' '}
           <AddressLink address={flag.address} data={data} />
         </div>
       </div>
@@ -246,32 +252,52 @@ function Termination({ termination }) {
 // Wallets on the traced path that move ERC-20 tokens we do not follow. Shown
 // because the alternative is silence: the trail just ends and the panel implies
 // the money stopped, when it may have continued in USDT or USDC.
-function TokenWarning({ warnings, data }) {
-  if (!warnings || warnings.length === 0) return null
+// What we deliberately did NOT follow. Phase 2 warned that token transfers were
+// unfollowed altogether; that is no longer true - USDT, USDC, DAI, WETH and WBTC
+// are traced end to end. What remains is tokens outside that list, skipped to
+// keep airdrop spam out of the graph, which is worth saying rather than hiding.
+//
+// A skipped token can claim the symbol of one we follow, because the backend
+// matches the contract address and not the name. Those are marked "impostor":
+// without that, a skipped "USDT" reads as the tool having missed real money,
+// when in fact it refused a fake.
+function TokenWarning({ warnings }) {
+  const note = warnings
+  if (!note || !note.skipped_transfers) return null
   return (
     <section className="block">
-      <h3>Untraced token activity</h3>
+      <h3>Tokens not followed</h3>
       <div className="token-warning">
         <p>
-          {warnings.length} wallet{warnings.length === 1 ? '' : 's'} on this path also
-          move ERC-20 tokens, which this version does not follow. The trail may
-          continue in USDT or USDC beyond what is shown.
+          Traced: {(note.followed_assets ?? []).join(', ')}. Skipped{' '}
+          {note.skipped_transfers} transfer{note.skipped_transfers === 1 ? '' : 's'} of{' '}
+          {note.distinct_tokens} other token{note.distinct_tokens === 1 ? '' : 's'} —
+          mostly airdrop spam, but a genuine trail in one of them would not be followed.
         </p>
         <ul>
-          {warnings.map((w) => (
-            <li key={w.address}>
-              hop {w.hop_distance} · <AddressLink address={w.address} data={data} />
+          {(note.top_skipped ?? []).slice(0, 5).map((t) => (
+            <li key={t.asset}>
+              {t.asset} · {t.transfers} transfer{t.transfers === 1 ? '' : 's'}
+              {t.impersonating ? (
+                <span className="impostor-tag" title={note.impersonation_note ?? ''}>
+                  impostor — not the real {t.asset} contract
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
+        {note.impersonated_symbols?.length ? (
+          <p className="impostor-note">{note.impersonation_note}</p>
+        ) : null}
       </div>
     </section>
   )
 }
 
 // Entity clusters: the wallets of one business, as one row. A lawful request is
-// served on the entity, so this - not the address list - is the actionable view.
-// Members stay one click away because an investigator still has to verify them.
+// served on the entity, so this - not the raw address list - is the actionable
+// view. Members stay one click away because an investigator still has to verify
+// each address individually.
 function Clusters({ data }) {
   const [open, setOpen] = useState(() => new Set())
   const clusters = data.clusters ?? []
@@ -299,7 +325,8 @@ function Clusters({ data }) {
                 {c.member_count} wallet{c.member_count === 1 ? '' : 's'}
               </span>
               <span className="cluster-meta">
-                hop {c.hop_distance} · {formatEth(c.value_received_eth, nativeSymbol(data))}
+                hop {c.hop_distance} ·{' '}
+                {formatAssets(c.value_received, c.value_received_eth, nativeSymbol(data))}
               </span>
               <span className="cluster-toggle">{open.has(c.cluster_id) ? '−' : '+'}</span>
             </button>
@@ -413,7 +440,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <div className="panel-body">
           <Clusters data={data} />
           <Termination termination={summary.termination ?? data.termination} />
-          <TokenWarning warnings={data.token_warnings} data={data} />
+          <TokenWarning warnings={data.token_warnings} />
           <RiskFlags flags={data.risk_flags} data={data} />
           <section className="block">
             <h3>What to do next</h3>
@@ -453,7 +480,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           <MethodNote method={summary.method} />
           <Clusters data={data} />
           <Termination termination={summary.termination ?? data.termination} />
-          <TokenWarning warnings={data.token_warnings} data={data} />
+          <TokenWarning warnings={data.token_warnings} />
           <RiskFlags flags={data.risk_flags} data={data} />
 
           <section className="block">
@@ -485,7 +512,8 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <Caveat text={summary.caveat} />
         <ConfidenceBar summary={summary} />
         <div className="finding-amount">
-          {formatEth(summary.value_received_eth, nativeSymbol(data))} received by this wallet on traced
+          {formatAssets(summary.value_received, summary.value_received_eth, nativeSymbol(data))}{' '}
+          received by this wallet on traced
           transfers — not an amount attributable to the suspect
         </div>
       </header>
@@ -499,7 +527,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <MethodNote method={summary.method} />
         <Clusters data={data} />
         <Termination termination={summary.termination ?? data.termination} />
-        <TokenWarning warnings={data.token_warnings} data={data} />
+        <TokenWarning warnings={data.token_warnings} />
         <RiskFlags flags={data.risk_flags} data={data} />
 
         {summary.other_exchanges_reached?.length > 0 && (

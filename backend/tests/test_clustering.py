@@ -38,7 +38,7 @@ def A(n):
 
 def tx(frm, to, val):
     return Transfer(hash="0x" + "c" * 64, from_addr=frm, to_addr=to,
-                    value_eth=val, timestamp=1700000000, block=1)
+                    value=val, timestamp=1700000000, block=1)
 
 
 class FakeClient:
@@ -89,7 +89,9 @@ async def main():
     check("cluster is named", binance[0].named, True)
     check("cluster method", binance[0].method, "known_label")
     check("stable cluster id", binance[0].cluster_id, "label:binance")
-    check("total value across members", round(binance[0].value_received_eth, 4), 80.0)
+    check("total value across members, per asset",
+          {k: round(v, 4) for k, v in binance[0].value_received.items()},
+          {"ETH": 80.0})
 
     coinbase = [c for c in result.clusters if c.entity == "Coinbase"]
     check("Coinbase is a separate cluster", len(coinbase), 1)

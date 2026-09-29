@@ -36,6 +36,7 @@ same wallet address appears under every trace_id that touched it:
 
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 
@@ -180,6 +181,13 @@ class Neo4jStore:
         self.add_wallet(address, **attrs)
 
     def add_transfer(self, src: str, dst: str, **attrs) -> None:
+        # Neo4j relationship properties are scalars or arrays - they cannot hold
+        # a nested map - so the per-asset breakdown travels as JSON and is parsed
+        # back on read. Writing only the flat fields, as this did before tokens
+        # existed, silently dropped every asset total on the Neo4j path.
+        attrs = dict(attrs)
+        if isinstance(attrs.get("assets"), dict):
+            attrs["assets_json"] = json.dumps(attrs.pop("assets"), sort_keys=True)
         self._pending_transfers.append({"src": src, "dst": dst, **attrs})
 
     def flush(self) -> None:
@@ -202,7 +210,9 @@ class Neo4jStore:
                 MERGE (a:Wallet {trace_id: $trace_id, address: row.src})
                 MERGE (b:Wallet {trace_id: $trace_id, address: row.dst})
                 MERGE (a)-[r:SENT {trace_id: $trace_id}]->(b)
-                SET r.value_eth = row.value_eth,
+                SET r.assets_json = row.assets_json,
+                    r.asset     = row.asset,
+                    r.value     = row.value,
                     r.tx_count  = row.tx_count,
                     r.timestamp = row.timestamp,
                     r.tx_hash   = row.tx_hash,
@@ -262,6 +272,19 @@ class Neo4jStore:
             out.append((row["a"], props))
         return out
 
+    @staticmethod
+    def _edge_props(raw: dict) -> dict:
+        """Relationship properties with the per-asset map parsed back out of JSON."""
+        props = dict(raw)
+        props.pop("trace_id", None)
+        blob = props.pop("assets_json", None)
+        if blob:
+            try:
+                props["assets"] = json.loads(blob)
+            except (TypeError, ValueError):
+                props["assets"] = {}
+        return props
+
     def transfers(self) -> list[tuple[str, str, dict]]:
         self.flush()
         out = []
@@ -271,9 +294,7 @@ class Neo4jStore:
             RETURN a.address AS src, b.address AS dst, properties(r) AS p
             """
         ):
-            props = dict(row["p"])
-            props.pop("trace_id", None)
-            out.append((row["src"], row["dst"], props))
+            out.append((row["src"], row["dst"], self._edge_props(row["p"])))
         return out
 
     def predecessors(self, address: str) -> set[str]:
@@ -319,7 +340,7 @@ class Neo4jStore:
             """,
             address=address,
         )
-        return [dict(row["p"]) for row in rows]
+        return [self._edge_props(row["p"]) for row in rows]
 
     def shortest_path(self, start: str, target: str) -> list[str]:
         """

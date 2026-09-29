@@ -98,6 +98,27 @@ def _fmt_eth(value) -> str:
     return f"{v:.4f} ETH"
 
 
+def _fmt_assets(totals, fallback=None) -> str:
+    """
+    Per-asset totals as one line: "12.5 ETH + 40,000 USDT".
+
+    Falls back to the legacy scalar for payloads recorded before tokens existed.
+    Assets are never summed: there is no price feed here, so a combined number
+    would be invented.
+    """
+    if not isinstance(totals, dict) or not totals:
+        return _fmt_eth(fallback) if fallback is not None else "—"
+    parts = []
+    for asset, amount in sorted(totals.items(), key=lambda kv: -kv[1]):
+        if amount >= 1000:
+            parts.append(f"{amount:,.0f} {asset}")
+        elif amount >= 1:
+            parts.append(f"{amount:,.2f} {asset}")
+        else:
+            parts.append(f"{amount:.4f} {asset}")
+    return " + ".join(parts)
+
+
 def _short(address: str) -> str:
     return f"{address[:10]}…{address[-8:]}" if address and len(address) > 20 else (address or "")
 
@@ -161,7 +182,11 @@ def _path_section(payload: dict, styles: dict) -> list:
             Paragraph(str(index) if index else "—", styles["small"]),
             Paragraph(role, styles["body"]),
             Paragraph(address, styles["mono"]),
-            Paragraph(_fmt_eth(edge["value_eth"]) if edge else "—", styles["small"]),
+            Paragraph(
+                _fmt_assets({a["asset"]: a["value"] for a in (edge.get("assets") or [])},
+                            edge.get("value_eth")) if edge else "—",
+                styles["small"],
+            ),
             Paragraph(_short(edge["tx_hash"]) if edge else "—", styles["mono"]),
         ])
 
@@ -250,7 +275,8 @@ def _risk_section(payload: dict, styles: dict) -> list:
             Paragraph(str(flag.get("entity", "")), styles["body"]),
             Paragraph("Yes" if flag.get("on_primary_path") else "No", styles["small"]),
             Paragraph(str(flag.get("hop_distance", "")), styles["small"]),
-            Paragraph(_fmt_eth(flag.get("value_received_eth")), styles["small"]),
+            Paragraph(_fmt_assets(flag.get("value_received"),
+                                  flag.get("value_received_eth")), styles["small"]),
         ])
 
     table = Table(rows, colWidths=[20 * mm, 76 * mm, 18 * mm, 12 * mm, 40 * mm], repeatRows=1)
@@ -377,7 +403,7 @@ def build_report(payload: dict) -> bytes:
             ("Exchange wallet",
              f'<font face="Courier" size="8">{summary.get("address", "")}</font>'),
             ("ETH on traced edges",
-             f'{_fmt_eth(summary.get("value_received_eth"))}'
+             f'{_fmt_assets(summary.get("value_received"), summary.get("value_received_eth"))}'
              f' <font size="7">(total into this wallet along traced transfers;'
              f' not an amount attributable to the suspect)</font>'),
             ("Identification method",
@@ -399,7 +425,8 @@ def build_report(payload: dict) -> bytes:
         story.append(_kv_table([
             ("Address of interest",
              f'<font face="Courier" size="8">{summary.get("address", "")}</font>'),
-            ("Value traced in", _fmt_eth(summary.get("value_received_eth"))),
+            ("Value traced in", _fmt_assets(summary.get("value_received"),
+                                            summary.get("value_received_eth"))),
             ("Caution", "A criminal re-pooling their own split funds produces the "
                         "same fan-in pattern as an exchange sweeping customer "
                         "deposits. Verify independently before acting."),
@@ -448,7 +475,8 @@ def build_report(payload: dict) -> bytes:
                 Paragraph(str(cluster.get("entity_type", "")), styles["small"]),
                 Paragraph(str(cluster.get("member_count", 0)), styles["small"]),
                 Paragraph(str(cluster.get("hop_distance", "")), styles["small"]),
-                Paragraph(_fmt_eth(cluster.get("value_received_eth")), styles["small"]),
+                Paragraph(_fmt_assets(cluster.get("value_received"),
+                                      cluster.get("value_received_eth")), styles["small"]),
             ])
         table = Table(rows, colWidths=[64 * mm, 30 * mm, 16 * mm, 12 * mm, 44 * mm], repeatRows=1)
         table.setStyle(TableStyle([
@@ -488,23 +516,32 @@ def build_report(payload: dict) -> bytes:
             story.append(Paragraph(termination["detail"], styles["small"]))
 
     # --- Untraced token activity ----------------------------------------
-    token_warnings = payload.get("token_warnings") or []
-    if token_warnings:
-        story.append(Paragraph("Untraced token activity", styles["h2"]))
-        plural = "" if len(token_warnings) == 1 else "s"
+    token_note = payload.get("token_warnings") or {}
+    if isinstance(token_note, dict) and token_note.get("skipped_transfers"):
+        story.append(Paragraph("Tokens not followed", styles["h2"]))
         story.append(Paragraph(
-            f"{len(token_warnings)} wallet{plural} on the traced path also move "
-            f"ERC-20 tokens, which this version does not follow. The trail may "
-            f"continue in USDT or USDC beyond what is shown here.",
+            f"Transfers of {', '.join(token_note.get('followed_assets', []))} were "
+            f"traced. {token_note['skipped_transfers']} transfer(s) of "
+            f"{token_note.get('distinct_tokens', 0)} other token(s) were not: "
+            f"{token_note.get('reason', '')}",
             styles["body"],
         ))
-        rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in ("Hop", "Wallet")]]
-        for warning in token_warnings:
+        # An impostor row must be labelled in the report itself. A bare skipped
+        # "USDT" would read to the recipient as money this trace failed to
+        # follow, when it is a token falsely using that name - refused because
+        # its contract address is not the real one on this chain.
+        if token_note.get("impersonation_note"):
+            story.append(Paragraph(token_note["impersonation_note"], styles["small"]))
+        rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in ("Token", "Transfers")]]
+        for entry in token_note.get("top_skipped", []):
+            asset = str(entry.get("asset", ""))
+            if entry.get("impersonating"):
+                asset += " (impostor - not the real contract)"
             rows.append([
-                Paragraph(str(warning.get("hop_distance", "")), styles["small"]),
-                Paragraph(str(warning.get("address", "")), styles["mono"]),
+                Paragraph(asset, styles["body"]),
+                Paragraph(str(entry.get("transfers", "")), styles["small"]),
             ])
-        table = Table(rows, colWidths=[12 * mm, 154 * mm], repeatRows=1)
+        table = Table(rows, colWidths=[120 * mm, 46 * mm], repeatRows=1)
         table.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("BACKGROUND", (0, 0), (-1, 0), BAND),

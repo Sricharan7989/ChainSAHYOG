@@ -39,7 +39,7 @@ class FakeClient:
 
 
 def tx(frm, to, val, h="0xhash", ts=1700000000):
-    return Transfer(hash=h, from_addr=frm, to_addr=to, value_eth=val, timestamp=ts, block=1)
+    return Transfer(hash=h, from_addr=frm, to_addr=to, value=val, timestamp=ts, block=1)
 
 
 book = {
@@ -71,9 +71,11 @@ async def main():
     g, hops = r  # tuple-unpack contract
 
     check("dust recipient excluded", A(9) in g, False)
-    check("aggregated value A0->A1", round(g[A(0)][A(1)]["value_eth"], 4), 15.0)
-    check("aggregated tx_count", g[A(0)][A(1)]["tx_count"], 2)
-    check("largest tx kept as example", g[A(0)][A(1)]["tx_hash"], "0xbig")
+    check("aggregated value A0->A1",
+          round(g[A(0)][A(1)]["assets"]["ETH"]["value"], 4), 15.0)
+    check("aggregated tx_count", g[A(0)][A(1)]["assets"]["ETH"]["tx_count"], 2)
+    check("largest tx kept as example",
+          g[A(0)][A(1)]["assets"]["ETH"]["tx_hash"], "0xbig")
 
     check("start depth", g.nodes[A(0)]["depth"], 0)
     check("A1 depth", g.nodes[A(1)]["depth"], 1)
