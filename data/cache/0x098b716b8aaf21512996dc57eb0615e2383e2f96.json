@@ -2,40 +2,322 @@
   "start_address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
   "params": {
     "max_depth": 3,
-    "dust_threshold_eth": 0.001
+    "dust_threshold_eth": 0.001,
+    "chain_id": 1,
+    "chain": "ethereum",
+    "chain_name": "Ethereum",
+    "native_symbol": "ETH",
+    "explorer": "https://etherscan.io"
   },
   "summary": {
-    "found": false,
-    "lead": true,
-    "headline": "No named exchange reached within 3 hops. One collection point found 2 hops away (60% confidence) - UNCONFIRMED.",
-    "address": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
-    "hop_distance": 2,
-    "confidence": 0.6,
-    "confidence_score": 60,
-    "confidence_breakdown": "consolidation pattern only (+22), 2 hops from suspect (+23), no mixer or bridge on path (+15)",
+    "found": true,
+    "lead": false,
+    "exchange": "FTX Exchange",
+    "address": "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94",
+    "hop_distance": 3,
+    "confidence": 0.81,
+    "confidence_score": 81,
+    "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
     "confidence_components": [
       {
-        "label": "consolidation pattern only",
-        "points": 22
+        "label": "direct label match",
+        "points": 50
       },
       {
-        "label": "2 hops from suspect",
-        "points": 23
+        "label": "3 hops from suspect",
+        "points": 16
       },
       {
         "label": "no mixer or bridge on path",
         "points": 15
       }
     ],
-    "method": "consolidation",
-    "value_received_eth": 84963.4,
-    "recommended_action": "Do NOT treat 0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5 as an exchange yet. Many wallets funnel into it, but a criminal re-pooling their own split funds produces the same pattern. Verify it independently (Etherscan labels, outgoing transaction count) before any lawful request is raised.",
+    "method": "known_label",
+    "value_received_eth": 1219.961789,
+    "value_received_note": "Total ETH this wallet received along traced edges - not the amount attributable to the suspect.",
+    "headline": "Transaction path connects to FTX Exchange, 3 hops, 81% confidence",
+    "caveat": "Path connectivity, not value-level taint tracking: transfers link these wallets, which does not prove these specific funds arrived.",
+    "recommended_action": "Serve a lawful data request to FTX Exchange via SAHYOG for KYC records on deposits to 0xc098b2a3aa256d2140208c3de6543aaef5cd3a94, covering the transactions listed in the traced path.",
+    "termination": {
+      "reason": "exchange_reached",
+      "label": "The trace stopped because it reached an exchange",
+      "detail": "This is the intended endpoint: a regulated business that holds KYC records."
+    },
     "mixers_or_bridges_crossed": [
       "Tornado Cash Router",
       "Optimism Gateway"
+    ],
+    "other_exchanges_reached": [
+      "Huobi",
+      "Huobi",
+      "Huobi"
+    ],
+    "unconfirmed_collection_points": [
+      "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5"
     ]
   },
   "attributions": [
+    {
+      "address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 0 hops from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "0 hops from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 0,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 4970.142606,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96"
+      ],
+      "crossed": []
+    },
+    {
+      "address": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 33568.152,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 25127.5192,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 23528.8,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x53b6936513e738f44fb50d2b9476730c0ab3bfc1",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 21629.48215,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x53b6936513e738f44fb50d2b9476730c0ab3bfc1"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0xa0e1c89ef1a489c9c7de96311ed5ce5d32c20e4b",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 18256.81,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0xa0e1c89ef1a489c9c7de96311ed5ce5d32c20e4b"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x08723392ed15743cc38513c4925f5e6be5c17243",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 12595.3,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x08723392ed15743cc38513c4925f5e6be5c17243"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x3cffd56b47b7b41c56258d9c7731abadc360e073",
+      "entity": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
+      "method": "known_label",
+      "confidence": 0.95,
+      "confidence_score": 95,
+      "confidence_breakdown": "direct label match (+50), 1 hop from suspect (+30), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "1 hop from suspect",
+          "points": 30
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 1,
+      "evidence": "Exact match in labels.json: LAZARUS GROUP (sanctioned) on ethereum.",
+      "value_received_eth": 10129.935,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x3cffd56b47b7b41c56258d9c7731abadc360e073"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
     {
       "address": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
       "entity": "Tornado Cash Router",
@@ -59,14 +341,16 @@
         }
       ],
       "hop_distance": 2,
-      "evidence": "Exact match in labels.json: Tornado Cash Router (mixer).",
+      "evidence": "Exact match in labels.json: Tornado Cash Router (mixer) on ethereum.",
       "value_received_eth": 176200.0,
       "path": [
         "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
-        "0x1bf53ce80ff2ed5711b8a2db8f7ea5b38da118d6",
+        "0x1361c1e18930483f4aaf91f3a263937e4fcc1f39",
         "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b"
       ],
-      "crossed": []
+      "crossed": [
+        "sanctioned"
+      ]
     },
     {
       "address": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
@@ -98,7 +382,149 @@
         "0xb66cd966670d962c227b3eaba30a872dbfb995db",
         "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5"
       ],
-      "crossed": []
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94",
+      "entity": "FTX Exchange",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: FTX Exchange (exchange) on ethereum.",
+      "value_received_eth": 1219.961789,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x5d84a732b355ada31a36b33c446e3dee28f51555",
+        "0x036587e77eabe6a7e181886a5a6ed10dc25654f9",
+        "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x0577a79cfc63bbc0df38833ff4c4a3bf2095b404",
+      "entity": "Huobi",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: Huobi (exchange) on ethereum.",
+      "value_received_eth": 29.999076,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x5d84a732b355ada31a36b33c446e3dee28f51555",
+        "0xf49fa9956cd53c4581a974a7fd535a15c47b954a",
+        "0x0577a79cfc63bbc0df38833ff4c4a3bf2095b404"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x73f8fc2e74302eb2efda125a326655acf0dc2d1b",
+      "entity": "Huobi",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: Huobi (exchange) on ethereum.",
+      "value_received_eth": 2499.947606,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x776b80e3fd97516ae3a2579cf4eae5ff5867d0f3",
+        "0x17a96cd2aff8bece22b54a83955fbab5c92a98ca",
+        "0x73f8fc2e74302eb2efda125a326655acf0dc2d1b"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x28ffe35688ffffd0659aee2e34778b0ae4e193ad",
+      "entity": "Huobi",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: Huobi (exchange) on ethereum.",
+      "value_received_eth": 1249.978116,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0xdb3a63562bb7afd44e6b6be8c8269f807c39f5fa",
+        "0x6102f081de19eb53404b684b4e14667745a4c874",
+        "0x28ffe35688ffffd0659aee2e34778b0ae4e193ad"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
     },
     {
       "address": "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1",
@@ -123,7 +549,7 @@
         }
       ],
       "hop_distance": 3,
-      "evidence": "Exact match in labels.json: Optimism Gateway (bridge).",
+      "evidence": "Exact match in labels.json: Optimism Gateway (bridge) on ethereum.",
       "value_received_eth": 3.0,
       "path": [
         "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
@@ -131,7 +557,9 @@
         "0x50275e0b7261559ce1644014d4b78d4aa63be836",
         "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1"
       ],
-      "crossed": []
+      "crossed": [
+        "sanctioned"
+      ]
     }
   ],
   "exchanges": [
@@ -165,7 +593,149 @@
         "0xb66cd966670d962c227b3eaba30a872dbfb995db",
         "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5"
       ],
-      "crossed": []
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94",
+      "entity": "FTX Exchange",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: FTX Exchange (exchange) on ethereum.",
+      "value_received_eth": 1219.961789,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x5d84a732b355ada31a36b33c446e3dee28f51555",
+        "0x036587e77eabe6a7e181886a5a6ed10dc25654f9",
+        "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x0577a79cfc63bbc0df38833ff4c4a3bf2095b404",
+      "entity": "Huobi",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: Huobi (exchange) on ethereum.",
+      "value_received_eth": 29.999076,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x5d84a732b355ada31a36b33c446e3dee28f51555",
+        "0xf49fa9956cd53c4581a974a7fd535a15c47b954a",
+        "0x0577a79cfc63bbc0df38833ff4c4a3bf2095b404"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x73f8fc2e74302eb2efda125a326655acf0dc2d1b",
+      "entity": "Huobi",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: Huobi (exchange) on ethereum.",
+      "value_received_eth": 2499.947606,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0x776b80e3fd97516ae3a2579cf4eae5ff5867d0f3",
+        "0x17a96cd2aff8bece22b54a83955fbab5c92a98ca",
+        "0x73f8fc2e74302eb2efda125a326655acf0dc2d1b"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
+    },
+    {
+      "address": "0x28ffe35688ffffd0659aee2e34778b0ae4e193ad",
+      "entity": "Huobi",
+      "entity_type": "exchange",
+      "method": "known_label",
+      "confidence": 0.81,
+      "confidence_score": 81,
+      "confidence_breakdown": "direct label match (+50), 3 hops from suspect (+16), no mixer or bridge on path (+15)",
+      "confidence_components": [
+        {
+          "label": "direct label match",
+          "points": 50
+        },
+        {
+          "label": "3 hops from suspect",
+          "points": 16
+        },
+        {
+          "label": "no mixer or bridge on path",
+          "points": 15
+        }
+      ],
+      "hop_distance": 3,
+      "evidence": "Exact match in labels.json: Huobi (exchange) on ethereum.",
+      "value_received_eth": 1249.978116,
+      "path": [
+        "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "0xdb3a63562bb7afd44e6b6be8c8269f807c39f5fa",
+        "0x6102f081de19eb53404b684b4e14667745a4c874",
+        "0x28ffe35688ffffd0659aee2e34778b0ae4e193ad"
+      ],
+      "crossed": [
+        "sanctioned"
+      ]
     }
   ],
   "flags": [
@@ -192,14 +762,16 @@
         }
       ],
       "hop_distance": 2,
-      "evidence": "Exact match in labels.json: Tornado Cash Router (mixer).",
+      "evidence": "Exact match in labels.json: Tornado Cash Router (mixer) on ethereum.",
       "value_received_eth": 176200.0,
       "path": [
         "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
-        "0x1bf53ce80ff2ed5711b8a2db8f7ea5b38da118d6",
+        "0x1361c1e18930483f4aaf91f3a263937e4fcc1f39",
         "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b"
       ],
-      "crossed": []
+      "crossed": [
+        "sanctioned"
+      ]
     },
     {
       "address": "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1",
@@ -224,7 +796,7 @@
         }
       ],
       "hop_distance": 3,
-      "evidence": "Exact match in labels.json: Optimism Gateway (bridge).",
+      "evidence": "Exact match in labels.json: Optimism Gateway (bridge) on ethereum.",
       "value_received_eth": 3.0,
       "path": [
         "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
@@ -232,10 +804,92 @@
         "0x50275e0b7261559ce1644014d4b78d4aa63be836",
         "0x99c9fc46f92e8a1c0dec1b1747d010903e884be1"
       ],
-      "crossed": []
+      "crossed": [
+        "sanctioned"
+      ]
     }
   ],
   "risk_flags": [
+    {
+      "address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 0,
+      "on_primary_path": true,
+      "value_received_eth": 4970.142606,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 33568.152,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 25127.5192,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 23528.8,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0x53b6936513e738f44fb50d2b9476730c0ab3bfc1",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 21629.48215,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0xa0e1c89ef1a489c9c7de96311ed5ce5d32c20e4b",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 18256.81,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0x08723392ed15743cc38513c4925f5e6be5c17243",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 12595.3,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
+    {
+      "address": "0x3cffd56b47b7b41c56258d9c7731abadc360e073",
+      "entity": "LAZARUS GROUP",
+      "risk_type": "sanctioned",
+      "severity": "critical",
+      "hop_distance": 1,
+      "on_primary_path": false,
+      "value_received_eth": 10129.935,
+      "note": "LAZARUS GROUP appears on a sanctions list. Handling these funds may carry legal obligations of its own - escalate before acting."
+    },
     {
       "address": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
       "entity": "Tornado Cash Router",
@@ -262,14 +916,43 @@
     "edges": 213,
     "hops": 213,
     "max_depth_reached": 3,
-    "identified": 3,
-    "labels_loaded": 36,
-    "api_calls": 82,
+    "identified": 15,
+    "labels_loaded": 525,
+    "api_calls": 86,
     "cache_hits": 0,
-    "elapsed_sec": 50.3,
-    "truncated": true
+    "elapsed_sec": 64.42,
+    "truncated": true,
+    "graph_backend": "memory"
   },
+  "termination": {
+    "reason": "exchange_reached",
+    "label": "The trace stopped because it reached an exchange",
+    "detail": "This is the intended endpoint: a regulated business that holds KYC records."
+  },
+  "token_warnings": [
+    {
+      "address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+      "hop_distance": 0,
+      "note": "This wallet also moves ERC-20 tokens, which this build does not follow. The trail may continue in USDT or USDC."
+    },
+    {
+      "address": "0x5d84a732b355ada31a36b33c446e3dee28f51555",
+      "hop_distance": 1,
+      "note": "This wallet also moves ERC-20 tokens, which this build does not follow. The trail may continue in USDT or USDC."
+    },
+    {
+      "address": "0x036587e77eabe6a7e181886a5a6ed10dc25654f9",
+      "hop_distance": 2,
+      "note": "This wallet also moves ERC-20 tokens, which this build does not follow. The trail may continue in USDT or USDC."
+    },
+    {
+      "address": "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94",
+      "hop_distance": 3,
+      "note": "This wallet also moves ERC-20 tokens, which this build does not follow. The trail may continue in USDT or USDC."
+    }
+  ],
   "notes": [
+    "The start address is itself a known entity (LAZARUS GROUP); tracing onward from it anyway.",
     "0x098b716b8aaf21512996dc57eb0615e2383e2f96 sent to 26 recipients; expanded the 25 largest by value.",
     "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5 was identified as a consolidation point only after the walk completed; its onward transfers were still followed."
   ],
@@ -278,25 +961,25 @@
       "id": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
       "depth": 0,
       "is_start": true,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x08723392ed15743cc38513c4925f5e6be5c17243",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x1361c1e18930483f4aaf91f3a263937e4fcc1f39",
@@ -338,37 +1021,37 @@
       "id": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x3cffd56b47b7b41c56258d9c7731abadc360e073",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x429a66e7bd829f9453cee5239bfeaf5657a11a3e",
@@ -386,13 +1069,13 @@
       "id": "0x53b6936513e738f44fb50d2b9476730c0ab3bfc1",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x5b0431365ce1ab3693bea6f33ae67653dd30d8bd",
@@ -470,13 +1153,13 @@
       "id": "0xa0e1c89ef1a489c9c7de96311ed5ce5d32c20e4b",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0xb2369d20e7f0c46270b9f79ab26fc62fada356c7",
@@ -566,13 +1249,13 @@
       "id": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
       "depth": 1,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
+      "label": "LAZARUS GROUP",
+      "entity_type": "sanctioned",
       "is_vasp": false,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0xfce9d04133701a77589615c23def7ba98289c8e2",
@@ -1274,13 +1957,13 @@
       "id": "0x0577a79cfc63bbc0df38833ff4c4a3bf2095b404",
       "depth": 3,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
-      "is_vasp": false,
+      "label": "Huobi",
+      "entity_type": "exchange",
+      "is_vasp": true,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x09acd981b854c85f6a42bd56594578aaf5f3794e",
@@ -1418,13 +2101,13 @@
       "id": "0x28ffe35688ffffd0659aee2e34778b0ae4e193ad",
       "depth": 3,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
-      "is_vasp": false,
+      "label": "Huobi",
+      "entity_type": "exchange",
+      "is_vasp": true,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x2c4bb8d6f71b54c1a21e05ca5fc9e29b63e02f19",
@@ -1634,13 +2317,13 @@
       "id": "0x73f8fc2e74302eb2efda125a326655acf0dc2d1b",
       "depth": 3,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
-      "is_vasp": false,
+      "label": "Huobi",
+      "entity_type": "exchange",
+      "is_vasp": true,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0x75cfe4ef963232ae8313ac33e21fc39241338618",
@@ -1814,13 +2497,13 @@
       "id": "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94",
       "depth": 3,
       "is_start": false,
-      "label": null,
-      "entity_type": null,
-      "is_vasp": false,
+      "label": "FTX Exchange",
+      "entity_type": "exchange",
+      "is_vasp": true,
       "is_mixer": false,
       "is_bridge": false,
-      "confidence": null,
-      "method": null
+      "confidence": 0.95,
+      "method": "known_label"
     },
     {
       "id": "0xc6495ed0586900693ce04a8b660060dae556cde4",
@@ -2132,6 +2815,15 @@
     },
     {
       "source": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+      "target": "0x29fc9b71492ec63696cf9cd56e9832a42b0dced0",
+      "value_eth": 1250.0,
+      "tx_count": 1,
+      "timestamp": 1648521338,
+      "tx_hash": "0xb0b1aeb2e2b816dd38c3d5a95166220884068fa95fe4fa77c2d087ac79a430d3",
+      "depth": 1
+    },
+    {
+      "source": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
       "target": "0x5d84a732b355ada31a36b33c446e3dee28f51555",
       "value_eth": 1250.0,
       "tx_count": 1,
@@ -2141,11 +2833,11 @@
     },
     {
       "source": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
-      "target": "0x29fc9b71492ec63696cf9cd56e9832a42b0dced0",
+      "target": "0x776b80e3fd97516ae3a2579cf4eae5ff5867d0f3",
       "value_eth": 1250.0,
-      "tx_count": 1,
-      "timestamp": 1648521338,
-      "tx_hash": "0xb0b1aeb2e2b816dd38c3d5a95166220884068fa95fe4fa77c2d087ac79a430d3",
+      "tx_count": 2,
+      "timestamp": 1648450347,
+      "tx_hash": "0xbca767de1cd8617b48b0c889779242cc5ebf77746930ae5ffd8bd9ade4e5591f",
       "depth": 1
     },
     {
@@ -2164,15 +2856,6 @@
       "tx_count": 2,
       "timestamp": 1648455050,
       "tx_hash": "0xc4df81444928db931c0520e97156631b620873231ba87aff2a43f15a6e068f01",
-      "depth": 1
-    },
-    {
-      "source": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
-      "target": "0x776b80e3fd97516ae3a2579cf4eae5ff5867d0f3",
-      "value_eth": 1250.0,
-      "tx_count": 2,
-      "timestamp": 1648450347,
-      "tx_hash": "0xbca767de1cd8617b48b0c889779242cc5ebf77746930ae5ffd8bd9ade4e5591f",
       "depth": 1
     },
     {
@@ -2222,15 +2905,6 @@
     },
     {
       "source": "0xb66cd966670d962c227b3eaba30a872dbfb995db",
-      "target": "0x8765a35394c98e81b9d56d44248e1199d8e38a4c",
-      "value_eth": 7738.25,
-      "tx_count": 1,
-      "timestamp": 1679758019,
-      "tx_hash": "0x77720ab2ab2bb6550e9b4e1cb4b6c2033c2200ae3abb7ae51f89898f86ac1e2a",
-      "depth": 2
-    },
-    {
-      "source": "0xb66cd966670d962c227b3eaba30a872dbfb995db",
       "target": "0x46e0be2df97dac791fc8e30cf2b2e4f58c50cf55",
       "value_eth": 7738.25,
       "tx_count": 1,
@@ -2240,11 +2914,11 @@
     },
     {
       "source": "0xb66cd966670d962c227b3eaba30a872dbfb995db",
-      "target": "0xc4e04ac48639ff077ebb36e7cfe0c4993b7b208e",
+      "target": "0x8765a35394c98e81b9d56d44248e1199d8e38a4c",
       "value_eth": 7738.25,
       "tx_count": 1,
-      "timestamp": 1679757971,
-      "tx_hash": "0xd4c7c88944783f3c39695bc5e6c5fcd8a399c0a103d822ac8bd96fad41a41866",
+      "timestamp": 1679758019,
+      "tx_hash": "0x77720ab2ab2bb6550e9b4e1cb4b6c2033c2200ae3abb7ae51f89898f86ac1e2a",
       "depth": 2
     },
     {
@@ -2254,6 +2928,15 @@
       "tx_count": 1,
       "timestamp": 1679757959,
       "tx_hash": "0x79c10cf538667a0a7de40ce54d2444c9e9e17b5c62b321e739020df0015baeda",
+      "depth": 2
+    },
+    {
+      "source": "0xb66cd966670d962c227b3eaba30a872dbfb995db",
+      "target": "0xc4e04ac48639ff077ebb36e7cfe0c4993b7b208e",
+      "value_eth": 7738.25,
+      "tx_count": 1,
+      "timestamp": 1679757971,
+      "tx_hash": "0xd4c7c88944783f3c39695bc5e6c5fcd8a399c0a103d822ac8bd96fad41a41866",
       "depth": 2
     },
     {
@@ -2437,141 +3120,6 @@
       "depth": 2
     },
     {
-      "source": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
-      "target": "0xa4ade1e23f0f98524727797b4975b450a4a8775c",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652106796,
-      "tx_hash": "0x65f743396083fdd319cf284f9306f73720b1dab698b4a8b016e1cc1f44029161",
-      "depth": 2
-    },
-    {
-      "source": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
-      "target": "0xcb3106424ff43365f084df13aba1526769120a79",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652079841,
-      "tx_hash": "0x03d0f7f1a460a58f4b69f5028d8ea2e3a38cdf4433b34583a5d1d8dc090ef4af",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0xfe4a0d465636ba3f6906818af88c1e01ae0d9d6e",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652432314,
-      "tx_hash": "0x8f652dbbc76173a326b9396b2a5b8352eb4fa3478f1d7cff7f22aada24e1f278",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0xc68b2c011f8df2190f239ddf5d49cb59324528e7",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652412807,
-      "tx_hash": "0x54ad5b54ad10c5363b8e915c947f8714bdc26c6d4955d7a7f980474192e8c30b",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0xbad37a7dfea2aa4fa0198ee4c644632a2d7c91c2",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652362318,
-      "tx_hash": "0xf42d3cf8ba6142849c50bbd14e5d362a5d0b5404a03ca05a829a9f2341296d03",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0xab346efef1ffe377cdad686abeab62e83df1099f",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652322413,
-      "tx_hash": "0x66d24f0d2010ee047f1d30b29979be719355467dd210e60e768742e8ea0ac235",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0xf5806e5c1c9402dcc87e9adf47bc7bc2f18cf556",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652278880,
-      "tx_hash": "0x00705ab87ad4aa36da075ed97f563199638f5600a2bdb6d7d9461c57eff1b980",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0x979443bebd684daee44ea7a6d599bd6ed4cafd55",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652242951,
-      "tx_hash": "0xc4902d7dec461c4601ca8ff12161bfc13db6ca1ce1422ae38f272b8e76a669bc",
-      "depth": 2
-    },
-    {
-      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
-      "target": "0x8c5f8af7a932613efe12cc25d38387e9654517a7",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652189056,
-      "tx_hash": "0x8c92d82248ad2f0b1437b375f7b7e8e7777b41023a58dabb8c2ad1f7a6e26f62",
-      "depth": 2
-    },
-    {
-      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
-      "target": "0x9ec8433487939bc432e79fa471a8605610659e41",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652773995,
-      "tx_hash": "0x3ca3cded2e0c4d091c19267779b507055642f5ae2bf81dc4f732314507418edc",
-      "depth": 2
-    },
-    {
-      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
-      "target": "0x24b6694982843b03c75bb25e1fb74167b55b57b6",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652756403,
-      "tx_hash": "0x9aed464f573ccb654595c22f729db796b12b9dce1d33e85d2fb57cb9d463b4be",
-      "depth": 2
-    },
-    {
-      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
-      "target": "0xa3d34ba0400a3952a6c81c4629c3971f1537ae6f",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652685806,
-      "tx_hash": "0x24004021bc0aeae0d85abe2c8caabf074435c23d2be0398d1e220aadc58a74bb",
-      "depth": 2
-    },
-    {
-      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
-      "target": "0xe8b2b5a8a4174b256828fca0f40a8831521160e5",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652668412,
-      "tx_hash": "0x89eb973de825800ae57b9bb1ba8eed85882da0daa68afb1031d82d33df0ccfcb",
-      "depth": 2
-    },
-    {
-      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
-      "target": "0x15e270175f4f2347153d4d113b459590888613e7",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652612799,
-      "tx_hash": "0xe135011c38a7cc4eb8db8d5e7050cb46bcf0ad9062890141ebe8a2a7212841b7",
-      "depth": 2
-    },
-    {
-      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
-      "target": "0x4bf2c2956942b2dd40517bce423917311f564d16",
-      "value_eth": 3003.3,
-      "tx_count": 1,
-      "timestamp": 1652519167,
-      "tx_hash": "0xc057f6f58fb0eb909e2e1ea70283ffea7454e1bde9fba8771eab2f246f5ecb5c",
-      "depth": 2
-    },
-    {
       "source": "0x08723392ed15743cc38513c4925f5e6be5c17243",
       "target": "0x0dcb08eabb2bedf838226fb7b2c15a69132df8b2",
       "value_eth": 3003.3,
@@ -2596,6 +3144,141 @@
       "tx_count": 1,
       "timestamp": 1652880385,
       "tx_hash": "0xa22153302ddf50ac4d41c6ee75172c1be4db43adba62c00e49c5ad8c3eaea9bb",
+      "depth": 2
+    },
+    {
+      "source": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
+      "target": "0xa4ade1e23f0f98524727797b4975b450a4a8775c",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652106796,
+      "tx_hash": "0x65f743396083fdd319cf284f9306f73720b1dab698b4a8b016e1cc1f44029161",
+      "depth": 2
+    },
+    {
+      "source": "0x35fb6f6db4fb05e6a4ce86f2c93691425626d4b1",
+      "target": "0xcb3106424ff43365f084df13aba1526769120a79",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652079841,
+      "tx_hash": "0x03d0f7f1a460a58f4b69f5028d8ea2e3a38cdf4433b34583a5d1d8dc090ef4af",
+      "depth": 2
+    },
+    {
+      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "target": "0x15e270175f4f2347153d4d113b459590888613e7",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652612799,
+      "tx_hash": "0xe135011c38a7cc4eb8db8d5e7050cb46bcf0ad9062890141ebe8a2a7212841b7",
+      "depth": 2
+    },
+    {
+      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "target": "0x24b6694982843b03c75bb25e1fb74167b55b57b6",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652756403,
+      "tx_hash": "0x9aed464f573ccb654595c22f729db796b12b9dce1d33e85d2fb57cb9d463b4be",
+      "depth": 2
+    },
+    {
+      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "target": "0x4bf2c2956942b2dd40517bce423917311f564d16",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652519167,
+      "tx_hash": "0xc057f6f58fb0eb909e2e1ea70283ffea7454e1bde9fba8771eab2f246f5ecb5c",
+      "depth": 2
+    },
+    {
+      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "target": "0x9ec8433487939bc432e79fa471a8605610659e41",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652773995,
+      "tx_hash": "0x3ca3cded2e0c4d091c19267779b507055642f5ae2bf81dc4f732314507418edc",
+      "depth": 2
+    },
+    {
+      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "target": "0xa3d34ba0400a3952a6c81c4629c3971f1537ae6f",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652685806,
+      "tx_hash": "0x24004021bc0aeae0d85abe2c8caabf074435c23d2be0398d1e220aadc58a74bb",
+      "depth": 2
+    },
+    {
+      "source": "0x3e37627deaa754090fbfbb8bd226c1ce66d255e9",
+      "target": "0xe8b2b5a8a4174b256828fca0f40a8831521160e5",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652668412,
+      "tx_hash": "0x89eb973de825800ae57b9bb1ba8eed85882da0daa68afb1031d82d33df0ccfcb",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0x8c5f8af7a932613efe12cc25d38387e9654517a7",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652189056,
+      "tx_hash": "0x8c92d82248ad2f0b1437b375f7b7e8e7777b41023a58dabb8c2ad1f7a6e26f62",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0x979443bebd684daee44ea7a6d599bd6ed4cafd55",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652242951,
+      "tx_hash": "0xc4902d7dec461c4601ca8ff12161bfc13db6ca1ce1422ae38f272b8e76a669bc",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0xab346efef1ffe377cdad686abeab62e83df1099f",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652322413,
+      "tx_hash": "0x66d24f0d2010ee047f1d30b29979be719355467dd210e60e768742e8ea0ac235",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0xbad37a7dfea2aa4fa0198ee4c644632a2d7c91c2",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652362318,
+      "tx_hash": "0xf42d3cf8ba6142849c50bbd14e5d362a5d0b5404a03ca05a829a9f2341296d03",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0xc68b2c011f8df2190f239ddf5d49cb59324528e7",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652412807,
+      "tx_hash": "0x54ad5b54ad10c5363b8e915c947f8714bdc26c6d4955d7a7f980474192e8c30b",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0xf5806e5c1c9402dcc87e9adf47bc7bc2f18cf556",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652278880,
+      "tx_hash": "0x00705ab87ad4aa36da075ed97f563199638f5600a2bdb6d7d9461c57eff1b980",
+      "depth": 2
+    },
+    {
+      "source": "0xf7b31119c2682c88d88d455dbb9d5932c65cf1be",
+      "target": "0xfe4a0d465636ba3f6906818af88c1e01ae0d9d6e",
+      "value_eth": 3003.3,
+      "tx_count": 1,
+      "timestamp": 1652432314,
+      "tx_hash": "0x8f652dbbc76173a326b9396b2a5b8352eb4fa3478f1d7cff7f22aada24e1f278",
       "depth": 2
     },
     {
@@ -2869,21 +3552,21 @@
       "depth": 3
     },
     {
-      "source": "0xc4e04ac48639ff077ebb36e7cfe0c4993b7b208e",
-      "target": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
-      "value_eth": 7738.05,
-      "tx_count": 1,
-      "timestamp": 1679941763,
-      "tx_hash": "0x19f802affe24572bac3af47983f42bbec6055117c6a32c3fddc58bd7545e5240",
-      "depth": 3
-    },
-    {
       "source": "0xa1b44d4b5b4c361f51e029b81bf2db9cf4d8e676",
       "target": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
       "value_eth": 7738.05,
       "tx_count": 1,
       "timestamp": 1679940827,
       "tx_hash": "0xe3f67f8e50042f09a3d9b6873bd15c14fa8b8176cfa1069bc1d3ab71e4b3fd0d",
+      "depth": 3
+    },
+    {
+      "source": "0xc4e04ac48639ff077ebb36e7cfe0c4993b7b208e",
+      "target": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
+      "value_eth": 7738.05,
+      "tx_count": 1,
+      "timestamp": 1679941763,
+      "tx_hash": "0x19f802affe24572bac3af47983f42bbec6055117c6a32c3fddc58bd7545e5240",
       "depth": 3
     },
     {
@@ -3013,12 +3696,12 @@
       "depth": 3
     },
     {
-      "source": "0xd98d925685908152f18c32697e0d3894a5c672c0",
+      "source": "0x0dcb08eabb2bedf838226fb7b2c15a69132df8b2",
       "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
       "value_eth": 3000.0,
       "tx_count": 30,
-      "timestamp": 1651904077,
-      "tx_hash": "0x1f8d48b831264d8c627e88044d1d135fe935a4f5ec52bd1283938c2a81814405",
+      "timestamp": 1652946975,
+      "tx_hash": "0x258e1f28a190d8f7e511cbeb832ecc3f80e1c4f06807e22f2d7ecf1564b295df",
       "depth": 3
     },
     {
@@ -3031,6 +3714,87 @@
       "depth": 3
     },
     {
+      "source": "0x15e270175f4f2347153d4d113b459590888613e7",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652617674,
+      "tx_hash": "0xb3558aef45b9672725b32e3c58cf14375c522c284e820f2e558b18ee7b78bac6",
+      "depth": 3
+    },
+    {
+      "source": "0x24b6694982843b03c75bb25e1fb74167b55b57b6",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652761596,
+      "tx_hash": "0x84f2cbe6bd43a99d027083b2b5d51aba17a7f069715751592d3cd7699f4bab33",
+      "depth": 3
+    },
+    {
+      "source": "0x49788613913050ce0da9c8313654cee3f4848a9e",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652932470,
+      "tx_hash": "0xd993ed494d75dc5b29e8ee5ef55274313d9f09840e3516c2906b7386e5ed0752",
+      "depth": 3
+    },
+    {
+      "source": "0x4bf2c2956942b2dd40517bce423917311f564d16",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652525563,
+      "tx_hash": "0xea3f0c9271e6761a7f7c415e7bdb42af1a07f2ee18642c72e96454b9e398af8a",
+      "depth": 3
+    },
+    {
+      "source": "0x8c5f8af7a932613efe12cc25d38387e9654517a7",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652196687,
+      "tx_hash": "0xa3f835667f09d389ea6c1f1b24b8c8a769f632111a7e500dafbb7644dab8c21b",
+      "depth": 3
+    },
+    {
+      "source": "0x979443bebd684daee44ea7a6d599bd6ed4cafd55",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652250828,
+      "tx_hash": "0x31b488e6a3c7af65ffb3f7db0df372daaac46bb4bdd681bb27267f975eee56ed",
+      "depth": 3
+    },
+    {
+      "source": "0x9b72b693440042c3a8045c569c1f9b61b5a92fa9",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652885523,
+      "tx_hash": "0x69d9e88129b075a63c769b6e96f91b9f25a9e58424e129d1f6628b481735db09",
+      "depth": 3
+    },
+    {
+      "source": "0x9ec8433487939bc432e79fa471a8605610659e41",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652778890,
+      "tx_hash": "0x0d9b5acbeb95e1683afd26367f5e8d07822119fb1d7af52013665729efc93093",
+      "depth": 3
+    },
+    {
+      "source": "0xa3d34ba0400a3952a6c81c4629c3971f1537ae6f",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652691935,
+      "tx_hash": "0x7952a2f6efd5e05cd86132e8d25e35513c610fed5bab28332f6602931d0a170e",
+      "depth": 3
+    },
+    {
       "source": "0xa4ade1e23f0f98524727797b4975b450a4a8775c",
       "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
       "value_eth": 3000.0,
@@ -3040,12 +3804,57 @@
       "depth": 3
     },
     {
+      "source": "0xab346efef1ffe377cdad686abeab62e83df1099f",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652355282,
+      "tx_hash": "0xb4026dc7122cfbea1c66406d63a16e6fc89315de385c345483800e54b28058c9",
+      "depth": 3
+    },
+    {
+      "source": "0xbad37a7dfea2aa4fa0198ee4c644632a2d7c91c2",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652381484,
+      "tx_hash": "0x06e4b0836b79e2c3392db2f6988f817379ae6794669ba8822db76ad6ed90ee6a",
+      "depth": 3
+    },
+    {
+      "source": "0xc68b2c011f8df2190f239ddf5d49cb59324528e7",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652422946,
+      "tx_hash": "0x33686b696208815ff816ac1664e7db63523ee39c54ea4c840040b4e4f56edba1",
+      "depth": 3
+    },
+    {
       "source": "0xcb3106424ff43365f084df13aba1526769120a79",
       "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
       "value_eth": 3000.0,
       "tx_count": 30,
       "timestamp": 1652087320,
       "tx_hash": "0x91c498c3c8cacf86541bb37d440fea7162b0a320d2c7aca43eb0a1e94032e9f1",
+      "depth": 3
+    },
+    {
+      "source": "0xd98d925685908152f18c32697e0d3894a5c672c0",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1651904077,
+      "tx_hash": "0x1f8d48b831264d8c627e88044d1d135fe935a4f5ec52bd1283938c2a81814405",
+      "depth": 3
+    },
+    {
+      "source": "0xe8b2b5a8a4174b256828fca0f40a8831521160e5",
+      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "value_eth": 3000.0,
+      "tx_count": 30,
+      "timestamp": 1652673082,
+      "tx_hash": "0x7e577b7a5e20fe4cbbf01eae4fe4e66b9a9d171c62702a08e62f7d68c8677222",
       "depth": 3
     },
     {
@@ -3064,132 +3873,6 @@
       "tx_count": 30,
       "timestamp": 1652439741,
       "tx_hash": "0x11c093822c9e1096f20a1fae6970779822eeaf2b1cbf87446fbe712778bed509",
-      "depth": 3
-    },
-    {
-      "source": "0xc68b2c011f8df2190f239ddf5d49cb59324528e7",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652422946,
-      "tx_hash": "0x33686b696208815ff816ac1664e7db63523ee39c54ea4c840040b4e4f56edba1",
-      "depth": 3
-    },
-    {
-      "source": "0xbad37a7dfea2aa4fa0198ee4c644632a2d7c91c2",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652381484,
-      "tx_hash": "0x06e4b0836b79e2c3392db2f6988f817379ae6794669ba8822db76ad6ed90ee6a",
-      "depth": 3
-    },
-    {
-      "source": "0xab346efef1ffe377cdad686abeab62e83df1099f",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652355282,
-      "tx_hash": "0xb4026dc7122cfbea1c66406d63a16e6fc89315de385c345483800e54b28058c9",
-      "depth": 3
-    },
-    {
-      "source": "0x979443bebd684daee44ea7a6d599bd6ed4cafd55",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652250828,
-      "tx_hash": "0x31b488e6a3c7af65ffb3f7db0df372daaac46bb4bdd681bb27267f975eee56ed",
-      "depth": 3
-    },
-    {
-      "source": "0x8c5f8af7a932613efe12cc25d38387e9654517a7",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652196687,
-      "tx_hash": "0xa3f835667f09d389ea6c1f1b24b8c8a769f632111a7e500dafbb7644dab8c21b",
-      "depth": 3
-    },
-    {
-      "source": "0x9ec8433487939bc432e79fa471a8605610659e41",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652778890,
-      "tx_hash": "0x0d9b5acbeb95e1683afd26367f5e8d07822119fb1d7af52013665729efc93093",
-      "depth": 3
-    },
-    {
-      "source": "0x24b6694982843b03c75bb25e1fb74167b55b57b6",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652761596,
-      "tx_hash": "0x84f2cbe6bd43a99d027083b2b5d51aba17a7f069715751592d3cd7699f4bab33",
-      "depth": 3
-    },
-    {
-      "source": "0xa3d34ba0400a3952a6c81c4629c3971f1537ae6f",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652691935,
-      "tx_hash": "0x7952a2f6efd5e05cd86132e8d25e35513c610fed5bab28332f6602931d0a170e",
-      "depth": 3
-    },
-    {
-      "source": "0xe8b2b5a8a4174b256828fca0f40a8831521160e5",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652673082,
-      "tx_hash": "0x7e577b7a5e20fe4cbbf01eae4fe4e66b9a9d171c62702a08e62f7d68c8677222",
-      "depth": 3
-    },
-    {
-      "source": "0x15e270175f4f2347153d4d113b459590888613e7",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652617674,
-      "tx_hash": "0xb3558aef45b9672725b32e3c58cf14375c522c284e820f2e558b18ee7b78bac6",
-      "depth": 3
-    },
-    {
-      "source": "0x4bf2c2956942b2dd40517bce423917311f564d16",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652525563,
-      "tx_hash": "0xea3f0c9271e6761a7f7c415e7bdb42af1a07f2ee18642c72e96454b9e398af8a",
-      "depth": 3
-    },
-    {
-      "source": "0x0dcb08eabb2bedf838226fb7b2c15a69132df8b2",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652946975,
-      "tx_hash": "0x258e1f28a190d8f7e511cbeb832ecc3f80e1c4f06807e22f2d7ecf1564b295df",
-      "depth": 3
-    },
-    {
-      "source": "0x49788613913050ce0da9c8313654cee3f4848a9e",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652932470,
-      "tx_hash": "0xd993ed494d75dc5b29e8ee5ef55274313d9f09840e3516c2906b7386e5ed0752",
-      "depth": 3
-    },
-    {
-      "source": "0x9b72b693440042c3a8045c569c1f9b61b5a92fa9",
-      "target": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
-      "value_eth": 3000.0,
-      "tx_count": 30,
-      "timestamp": 1652885523,
-      "tx_hash": "0x69d9e88129b075a63c769b6e96f91b9f25a9e58424e129d1f6628b481735db09",
       "depth": 3
     },
     {
@@ -3374,20 +4057,20 @@
     },
     {
       "source": "0xa58b6105e208cb23e7566d69120319e30a1a9ec4",
-      "target": "0xbad37a7dfea2aa4fa0198ee4c644632a2d7c91c2",
-      "value_eth": 10.0,
-      "tx_count": 1,
-      "timestamp": 1652365371,
-      "tx_hash": "0xd86da8b37d257e352a6ab477f1193b751ee372e8823df0d01546f4d8335d4c3a",
-      "depth": 3
-    },
-    {
-      "source": "0xa58b6105e208cb23e7566d69120319e30a1a9ec4",
       "target": "0xab346efef1ffe377cdad686abeab62e83df1099f",
       "value_eth": 10.0,
       "tx_count": 1,
       "timestamp": 1652345949,
       "tx_hash": "0x4917d0b6ed2ab29b76c0389ec1e32d0a94b48be6e0f77730e9a6c5651b5753f8",
+      "depth": 3
+    },
+    {
+      "source": "0xa58b6105e208cb23e7566d69120319e30a1a9ec4",
+      "target": "0xbad37a7dfea2aa4fa0198ee4c644632a2d7c91c2",
+      "value_eth": 10.0,
+      "tx_count": 1,
+      "timestamp": 1652365371,
+      "tx_hash": "0xd86da8b37d257e352a6ab477f1193b751ee372e8823df0d01546f4d8335d4c3a",
       "depth": 3
     },
     {
@@ -3454,6 +4137,15 @@
       "depth": 3
     },
     {
+      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
+      "target": "0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f",
+      "value_eth": 2.0,
+      "tx_count": 1,
+      "timestamp": 1700689259,
+      "tx_hash": "0xa49d9bd7616e108bb556d366b77f4c238fbf559f0caf35825400f75e08233075",
+      "depth": 3
+    },
+    {
       "source": "0xa58b6105e208cb23e7566d69120319e30a1a9ec4",
       "target": "0x93df2c9c8786242b8fdca3f96b3914b8b4a9f704",
       "value_eth": 2.0,
@@ -3469,15 +4161,6 @@
       "tx_count": 2,
       "timestamp": 1746039203,
       "tx_hash": "0x831ccacf8f15424e7dd188a60dc5c31c988fe328bab553c55031038bacba22cf",
-      "depth": 3
-    },
-    {
-      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
-      "target": "0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f",
-      "value_eth": 2.0,
-      "tx_count": 1,
-      "timestamp": 1700689259,
-      "tx_hash": "0xa49d9bd7616e108bb556d366b77f4c238fbf559f0caf35825400f75e08233075",
       "depth": 3
     },
     {
@@ -3526,6 +4209,15 @@
       "depth": 3
     },
     {
+      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
+      "target": "0x5433bd5b1ffefb8368b8bda14cfeaed12ab73fd2",
+      "value_eth": 1.0,
+      "tx_count": 1,
+      "timestamp": 1700680271,
+      "tx_hash": "0x356dbdd0315a8f8b8ee83102ad92a8adf3154c2c35c909603e66cb66a2383e29",
+      "depth": 3
+    },
+    {
       "source": "0x7e3167771bf23ac10930803589d1424903b36584",
       "target": "0x82906886796d110b7ec4c54f6611fb29128699dd",
       "value_eth": 1.0,
@@ -3541,15 +4233,6 @@
       "tx_count": 1,
       "timestamp": 1729268111,
       "tx_hash": "0x840aadbe686162185f8cb248601e75d3b812475d57f7c2cd618a31042c29c4fc",
-      "depth": 3
-    },
-    {
-      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
-      "target": "0x5433bd5b1ffefb8368b8bda14cfeaed12ab73fd2",
-      "value_eth": 1.0,
-      "tx_count": 1,
-      "timestamp": 1700680271,
-      "tx_hash": "0x356dbdd0315a8f8b8ee83102ad92a8adf3154c2c35c909603e66cb66a2383e29",
       "depth": 3
     },
     {
@@ -3589,21 +4272,21 @@
       "depth": 3
     },
     {
-      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
-      "target": "0x8731765b635d5dc45159f0a2c7d748c3927d68a6",
-      "value_eth": 0.75,
-      "tx_count": 2,
-      "timestamp": 1735851443,
-      "tx_hash": "0xdd8a8af457af41594fde1763102ddd0a2a818f59c74ef1743fd79146301ce8bd",
-      "depth": 3
-    },
-    {
       "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
       "target": "0x49048044d57e1c92a77f79988d21fa8faf74e97e",
       "value_eth": 0.75,
       "tx_count": 1,
       "timestamp": 1700651219,
       "tx_hash": "0x97795090511a4beeb00a546bdb502d6e4afaa82774db86fa4e275083e6422414",
+      "depth": 3
+    },
+    {
+      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
+      "target": "0x8731765b635d5dc45159f0a2c7d748c3927d68a6",
+      "value_eth": 0.75,
+      "tx_count": 2,
+      "timestamp": 1735851443,
+      "tx_hash": "0xdd8a8af457af41594fde1763102ddd0a2a818f59c74ef1743fd79146301ce8bd",
       "depth": 3
     },
     {
@@ -3625,21 +4308,21 @@
       "depth": 3
     },
     {
-      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
-      "target": "0xcc6451385685721778e7bd80b54f8c92b484f601",
+      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
+      "target": "0xc6495ed0586900693ce04a8b660060dae556cde4",
       "value_eth": 0.5,
       "tx_count": 1,
-      "timestamp": 1735851335,
-      "tx_hash": "0x9f8199061503235f1c6517507fecc462409d07124da38710905bdf8aeec89764",
+      "timestamp": 1700650583,
+      "tx_hash": "0x5689b4b7f2022ed8e70d81a867c95d1c93829510b4c69e7c3279ae964e178d5e",
       "depth": 3
     },
     {
-      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
-      "target": "0xe6ca604c8a8ae1dc878132f78823627ad6b7fdda",
+      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
+      "target": "0xfc608d13acc36e7b2fe34c4338751c75992bc223",
       "value_eth": 0.5,
       "tx_count": 1,
-      "timestamp": 1733900315,
-      "tx_hash": "0xb2da3b4598c7036ce6005c98f95ba48274c32f3ff37998d29668cf3c26036f95",
+      "timestamp": 1700688935,
+      "tx_hash": "0xcf638f8472a30555a78015a256925653b67b951f1257b12cae4d42a81d2c0490",
       "depth": 3
     },
     {
@@ -3688,21 +4371,21 @@
       "depth": 3
     },
     {
-      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
-      "target": "0xfc608d13acc36e7b2fe34c4338751c75992bc223",
+      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
+      "target": "0xcc6451385685721778e7bd80b54f8c92b484f601",
       "value_eth": 0.5,
       "tx_count": 1,
-      "timestamp": 1700688935,
-      "tx_hash": "0xcf638f8472a30555a78015a256925653b67b951f1257b12cae4d42a81d2c0490",
+      "timestamp": 1735851335,
+      "tx_hash": "0x9f8199061503235f1c6517507fecc462409d07124da38710905bdf8aeec89764",
       "depth": 3
     },
     {
-      "source": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
-      "target": "0xc6495ed0586900693ce04a8b660060dae556cde4",
+      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
+      "target": "0xe6ca604c8a8ae1dc878132f78823627ad6b7fdda",
       "value_eth": 0.5,
       "tx_count": 1,
-      "timestamp": 1700650583,
-      "tx_hash": "0x5689b4b7f2022ed8e70d81a867c95d1c93829510b4c69e7c3279ae964e178d5e",
+      "timestamp": 1733900315,
+      "tx_hash": "0xb2da3b4598c7036ce6005c98f95ba48274c32f3ff37998d29668cf3c26036f95",
       "depth": 3
     },
     {
@@ -3832,21 +4515,21 @@
       "depth": 3
     },
     {
-      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
-      "target": "0x967b10c27454cc5b1b1eeb163034acde13fe55e2",
-      "value_eth": 0.05,
-      "tx_count": 1,
-      "timestamp": 1741284071,
-      "tx_hash": "0x555dc6795e66a06a00108d3379253cc7da4e0d6543f37c8d6510275901c04e12",
-      "depth": 3
-    },
-    {
       "source": "0xa1b44d4b5b4c361f51e029b81bf2db9cf4d8e676",
       "target": "0x0d1b0c32b52583fd155ea6a2df10214270da9843",
       "value_eth": 0.05,
       "tx_count": 1,
       "timestamp": 1679943443,
       "tx_hash": "0x0ca8ac3ec680e2735e425836746abca230740ec48c253a42e90cf77b90937e0c",
+      "depth": 3
+    },
+    {
+      "source": "0xee009faf00cf54c1b4387829af7a8dc5f0c8c8c5",
+      "target": "0x967b10c27454cc5b1b1eeb163034acde13fe55e2",
+      "value_eth": 0.05,
+      "tx_count": 1,
+      "timestamp": 1741284071,
+      "tx_hash": "0x555dc6795e66a06a00108d3379253cc7da4e0d6543f37c8d6510275901c04e12",
       "depth": 3
     },
     {
@@ -5806,6 +6489,6 @@
     }
   ],
   "source": "cache",
-  "recorded_at": "2026-09-14T18:13:03+00:00",
-  "recorded_epoch": 1789409583
+  "recorded_at": "2026-09-29T03:48:36+00:00",
+  "recorded_epoch": 1790653716
 }
