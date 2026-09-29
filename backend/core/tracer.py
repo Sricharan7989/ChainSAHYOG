@@ -66,7 +66,7 @@ from dataclasses import dataclass, field
 import networkx as nx
 
 from app import config
-from core import identify, scoring
+from core import clustering, identify, scoring
 from services import graph_store
 from services.etherscan import EtherscanClient, Transfer, get_client, normalize_address
 
@@ -131,6 +131,9 @@ class Attribution:
     confidence_score: int = 0  # 0-100, from scoring.py
     confidence_breakdown: str = ""
     confidence_components: list[dict] = field(default_factory=list)
+    # Which entity cluster this wallet belongs to. Filled in after the walk by
+    # core.clustering, so one Binance wallet points at the one Binance cluster.
+    cluster_id: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -147,6 +150,7 @@ class Attribution:
             "value_received_eth": round(self.value_received_eth, 6),
             "path": self.path,
             "crossed": sorted(self.path_risk_types),
+            "cluster_id": self.cluster_id,
         }
 
 
@@ -214,6 +218,10 @@ class TraceResult:
     # Which network this trace ran on. Every consumer (panel, PDF, explorer
     # links) needs it, so it travels with the result rather than being inferred.
     chain: dict = field(default_factory=dict)
+
+    # Entity clusters: the wallets of one business collapsed into one object,
+    # which is what a lawful request is actually served against.
+    clusters: list = field(default_factory=list)
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -499,6 +507,13 @@ async def trace(
 
     risk_flags = _collect_risk_flags(store, start, ordered)
 
+    # Entity resolution. Runs on finished attributions so it only aggregates -
+    # each wallet keeps the hop distance and confidence it was given.
+    clusters = clustering.build_clusters(store, ordered, chain=chain.get("slug"))
+    index = clustering.cluster_index(clusters)
+    for attribution in ordered:
+        attribution.cluster_id = index.get(attribution.address)
+
     primary = _primary_attribution(ordered)
     termination = _classify_termination(
         found_exchange=any(a.entity_type == "exchange" for a in ordered),
@@ -544,6 +559,7 @@ async def trace(
         termination=termination,
         token_warnings=token_warnings,
         chain=chain,
+        clusters=clusters,
     )
 
 
@@ -915,6 +931,11 @@ def summarize(result: TraceResult) -> dict:
             f"transactions listed in the traced path."
         ),
         "termination": result.termination,
+        "cluster_id": nearest.cluster_id,
+        "cluster_members": next(
+            (c.member_count for c in result.clusters if c.cluster_id == nearest.cluster_id),
+            1,
+        ),
         "mixers_or_bridges_crossed": [f.entity for f in flags],
         "other_exchanges_reached": [a.entity for a in exchanges[1:]],
         "unconfirmed_collection_points": [a.address for a in suspected],
@@ -975,6 +996,7 @@ def to_json(result: TraceResult) -> dict:
         },
         "summary": summarize(result),
         "attributions": [a.to_dict() for a in result.attributions],
+        "clusters": [c.to_dict() for c in result.clusters],
         "exchanges": [a.to_dict() for a in result.exchanges],
         "flags": [a.to_dict() for a in result.flags],
         "risk_flags": [f.to_dict() for f in result.risk_flags],
@@ -984,6 +1006,7 @@ def to_json(result: TraceResult) -> dict:
             "hops": len(result.hops),
             "max_depth_reached": max((n["depth"] for n in nodes), default=0),
             "identified": len(result.attributions),
+            "clusters": len(result.clusters),
             "labels_loaded": identify.label_count(),
             "api_calls": result.api_calls,
             "cache_hits": result.cache_hits,

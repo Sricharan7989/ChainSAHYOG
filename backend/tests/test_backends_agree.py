@@ -107,9 +107,11 @@ async def main():
     print("\n--- neo4j backend ---")
     store = graph_store.get_store()
     if store.backend != "neo4j":
-        print("  SKIPPED: Neo4j not reachable — cannot compare backends.")
-        print("  Start it with:  docker compose up -d")
-        return 1
+        # A skip is not a failure: this suite needs a database the others do
+        # not, and reporting it as failing would train people to ignore reds.
+        print("  SKIPPED: Neo4j not reachable - cannot compare backends.")
+        print("  Start it with:  docker compose up -d   (then re-run)")
+        return 0
     store.close()
 
     neo, neo_backend = await run(None)

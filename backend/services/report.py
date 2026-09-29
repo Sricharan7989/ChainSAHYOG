@@ -424,6 +424,61 @@ def build_report(payload: dict) -> bytes:
     story.append(Paragraph("Risk flags", styles["h2"]))
     story.extend(_risk_section(payload, styles))
 
+    # --- Entity clusters -------------------------------------------------
+    clusters = payload.get("clusters") or []
+    if clusters:
+        story.append(Paragraph("Entity clusters", styles["h2"]))
+        story.append(Paragraph(
+            "Wallets grouped by the business behind them. A lawful request is "
+            "served on the entity, citing every address below. Hop distance is "
+            "the distance to the first member reached; clustering does not change "
+            "it.",
+            styles["small"],
+        ))
+        story.append(Spacer(1, 4))
+
+        head = ("Entity", "Type", "Wallets", "Hop", "Received")
+        rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in head]]
+        for cluster in clusters:
+            label = str(cluster.get("entity", ""))
+            if not cluster.get("named", True):
+                label += " <font size=\"7\">(unnamed - inferred)</font>"
+            rows.append([
+                Paragraph(label, styles["body"]),
+                Paragraph(str(cluster.get("entity_type", "")), styles["small"]),
+                Paragraph(str(cluster.get("member_count", 0)), styles["small"]),
+                Paragraph(str(cluster.get("hop_distance", "")), styles["small"]),
+                Paragraph(_fmt_eth(cluster.get("value_received_eth")), styles["small"]),
+            ])
+        table = Table(rows, colWidths=[64 * mm, 30 * mm, 16 * mm, 12 * mm, 44 * mm], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("BACKGROUND", (0, 0), (-1, 0), BAND),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, LINE),
+            ("LINEBELOW", (0, 1), (-1, -2), 0.25, LINE),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+
+        # Member addresses, so the request can cite them and anyone can verify.
+        for cluster in clusters:
+            if cluster.get("member_count", 0) < 1:
+                continue
+            story.append(Spacer(1, 5))
+            story.append(Paragraph(
+                f'<b>{cluster.get("entity", "")}</b> — '
+                f'{cluster.get("member_count", 0)} wallet(s), hop '
+                f'{cluster.get("hop_distance", "")}',
+                styles["small"],
+            ))
+            hops = cluster.get("member_hops") or {}
+            for member in cluster.get("members", []):
+                story.append(Paragraph(
+                    f'hop {hops.get(member, "?")} &nbsp; {member}', styles["mono"]
+                ))
+
     # --- Why the trace stopped ------------------------------------------
     termination = summary.get("termination") or payload.get("termination") or {}
     if termination:

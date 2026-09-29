@@ -269,6 +269,59 @@ function TokenWarning({ warnings, data }) {
   )
 }
 
+// Entity clusters: the wallets of one business, as one row. A lawful request is
+// served on the entity, so this - not the address list - is the actionable view.
+// Members stay one click away because an investigator still has to verify them.
+function Clusters({ data }) {
+  const [open, setOpen] = useState(() => new Set())
+  const clusters = data.clusters ?? []
+  if (clusters.length === 0) return null
+
+  const toggle = (id) =>
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  return (
+    <section className="block">
+      <h3>Entity clusters</h3>
+      <ul className="clusters">
+        {clusters.map((c) => (
+          <li key={c.cluster_id} className={`cluster ${c.named ? '' : 'cluster-unnamed'}`}>
+            <button type="button" className="cluster-head" onClick={() => toggle(c.cluster_id)}>
+              <span className="cluster-entity">
+                {c.named ? c.entity : 'Unnamed collection point'}
+              </span>
+              <span className="cluster-count">
+                {c.member_count} wallet{c.member_count === 1 ? '' : 's'}
+              </span>
+              <span className="cluster-meta">
+                hop {c.hop_distance} · {formatEth(c.value_received_eth, nativeSymbol(data))}
+              </span>
+              <span className="cluster-toggle">{open.has(c.cluster_id) ? '−' : '+'}</span>
+            </button>
+            {open.has(c.cluster_id) && (
+              <ul className="cluster-members">
+                {c.members.map((m) => (
+                  <li key={m}>
+                    hop {c.member_hops?.[m] ?? '?'} · <AddressLink address={m} data={data} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="score-note">
+        Hop distance is to the first member reached; grouping does not change it.
+      </p>
+    </section>
+  )
+}
+
 function SourceBadge({ data }) {
   if (data.source !== 'cache') return null
   return (
@@ -358,6 +411,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           </p>
         </header>
         <div className="panel-body">
+          <Clusters data={data} />
           <Termination termination={summary.termination ?? data.termination} />
           <TokenWarning warnings={data.token_warnings} data={data} />
           <RiskFlags flags={data.risk_flags} data={data} />
@@ -397,6 +451,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           </section>
 
           <MethodNote method={summary.method} />
+          <Clusters data={data} />
           <Termination termination={summary.termination ?? data.termination} />
           <TokenWarning warnings={data.token_warnings} data={data} />
           <RiskFlags flags={data.risk_flags} data={data} />
@@ -423,6 +478,8 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           Transaction path connects to <strong>{summary.exchange}</strong>
           <span className="finding-hops">
             {summary.hop_distance} hop{summary.hop_distance === 1 ? '' : 's'}
+            {summary.cluster_members > 1 &&
+              ` · ${summary.cluster_members} wallets of this entity`}
           </span>
         </h2>
         <Caveat text={summary.caveat} />
@@ -440,6 +497,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         </section>
 
         <MethodNote method={summary.method} />
+        <Clusters data={data} />
         <Termination termination={summary.termination ?? data.termination} />
         <TokenWarning warnings={data.token_warnings} data={data} />
         <RiskFlags flags={data.risk_flags} data={data} />
