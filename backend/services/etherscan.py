@@ -107,9 +107,21 @@ class EtherscanClient:
         self.api_calls = 0
         self.cache_hits = 0
         # (chain_id, claimed symbol) -> how many transfers we declined to
-        # follow, for the payload. Keyed by chain because a symbol that is a
-        # real asset on one chain can be an impostor on another.
+        # follow, for THIS trace. Keyed by chain because a symbol that is a real
+        # asset on one chain can be an impostor on another.
         self.skipped_tokens: dict[tuple[int, str], int] = {}
+        # The same tally per wallet, cached alongside that wallet's transfers.
+        #
+        # WHY THIS EXISTS. The per-trace tally above is built while PARSING rows,
+        # so a cache hit used to contribute nothing to it: the second trace of a
+        # session silently lost its "tokens not followed" disclosure entirely,
+        # because every wallet was already cached. A disclosure that disappears
+        # depending on whether something was fetched before is worse than none,
+        # so the tally is remembered per wallet and replayed on every hit.
+        self._skipped_by_wallet: dict[tuple[int, str], dict[str, int]] = {}
+        # Wallets already counted into this trace, so revisiting one cannot
+        # double its contribution.
+        self._tallied: set[tuple[int, str]] = set()
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -125,9 +137,12 @@ class EtherscanClient:
         self.api_calls = 0
         self.cache_hits = 0
         self.skipped_tokens = {}
+        self._tallied = set()
 
     def clear_cache(self) -> None:
         self._cache.clear()
+        self._skipped_by_wallet.clear()
+        self._tallied.clear()
 
     async def _request(self, params: dict, chain_id: int | None = None) -> object:
         """
@@ -219,6 +234,7 @@ class EtherscanClient:
         key = (resolved, normalize_address(address))
         if key in self._cache:
             self.cache_hits += 1
+            self._count_skipped(key)
             return self._cache[key]
 
         raw = await self._request(
@@ -272,13 +288,28 @@ class EtherscanClient:
                     # wallet SENT count - incoming spam is not a trail we
                     # declined to follow, and counting it would inflate the
                     # figure now that both directions are fetched.
-                    tally_key = (resolved, skipped_symbol)
-                    self.skipped_tokens[tally_key] = (
-                        self.skipped_tokens.get(tally_key, 0) + 1
-                    )
+                    wallet_tally = self._skipped_by_wallet.setdefault(key, {})
+                    wallet_tally[skipped_symbol] = wallet_tally.get(skipped_symbol, 0) + 1
 
         self._cache[key] = transfers
+        self._count_skipped(key)
         return transfers
+
+    def _count_skipped(self, key: tuple[int, str]) -> None:
+        """
+        Fold one wallet's skipped-token tally into this trace's total.
+
+        Called on both a fresh fetch and a cache hit, so the disclosure describes
+        the wallets the TRACE visited rather than the wallets this process
+        happened to parse. Guarded against counting a wallet twice.
+        """
+        if key in self._tallied:
+            return
+        self._tallied.add(key)
+        chain_id = key[0]
+        for symbol, count in self._skipped_by_wallet.get(key, {}).items():
+            tally_key = (chain_id, symbol)
+            self.skipped_tokens[tally_key] = self.skipped_tokens.get(tally_key, 0) + count
 
     async def get_outgoing_transfers(
         self, address: str, chain_id: int | None = None

@@ -277,6 +277,54 @@ async def main():
     check("the note explains the refusal",
           "not the real contract" in note["impersonation_note"], True)
 
+    # ------------------------------------------------------------- case 5
+    print("\n--- 5. the skipped-token disclosure survives the wallet cache ---")
+    # REGRESSION. The tally was built while parsing rows, so a cache hit added
+    # nothing to it: the second trace of a session reported no skipped tokens at
+    # all, because every wallet was already cached. Both re-recorded demo traces
+    # lost their "Tokens not followed" section this way. A disclosure that
+    # disappears depending on what was fetched earlier is worse than none.
+    import json as _json  # noqa: PLC0415
+    from unittest.mock import patch as _patch  # noqa: PLC0415
+
+    from services.etherscan import EtherscanClient  # noqa: PLC0415
+
+    WALLET = "0x" + "7" * 40
+    spam_rows = [
+        {
+            "from": WALLET, "to": "0x" + "8" * 40, "hash": f"0x{i:064x}",
+            "timeStamp": "1700000000", "blockNumber": "1", "transactionIndex": "0",
+            "tokenSymbol": "SPAM", "tokenDecimal": "18",
+            "contractAddress": "0xfeed000000000000000000000000000000000009",
+            "value": "5000000000000000000",
+        }
+        for i in range(3)
+    ]
+
+    client = EtherscanClient()
+
+    async def fake_request(params, chain_id=None):
+        return spam_rows if params.get("action") == "tokentx" else []
+
+    with _patch.object(client, "_request", side_effect=fake_request):
+        await client.get_wallet_transfers(WALLET, chain_id=1)
+        first = dict(client.skipped_tokens)
+        # A second trace: stats reset, wallet still cached, no parsing happens.
+        client.reset_stats()
+        await client.get_wallet_transfers(WALLET, chain_id=1)
+        second = dict(client.skipped_tokens)
+        # Visiting the same wallet twice within one trace must not double it.
+        await client.get_wallet_transfers(WALLET, chain_id=1)
+        third = dict(client.skipped_tokens)
+
+    check("a fresh fetch counts the skipped tokens", first, {(1, "SPAM"): 3})
+    check("a CACHED fetch reports the same tally, not nothing", second, {(1, "SPAM"): 3})
+    check("and the cache was actually used", client.cache_hits > 0, True)
+    check("revisiting a wallet in one trace does not double count", third, second)
+    check("the note is therefore produced on a cached trace too",
+          tracer._unfollowed_token_note(client, 1).get("skipped_transfers"), 3)
+    _json  # referenced so the import reads as deliberate
+
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 
