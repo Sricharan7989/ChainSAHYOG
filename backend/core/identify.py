@@ -40,6 +40,10 @@ from services import graph_store
 
 # --- Tunables -----------------------------------------------------------------
 
+# The chain a label belongs to when the file does not say. Every entry predates
+# multi-chain support and describes Ethereum, so this keeps them all valid.
+DEFAULT_CHAIN = "ethereum"
+
 # Distinct in-graph senders before fan-in is considered meaningful at all.
 # Below this, a shared recipient is just as likely to be a merchant, a contract
 # or coincidence, so claiming "exchange" would be irresponsible.
@@ -108,6 +112,15 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
     matches. Underscore-prefixed keys are documentation, not data, and JSON has
     no comment syntax - hence the convention.
 
+    CHAIN AWARENESS: the in-memory index is keyed by (chain, address), not by
+    address alone. The same address can be a completely different entity on
+    another network - a deployer controls the address on every EVM chain, and
+    contract addresses collide by construction - so a label that is true on
+    Ethereum must not be asserted on Polygon. Two spellings are accepted in the
+    file: a bare address (which means Ethereum, keeping every existing entry
+    valid) and "<chain>:<address>" for anything chain-specific. An explicit
+    "chain" field on the entry wins over both.
+
     WHY it watches the file's timestamp: labels are DATA, and uvicorn --reload
     only watches code. Without this, importing new labels appears to do nothing
     until someone thinks to restart the server - a trap that would be found
@@ -135,34 +148,56 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"data/labels.json is not valid JSON: {exc}") from exc
 
-    _labels = {
-        str(addr).strip().lower(): meta
-        for addr, meta in raw.items()
-        if not str(addr).startswith("_") and isinstance(meta, dict)
-    }
+    index: dict[tuple[str, str], dict] = {}
+    for key, meta in raw.items():
+        key = str(key).strip()
+        if key.startswith("_") or not isinstance(meta, dict):
+            continue
+
+        # "<chain>:<address>" in the key, an explicit "chain" field, or neither
+        # (Ethereum). The field wins so a file can be reorganised without
+        # rewriting every key.
+        chain_from_key, _, address = key.rpartition(":")
+        chain_name = str(meta.get("chain") or chain_from_key or DEFAULT_CHAIN).strip().lower()
+        index[(chain_name, address.strip().lower())] = meta
+
+    _labels = index
     return _labels
 
 
-def label_count() -> int:
-    """How many addresses we can currently recognise. Shown in the API response."""
-    return len(load_labels())
+def label_count(chain: str | None = None) -> int:
+    """
+    How many addresses we can recognise, optionally for one chain only.
+
+    The per-chain number is the honest one to show next to a trace: a Polygon
+    trace is not helped by 525 Ethereum labels.
+    """
+    labels = load_labels()
+    if chain is None:
+        return len(labels)
+    return sum(1 for (chain_name, _) in labels if chain_name == chain)
 
 
 # --- (a) Known-label lookup — WORKS -------------------------------------------
 
 
-def known_label_lookup(address: str) -> Identification | None:
+def known_label_lookup(address: str, chain: str | None = None) -> Identification | None:
     """
-    Method (a): is this address in our list of known entities?
+    Method (a): is this address a known entity ON THIS CHAIN?
 
     The highest-quality signal available. An exchange's hot wallets are public
     knowledge precisely because the exchange cannot operate secretly, so a
     direct hit names the entity outright rather than inferring it.
 
-    Returns None when the address is unknown - which is the normal case, since
-    most wallets in a trace are the criminal's own anonymous ones.
+    The chain is part of the question, not a detail: matching an Ethereum label
+    against a Polygon address would invent a finding, and inventing findings is
+    the single worst failure this tool has.
+
+    Returns None when the address is unknown on that chain - the normal case,
+    since most wallets in a trace are the criminal's own anonymous ones.
     """
-    meta = load_labels().get(address.strip().lower())
+    chain_name = (chain or DEFAULT_CHAIN).strip().lower()
+    meta = load_labels().get((chain_name, address.strip().lower()))
     if meta is None:
         return None
 
@@ -175,7 +210,9 @@ def known_label_lookup(address: str) -> Identification | None:
         entity_type=entity_type,
         method="known_label",
         confidence=LABEL_CONFIDENCE,
-        evidence=f"Exact match in labels.json: {entity} ({entity_type}).",
+        evidence=(
+            f"Exact match in labels.json: {entity} ({entity_type}) on {chain_name}."
+        ),
     )
 
 
@@ -377,7 +414,7 @@ def cospend_cluster(address: str, graph: nx.DiGraph) -> None:
 # --- Combined entry point -----------------------------------------------------
 
 
-def identify(address: str, graph: nx.DiGraph) -> Identification | None:
+def identify(address: str, graph: nx.DiGraph, chain: str | None = None) -> Identification | None:
     """
     Run the available methods against one address, best evidence first.
 
@@ -388,10 +425,12 @@ def identify(address: str, graph: nx.DiGraph) -> Identification | None:
     Returns None when nothing recognises the address - the expected outcome for
     the criminal's own wallets, and the reason the trace keeps walking.
     """
-    hit = known_label_lookup(address)
+    hit = known_label_lookup(address, chain=chain)
     if hit is not None:
         return hit
 
+    # Deliberately chain-agnostic: fan-in is a shape in the traced graph, and
+    # that graph is already confined to one chain by the tracer.
     hit = consolidation_identify(address, graph)
     if hit is not None:
         return hit

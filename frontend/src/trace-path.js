@@ -6,57 +6,40 @@
 // the server, since the edge list already contains everything required.
 
 /**
- * Shortest path of hops from `start` to `target`, following edge direction.
+ * The traced route to the headline finding, as addresses, straight from the payload.
  *
- * Breadth-first, which matters: the backend reports hop distance from a BFS
- * walk, so the path shown to the investigator has to be the shortest one too.
- * Anything else would contradict the "N hops away" headline.
+ * The backend already computed this (tracer.trace -> store.shortest_path) and it
+ * is what the PDF prints, so the frontend MUST NOT recompute it. It used to run
+ * its own BFS here, which agreed only by luck: the recorded Binance demo has
+ * three equally short two-hop routes, and nothing forced both sides to break the
+ * tie the same way. The graph could then highlight a different route from the one
+ * the report cited. One computation, one source of truth.
  *
- * Returns an array of edge objects in order, or [] if no route exists.
+ * Returns [] when nothing was identified, or when no route was reconstructed.
  */
-export function findPath(edges, start, target) {
-  if (!start || !target || start === target) return []
-
-  const outgoing = new Map()
-  for (const edge of edges) {
-    if (!outgoing.has(edge.source)) outgoing.set(edge.source, [])
-    outgoing.get(edge.source).push(edge)
-  }
-
-  const queue = [start]
-  const cameFrom = new Map() // node -> edge that reached it
-  const seen = new Set([start])
-
-  while (queue.length > 0) {
-    const current = queue.shift()
-    if (current === target) break
-
-    for (const edge of outgoing.get(current) ?? []) {
-      if (seen.has(edge.target)) continue
-      seen.add(edge.target)
-      cameFrom.set(edge.target, edge)
-      queue.push(edge.target)
-    }
-  }
-
-  if (!cameFrom.has(target)) return []
-
-  const path = []
-  let node = target
-  while (node !== start) {
-    const edge = cameFrom.get(node)
-    if (!edge) return []
-    path.unshift(edge)
-    node = edge.source
-  }
-  return path
+export function findingPath(data) {
+  const target = data?.summary?.address
+  if (!target) return []
+  const attribution = (data.attributions ?? []).find((a) => a.address === target)
+  return attribution?.path ?? []
 }
 
-/** Every address touched by a path, including the starting wallet. */
-export function pathAddresses(path, start) {
-  const addresses = [start]
-  for (const edge of path) addresses.push(edge.target)
-  return addresses
+/**
+ * The transfer edges between consecutive addresses of a path.
+ *
+ * Index i is the edge INTO addresses[i + 1], so the panel can show what each
+ * wallet received. Missing edges become null rather than throwing - a payload
+ * whose path and edge list disagree should degrade, not blank the panel.
+ */
+export function pathEdges(data, addresses) {
+  const byPair = new Map(
+    (data.edges ?? []).map((e) => [`${e.source}->${e.target}`, e]),
+  )
+  const edges = []
+  for (let i = 0; i < addresses.length - 1; i += 1) {
+    edges.push(byPair.get(`${addresses[i]}->${addresses[i + 1]}`) ?? null)
+  }
+  return edges
 }
 
 /**
@@ -118,14 +101,60 @@ export function describeRole(node, isStart) {
   if (node.is_vasp) return node.label ?? 'Exchange'
   if (node.is_mixer) return `${node.label} · mixer`
   if (node.is_bridge) return `${node.label} · bridge`
+  if (node.entity_type === 'sanctioned') return `${node.label} · OFAC sanctioned`
   return 'Intermediate wallet'
 }
 
-export function formatEth(value) {
+/** Format one amount of one asset. Use formatAssets() for a per-asset map. */
+export function formatEth(value, symbol = 'ETH') {
   if (value === null || value === undefined) return '—'
-  if (value >= 1000) return `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })} ETH`
-  if (value >= 1) return `${value.toFixed(2)} ETH`
-  return `${value.toFixed(4)} ETH`
+  if (value >= 1000) {
+    return `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })} ${symbol}`
+  }
+  if (value >= 1) return `${value.toFixed(2)} ${symbol}`
+  return `${value.toFixed(4)} ${symbol}`
 }
 
-export const ETHERSCAN = 'https://etherscan.io/address/'
+/**
+ * Block-explorer base for the chain a trace actually ran on.
+ *
+ * Read from the payload rather than hardcoded: on a Polygon trace an Etherscan
+ * link sends the investigator to a page for an address that may not exist there,
+ * which looks like the tool being wrong about the finding. Falls back to
+ * Etherscan for recordings made before chains were tracked.
+ */
+export function explorerBase(data) {
+  const base = data?.params?.explorer ?? 'https://etherscan.io'
+  return base.replace(/\/$/, '')
+}
+
+export function explorerAddressUrl(data, address) {
+  return `${explorerBase(data)}/address/${address}`
+}
+
+/** Display name of the chain a payload describes. */
+export function chainName(data) {
+  return data?.params?.chain_name ?? 'Ethereum'
+}
+
+/** The chain's gas-token symbol, for value formatting. */
+export function nativeSymbol(data) {
+  return data?.params?.native_symbol ?? 'ETH'
+}
+
+/**
+ * Render a per-asset total map as one line: "12.5 ETH + 40,000 USDT".
+ *
+ * Assets are never added together - there is no price feed in this build, so a
+ * combined figure would be invented. Falls back to the legacy scalar so
+ * recordings made before token support still display.
+ */
+export function formatAssets(totals, fallback, symbol = 'ETH') {
+  if (!totals || typeof totals !== 'object' || Object.keys(totals).length === 0) {
+    return fallback === undefined || fallback === null ? '—' : formatEth(fallback, symbol)
+  }
+  return Object.entries(totals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([asset, amount]) => formatEth(amount, asset))
+    .join(' + ')
+}
