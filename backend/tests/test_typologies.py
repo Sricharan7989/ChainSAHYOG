@@ -161,7 +161,38 @@ def main():
     check("a medium third output means it is a distribution, not a peel",
           len(of(run(book), "peel_chain")), 0)
 
-    # (e) Just under the structuring similarity bar.
+    # (e) THE PRINCIPAL MUST NOT GROW. Each wallet forwards ~90% to one recipient
+    #     and peels a slice, so every link looks like a peel - but the amounts
+    #     increase tenfold at each step, so the money leaving step two cannot be
+    #     the money that arrived from step one. These are adjacent independent
+    #     wallets, not one chain. Found by probing real addresses for a demo case,
+    #     which produced 3.4 -> 517 -> 5,894 ETH and called it a peel chain.
+    book = {}
+    principal = 10.0
+    for hop in range(4):
+        src = A(hop)
+        book[src] = [
+            t(src, A(hop + 1), principal * 0.9),
+            t(src, A(900 + hop), principal * 0.1),
+        ]
+        principal *= 10.0
+    check("a chain whose principal GROWS is not one peel chain",
+          len(of(run(book), "peel_chain")), 0)
+
+    # A modest increase is tolerated - a wallet may add a little of its own.
+    book = {}
+    principal = 100.0
+    for hop in range(4):
+        src = A(hop)
+        book[src] = [
+            t(src, A(hop + 1), principal * 0.9),
+            t(src, A(900 + hop), principal * 0.1),
+        ]
+        principal *= 1.02
+    check("but a shrinking-or-flat principal still chains",
+          len(of(run(book), "peel_chain")) >= 1, True)
+
+    # (f) Just under the structuring similarity bar.
     book = {A(0): [t(A(0), A(10 + i), 100.0 + i * 12.0) for i in range(8)]}
     check("outputs that merely look roughly similar do not fire",
           len(of(run(book), "structuring_fan_out")), 0)
@@ -338,6 +369,29 @@ def main():
               typologies.summarise(capped, suppressed)["suppressed"], suppressed)
     finally:
         config.TYPOLOGY_MAX_REPORTED = saved
+
+    # (f) THE CAP MUST KEEP EVERY TYPOLOGY REPRESENTED. A plain "strongest N"
+    #     dropped a real 2-link peel chain (strength 75) because fifteen rapid
+    #     pass-throughs scored 82-90 and filled the budget - inverting the value
+    #     of the output, since pass-throughs are numerous and near-identical while
+    #     a peel chain is rare and says far more.
+    strong = [
+        typologies.Detection(
+            typology="rapid_pass_through", name="Rapid pass-through", strength=90,
+            wallets=[A(100 + i)], hops=[], explanation="x",
+        )
+        for i in range(20)
+    ]
+    rare = typologies.Detection(
+        typology="peel_chain", name="Peel chain", strength=40,
+        wallets=[A(1)], hops=[], explanation="y",
+    )
+    kept = typologies._cap(sorted(strong + [rare], key=lambda d: -d.strength))
+    check("the cap keeps the weaker but rarer typology",
+          "peel_chain" in {d.typology for d in kept}, True)
+    check("and still respects the ceiling", len(kept) <= config.TYPOLOGY_MAX_REPORTED, True)
+    check("and stays ordered strongest first",
+          [d.strength for d in kept], sorted((d.strength for d in kept), reverse=True))
 
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
