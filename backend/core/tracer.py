@@ -86,7 +86,7 @@ from dataclasses import dataclass, field
 import networkx as nx
 
 from app import config
-from core import clustering, identify, scoring, taint as taint_engine
+from core import clustering, identify, scoring, taint as taint_engine, typologies
 from services import graph_store
 from services.etherscan import EtherscanClient, Transfer, get_client, normalize_address
 
@@ -297,6 +297,16 @@ class TraceResult:
     # The FIFO taint pass. None when it could not run (no transfers fetched), in
     # which case every consumer must fall back to connectivity-only wording.
     taint: object | None = None
+
+    # Matched laundering typologies - peel chains, layering, structuring and so
+    # on. Kept separate from `risk_flags`: a risk flag says WHAT a wallet is (a
+    # mixer, a sanctioned address), a typology says what the MOVEMENT looks like.
+    # Conflating them would let a pattern inference borrow the authority of a
+    # published label.
+    typologies: list = field(default_factory=list)
+    # How many further matches the reporting cap held back, so a capped list is
+    # never mistaken for a complete one.
+    typologies_suppressed: int = 0
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -676,6 +686,14 @@ async def trace(
     # what we declined to follow is known from data in hand.
     token_warnings = _unfollowed_token_note(client, chain["chain_id"])
 
+    # LAUNDERING TYPOLOGIES. Pattern rules over the transfers already fetched -
+    # no new API calls. Runs before the store closes because the detectors need
+    # each wallet's entity type to exempt labelled businesses, without which an
+    # exchange hot wallet would be reported as a structuring suspect.
+    matched_typologies, typologies_suppressed = typologies.detect(
+        fetched, store, taint=taint, start=start
+    )
+
     # Materialise a NetworkX view for serialisation and for everything that
     # already speaks DiGraph. With Neo4j this is one query at the end of the
     # walk, not a second traversal engine running alongside the first.
@@ -702,6 +720,8 @@ async def trace(
         chain=chain,
         clusters=clusters,
         taint=taint,
+        typologies=matched_typologies,
+        typologies_suppressed=typologies_suppressed,
     )
 
 
@@ -1408,6 +1428,13 @@ def to_json(result: TraceResult) -> dict:
         },
         "termination": result.termination,
         "token_warnings": result.token_warnings,
+        # Matched laundering typologies, strongest first, each with the
+        # measurements and thresholds that produced it. Deliberately NOT merged
+        # into risk_flags - see the note on TraceResult.typologies.
+        "typologies": [d.to_dict() for d in result.typologies],
+        "typology_summary": typologies.summarise(
+            result.typologies, result.typologies_suppressed
+        ),
         # How the tainted figures above were produced, and their uncertainties.
         # Present even when taint could not run, so a consumer can tell the
         # difference between "nothing was attributable" and "not computed".

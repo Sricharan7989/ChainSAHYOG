@@ -321,6 +321,87 @@ def _risk_section(payload: dict, styles: dict) -> list:
     return [table, *notes]
 
 
+def _typology_section(payload: dict, styles: dict) -> list:
+    """
+    Matched laundering typologies, each with its explanation and its numbers.
+
+    WHY THE FULL EXPLANATION IS PRINTED, not a code. The point of this section is
+    that an investigator can lift a paragraph into a case file and a magistrate can
+    read it without knowing what "peel chain" means. A table of typology names and
+    scores would be useless for that, and worse, it would read as a verdict.
+
+    Every entry therefore carries the measurements that triggered it and the
+    thresholds it was judged against, so the reasoning is auditable and a reader
+    who thinks our bar is too low can say exactly where.
+    """
+    found = payload.get("typologies") or []
+    summary = payload.get("typology_summary") or {}
+    if not found:
+        return [
+            Paragraph("Laundering typologies", styles["h2"]),
+            Paragraph(
+                "No laundering typology met its threshold on this trace. The rules "
+                "are deliberately strict - a wrongly asserted pattern in a police "
+                "report is more damaging than a missed one - so this is not a "
+                "finding that the movement was ordinary, only that no pattern was "
+                "unambiguous enough to assert.",
+                styles["body"],
+            ),
+        ]
+
+    story = [Paragraph("Laundering typologies", styles["h2"])]
+    story.append(Paragraph(
+        f"<b>{summary.get('count', len(found))} pattern(s) matched.</b> "
+        f"{summary.get('caveat', '')}",
+        styles["small"],
+    ))
+    if summary.get("suppressed"):
+        story.append(Paragraph(
+            f"The {summary['count']} strongest are shown; "
+            f"{summary['suppressed']} further match(es) of the same kinds are not "
+            f"listed individually.",
+            styles["small"],
+        ))
+    if summary.get("scope"):
+        story.append(Paragraph(summary["scope"], styles["small"]))
+    story.append(Spacer(1, 4))
+
+    for entry in found:
+        strength = entry.get("strength", 0)
+        colour = DANGER if strength >= 80 else WARN if strength >= 60 else SOFT
+        heading = (
+            f'<font color="{_hex(colour)}"><b>{entry.get("name", "")}</b></font> '
+            f'· strength {strength}/100'
+        )
+        if entry.get("corroborating_only"):
+            heading += ' · <i>corroborating signal only, not a finding on its own</i>'
+        if entry.get("asset"):
+            heading += f' · {entry["asset"]}'
+
+        measurements = ", ".join(
+            f"{k.replace('_', ' ')} {v}" for k, v in (entry.get("measurements") or {}).items()
+        )
+        thresholds = ", ".join(
+            f"{k.replace('_', ' ')} {v}" for k, v in (entry.get("thresholds") or {}).items()
+        )
+
+        block = [
+            Paragraph(heading, styles["body"]),
+            Paragraph(entry.get("explanation", ""), styles["small"]),
+            Paragraph(
+                f'<font size="7">Measured: {measurements}. '
+                f'Thresholds applied: {thresholds}. '
+                f'Wallets involved: {len(entry.get("wallets") or [])}.</font>',
+                styles["small"],
+            ),
+            Spacer(1, 6),
+        ]
+        story.append(KeepTogether(block))
+
+    story.append(Paragraph(summary.get("thresholds_note", ""), styles["small"]))
+    return story
+
+
 def disclaimer(
     chain_name: str = "Ethereum", native: str = "ETH", accounting: dict | None = None
 ) -> str:
@@ -560,6 +641,14 @@ def build_report(payload: dict) -> bytes:
     # --- Risk flags -----------------------------------------------------
     story.append(Paragraph("Risk flags", styles["h2"]))
     story.extend(_risk_section(payload, styles))
+
+    # --- Laundering typologies ------------------------------------------
+    # A SECTION OF ITS OWN, deliberately not merged into risk flags above. A risk
+    # flag says what a wallet IS, on the authority of a published label; a
+    # typology says what the movement LOOKS LIKE, on the authority of our own
+    # pattern rules. Printing them together would lend the inference the label's
+    # credibility, which is exactly the confusion a defence lawyer should win.
+    story.extend(_typology_section(payload, styles))
 
     # --- Entity clusters -------------------------------------------------
     clusters = payload.get("clusters") or []

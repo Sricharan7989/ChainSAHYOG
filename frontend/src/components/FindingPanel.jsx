@@ -190,6 +190,99 @@ function TracedPath({ data }) {
   )
 }
 
+/**
+ * Matched laundering typologies - the shape of the movement, not the identity.
+ *
+ * A SECTION OF ITS OWN, deliberately not folded into risk flags. A risk flag says
+ * what a wallet IS and rests on a published label; a typology says what the
+ * movement LOOKS LIKE and rests on our own pattern rules. Showing them together
+ * would lend the inference the label's authority.
+ *
+ * Each entry opens to its full explanation, the measurements that triggered it
+ * and the thresholds it was judged against. That is the whole point: an
+ * investigator has to be able to lift the paragraph into a case file, and anyone
+ * can then disagree with our numbers rather than take our word.
+ */
+function Typologies({ data }) {
+  const found = data.typologies ?? []
+  const summary = data.typology_summary ?? {}
+  const [open, setOpen] = useState(() => new Set())
+  if (found.length === 0) return null
+
+  const toggle = (i) =>
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+
+  return (
+    <section className="block">
+      <h3>Laundering typologies</h3>
+      <p className="muted typology-caveat">{summary.caveat}</p>
+      {summary.suppressed > 0 && (
+        <p className="muted typology-caveat">
+          Showing the {summary.count} strongest; {summary.suppressed} further match
+          {summary.suppressed === 1 ? '' : 'es'} of the same kinds not listed.
+        </p>
+      )}
+      <ul className="typology-list">
+        {found.map((tp, i) => {
+          const band = tp.strength >= 80 ? 'high' : tp.strength >= 60 ? 'mid' : 'low'
+          return (
+            <li key={`${tp.typology}-${i}`} className={`typology typology-${band}`}>
+              <button
+                type="button"
+                className="typology-head"
+                onClick={() => toggle(i)}
+                aria-expanded={open.has(i)}
+              >
+                <span className="typology-name">{tp.name}</span>
+                {tp.asset && <span className="typology-asset">{tp.asset}</span>}
+                <span className="typology-strength">{tp.strength}/100</span>
+                {tp.corroborating_only && (
+                  <span className="typology-weak">corroborating only</span>
+                )}
+                <span className="typology-chevron">{open.has(i) ? '−' : '+'}</span>
+              </button>
+              {open.has(i) && (
+                <div className="typology-body">
+                  <p>{tp.explanation}</p>
+                  <dl className="typology-numbers">
+                    <dt>Measured</dt>
+                    <dd>
+                      {Object.entries(tp.measurements ?? {})
+                        .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                        .join(' · ')}
+                    </dd>
+                    <dt>Thresholds applied</dt>
+                    <dd>
+                      {Object.entries(tp.thresholds ?? {})
+                        .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                        .join(' · ')}
+                    </dd>
+                  </dl>
+                  <div className="typology-wallets">
+                    {(tp.wallets ?? []).slice(0, 8).map((w) => (
+                      <AddressLink key={w} address={w} data={data} />
+                    ))}
+                    {(tp.wallets ?? []).length > 8 && (
+                      <span className="muted">
+                        +{tp.wallets.length - 8} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
+
 // Risk flags come from the backend already sorted worst-first, with the ones
 // sitting on the actual money trail ahead of those on side branches - a mixer
 // the funds went through means something quite different from one they didn't.
@@ -528,6 +621,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           <Clusters data={data} />
           <Termination termination={summary.termination ?? data.termination} />
           <TokenWarning warnings={data.token_warnings} />
+          <Typologies data={data} />
           <RiskFlags flags={data.risk_flags} data={data} />
           <section className="block">
             <h3>What to do next</h3>
@@ -568,6 +662,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
           <Clusters data={data} />
           <Termination termination={summary.termination ?? data.termination} />
           <TokenWarning warnings={data.token_warnings} />
+          <Typologies data={data} />
           <RiskFlags flags={data.risk_flags} data={data} />
 
           <section className="block">
@@ -625,6 +720,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <Clusters data={data} />
         <Termination termination={summary.termination ?? data.termination} />
         <TokenWarning warnings={data.token_warnings} />
+        <Typologies data={data} />
         <RiskFlags flags={data.risk_flags} data={data} />
 
         {summary.other_exchanges_reached?.length > 0 && (

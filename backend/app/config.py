@@ -319,6 +319,132 @@ def dust_threshold_for(asset: str, native_override: float | None = None) -> floa
         return native_override
     return DUST_THRESHOLDS.get(symbol, DUST_THRESHOLD_TOKEN_DEFAULT)
 
+# --- Laundering typologies ----------------------------------------------------
+#
+# Pattern rules over the graph we already built. No new data sources, no new API
+# calls: every threshold below is applied to transfers already fetched.
+#
+# WHY EVERY DEFAULT HERE IS DELIBERATELY STRICT. A typology is an accusation
+# dressed as an observation. "This is a peel chain" in a police report, wrong,
+# discredits the whole document and the investigator carrying it - while a missed
+# pattern costs only that one lead. So each rule is set where a pattern has to be
+# quite unambiguous before it fires, and each detection ships with the numbers
+# that made it fire so a reader can disagree with our thresholds rather than
+# having to take our word.
+#
+# Every value is overridable by environment variable, named after the setting.
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    return float(raw) if raw not in (None, "") else default
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    return int(raw) if raw not in (None, "") else default
+
+
+# PEEL CHAIN. A wallet forwards most of its balance to a fresh wallet while
+# peeling a small slice off towards a cash-out, repeated down a chain.
+#
+# 0.80 dominant share: below about 0.7 you stop describing a peel and start
+# describing an ordinary split, which is far too common to flag. 3 links: two
+# consecutive forwards happen constantly by accident (a wallet paying a fee and
+# forwarding the rest), three with a peel at every step much less so. Note that
+# the trace depth cap bounds what is visible at all - at max_depth=3 a 3-link
+# chain is the longest detectable one, so raising depth finds longer chains.
+PEEL_MIN_LINKS = _env_int("PEEL_MIN_LINKS", 3)
+PEEL_DOMINANT_SHARE = _env_float("PEEL_DOMINANT_SHARE", 0.80)
+PEEL_MAX_SIDE_SHARE = _env_float("PEEL_MAX_SIDE_SHARE", 0.20)
+PEEL_MIN_SIDE_OUTPUTS = _env_int("PEEL_MIN_SIDE_OUTPUTS", 1)
+
+# LAYERING. Rapid multi-hop movement with no apparent economic purpose: each
+# wallet holds the funds briefly and forwards nearly all of them.
+#
+# 0.95 forward ratio distinguishes layering from peeling - a layering hop keeps
+# essentially nothing, where a peel deliberately keeps a slice. 1 hour dwell:
+# laundering scripts move in seconds to minutes, while a wallet with a genuine
+# purpose holds value for longer. Both have to hold across 3 consecutive hops.
+LAYERING_MIN_LINKS = _env_int("LAYERING_MIN_LINKS", 3)
+LAYERING_MAX_DWELL_SEC = _env_int("LAYERING_MAX_DWELL_SEC", 3600)
+LAYERING_MIN_FORWARD_RATIO = _env_float("LAYERING_MIN_FORWARD_RATIO", 0.95)
+LAYERING_MAX_FORWARD_RATIO = _env_float("LAYERING_MAX_FORWARD_RATIO", 1.25)
+
+# STRUCTURING / SMURFING. One source split into many similar-sized outputs, or
+# many similar-sized inputs converging on one destination.
+#
+# 6 outputs and a 0.10 coefficient of variation are both strict. Five similar
+# payments is a payroll run; the similarity bar matters more than the count,
+# because "many outputs" alone describes any active wallet. Labelled exchanges,
+# mixers and bridges are excluded entirely: fanning value out to thousands of
+# similar-sized withdrawals is precisely what an exchange hot wallet does all
+# day, and flagging that as structuring would be the single biggest source of
+# false positives in this whole module.
+STRUCTURING_MIN_OUTPUTS = _env_int("STRUCTURING_MIN_OUTPUTS", 6)
+STRUCTURING_MIN_INPUTS = _env_int("STRUCTURING_MIN_INPUTS", 6)
+STRUCTURING_MAX_CV = _env_float("STRUCTURING_MAX_CV", 0.10)
+
+# RAPID PASS-THROUGH. One wallet, funds in and straight out again. Distinct from
+# layering, which is a property of a chain; this is a property of a single wallet
+# and fires even where the next hop was never expanded.
+#
+# 1 hour and 0.90: a wallet that received and forwarded 90% of the value within
+# the hour was a conduit, not a destination.
+PASS_THROUGH_MAX_WINDOW_SEC = _env_int("PASS_THROUGH_MAX_WINDOW_SEC", 3600)
+PASS_THROUGH_MIN_FORWARD = _env_float("PASS_THROUGH_MIN_FORWARD", 0.90)
+
+# AND AN UPPER BOUND, which turned out to matter as much as the lower one. We see
+# only a window of each wallet's history, so a wallet funded before that window
+# appears to send far more than it received - on the live demo one reported a
+# "forward ratio" of 31,809%. Such a wallet is not demonstrably a conduit for the
+# value WE traced, because the bulk of its outflow came from inflows we never saw.
+# 1.25 allows for ordinary slop (a small prior balance, gas) and rejects the rest.
+PASS_THROUGH_MAX_FORWARD = _env_float("PASS_THROUGH_MAX_FORWARD", 1.25)
+
+# A pattern has to involve an amount worth an investigator's time. Expressed as a
+# multiple of the asset's own dust threshold so one rule scales across assets:
+# 100x gives roughly 0.1 ETH and 100 USDT. Without it the detectors spent their
+# output on sub-cent airdrop residue - the live demo reported a 0.0008 WETH
+# "pass-through".
+TYPOLOGY_MIN_VALUE_MULTIPLE = _env_float("TYPOLOGY_MIN_VALUE_MULTIPLE", 100.0)
+
+# Only describe movement carrying the SUSPECT's money. A trace fetches each
+# wallet's whole recent history, so most of what it sees is unrelated traffic;
+# describing that traffic buried the relevant findings 120 deep on the live demo.
+# When the FIFO taint pass has run, the wallet-level detectors consider only
+# wallets it attributed value to. Set to 0 to describe the whole fetched graph.
+TYPOLOGY_TAINTED_ONLY = os.getenv("TYPOLOGY_TAINTED_ONLY", "1").strip() not in (
+    "0", "false", "False",
+)
+
+# Last-resort ceiling on how many detections a payload carries, strongest first.
+# The relevance filter above should keep the real number far below this; the cap
+# exists so that a pathological graph cannot produce a hundred-page report. The
+# payload always states how many were held back.
+TYPOLOGY_MAX_REPORTED = _env_int("TYPOLOGY_MAX_REPORTED", 15)
+
+# ROUND AMOUNTS. Weak on its own and treated as such: this detector CANNOT fire
+# by itself. A round number is only reported where another typology already
+# matched the same wallets, as corroboration, because round transfers are
+# completely ordinary - people send 1 ETH and 1,000 USDT constantly.
+#
+# 2 significant digits, at least 3 such transfers, and only above a floor worth
+# noticing at all.
+ROUND_AMOUNT_MAX_SIG_DIGITS = _env_int("ROUND_AMOUNT_MAX_SIG_DIGITS", 2)
+ROUND_AMOUNT_MIN_COUNT = _env_int("ROUND_AMOUNT_MIN_COUNT", 3)
+ROUND_AMOUNT_MIN_SHARE = _env_float("ROUND_AMOUNT_MIN_SHARE", 0.60)
+
+# No typology is ever reported as certain, for the same reason confidence scores
+# are capped: a pattern rule cannot know intent.
+TYPOLOGY_STRENGTH_CAP = _env_int("TYPOLOGY_STRENGTH_CAP", 90)
+
+# Entity types whose normal business produces these patterns. Excluded from the
+# wallet-level detectors so the module reports suspicious behaviour by unknown
+# wallets, not the ordinary operation of a regulated business.
+TYPOLOGY_EXEMPT_ENTITY_TYPES = frozenset(
+    {"exchange", "suspected_exchange", "mixer", "bridge"}
+)
+
 # Cap on outgoing transfers expanded per wallet, largest-value first. Stops one
 # hot wallet from fanning the graph out to thousands of nodes.
 MAX_EDGES_PER_NODE = 25

@@ -228,7 +228,7 @@ class _Event:
         return (self.timestamp, self.block, self.tx_index)
 
 
-def _build_events(fetched: dict[str, list]) -> list[_Event]:
+def build_events(fetched: dict[str, list]) -> list[_Event]:
     """
     One event per real transfer, from the per-wallet fetches.
 
@@ -314,7 +314,7 @@ def compute_taint(fetched: dict[str, list], start_address: str) -> TaintResult:
     """
     start = (start_address or "").lower()
     result = TaintResult(observed=set(fetched))
-    events = _build_events(fetched)
+    events = build_events(fetched)
     result.events_replayed = len(events)
 
     # (address, asset) -> queue of [size, tainted] lots, oldest first.
