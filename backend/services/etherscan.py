@@ -37,14 +37,36 @@ class EtherscanError(RuntimeError):
 
 @dataclass(frozen=True)
 class Transfer:
-    """One value-bearing ETH transaction, normalised out of Etherscan's raw JSON."""
+    """
+    One value-bearing transfer - native or ERC-20 - normalised from Etherscan.
+
+    `value` is in WHOLE UNITS of `asset`, already scaled by that token's own
+    decimals. Assuming 18 everywhere would report a 100 USDT payment as
+    0.0000000000001 USDT, because USDT and USDC use 6.
+
+    `contract` is None for the chain's native token and the token address
+    otherwise, which is what makes two tokens sharing a symbol distinguishable.
+
+    `tx_index` is the transaction's position within its block. It is carried for
+    FIFO taint accounting: a block gives every transaction in it the SAME
+    timestamp, so timestamps alone cannot order two transfers out of one wallet,
+    and the order decides which funds were spent first.
+    """
 
     hash: str
     from_addr: str
     to_addr: str
-    value_eth: float
+    value: float
     timestamp: int  # unix epoch seconds
     block: int
+    asset: str = "ETH"
+    contract: str | None = None
+    decimals: int = 18
+    tx_index: int = 0
+
+    @property
+    def is_native(self) -> bool:
+        return self.contract is None
 
 
 def normalize_address(address: str) -> str:
@@ -76,12 +98,30 @@ class EtherscanClient:
 
     def __init__(self) -> None:
         self._client: httpx.AsyncClient | None = None
-        # address -> transfers sent BY that address
-        self._cache: dict[str, list[Transfer]] = {}
+        # (chain_id, address) -> transfers sent BY that address. The chain is
+        # part of the key because the same address on another network is another
+        # wallet entirely; a flat cache would answer with the wrong chain's data.
+        self._cache: dict[tuple[int, str], list[Transfer]] = {}
         self._lock = asyncio.Lock()
         self._last_request_at = 0.0
         self.api_calls = 0
         self.cache_hits = 0
+        # (chain_id, claimed symbol) -> how many transfers we declined to
+        # follow, for THIS trace. Keyed by chain because a symbol that is a real
+        # asset on one chain can be an impostor on another.
+        self.skipped_tokens: dict[tuple[int, str], int] = {}
+        # The same tally per wallet, cached alongside that wallet's transfers.
+        #
+        # WHY THIS EXISTS. The per-trace tally above is built while PARSING rows,
+        # so a cache hit used to contribute nothing to it: the second trace of a
+        # session silently lost its "tokens not followed" disclosure entirely,
+        # because every wallet was already cached. A disclosure that disappears
+        # depending on whether something was fetched before is worse than none,
+        # so the tally is remembered per wallet and replayed on every hit.
+        self._skipped_by_wallet: dict[tuple[int, str], dict[str, int]] = {}
+        # Wallets already counted into this trace, so revisiting one cannot
+        # double its contribution.
+        self._tallied: set[tuple[int, str]] = set()
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -96,11 +136,15 @@ class EtherscanClient:
         """Zero the per-trace counters. The cache itself deliberately survives."""
         self.api_calls = 0
         self.cache_hits = 0
+        self.skipped_tokens = {}
+        self._tallied = set()
 
     def clear_cache(self) -> None:
         self._cache.clear()
+        self._skipped_by_wallet.clear()
+        self._tallied.clear()
 
-    async def _request(self, params: dict) -> object:
+    async def _request(self, params: dict, chain_id: int | None = None) -> object:
         """
         One throttled Etherscan V2 call.
 
@@ -116,7 +160,7 @@ class EtherscanClient:
 
         query = {
             **params,
-            "chainid": config.ETHERSCAN_CHAIN_ID,
+            "chainid": config.chain(chain_id)["chain_id"],
             "apikey": config.ETHERSCAN_API_KEY,
         }
 
@@ -156,82 +200,253 @@ class EtherscanClient:
         # result field usually carries the human-readable reason.
         raise EtherscanError(f"Etherscan error: {message or 'unknown'} / {result}")
 
-    async def get_outgoing_transfers(self, address: str) -> list[Transfer]:
+    async def get_wallet_transfers(
+        self, address: str, chain_id: int | None = None
+    ) -> list[Transfer]:
         """
         Every ETH transfer SENT BY `address`, most recent first.
 
-        WHY only outgoing: a trace follows the money forward. Transactions where
-        this wallet is the recipient tell us where the funds came from, which is
-        backwards from what the investigator needs here.
+        BOTH DIRECTIONS, and this is deliberate. The trace itself only ever
+        follows outgoing edges - see the direction argument in tracer.py, which
+        has not changed. But FIFO taint accounting cannot work from outgoing
+        transfers alone: to know which funds a wallet passed on, you have to know
+        the order in which funds arrived, including arrivals from wallets the
+        trace never visited. Those clean inflows are exactly what dilutes taint.
 
-        SCOPE: external ETH transactions only (Etherscan's `txlist`). Internal
-        transactions (contract-driven moves) and ERC-20 token transfers such as
-        USDT are not covered yet - see the scope note in tracer.py.
+        THIS COSTS NOTHING EXTRA. Etherscan's `txlist` returns every transaction
+        where the address is sender OR recipient, in the same single call we were
+        already making - on one real demo wallet, 1000 rows of which 647 were
+        incoming and were being thrown away. Same for `tokentx`. Callers wanting
+        the old behaviour use `get_outgoing_transfers`, which filters this list.
+
+        Covers BOTH native transfers (`txlist`) and ERC-20 transfers (`tokentx`),
+        merged into one stream. They have to be merged rather than chosen between:
+        a wallet that receives ETH and forwards USDT is a single step in the
+        trail, and a native-only view shows it as a dead end.
+
+        SCOPE: internal transactions (value moved by contract execution) are still
+        not covered. Token transfers outside the allowlist are counted and
+        reported, not followed - see `skipped_tokens`.
         """
-        key = normalize_address(address)
+        chain = config.chain(chain_id)
+        resolved = chain["chain_id"]
+        native_symbol = chain["native"]
+        key = (resolved, normalize_address(address))
         if key in self._cache:
             self.cache_hits += 1
+            self._count_skipped(key)
             return self._cache[key]
 
         raw = await self._request(
             {
                 "module": "account",
                 "action": "txlist",
-                "address": key,
+                "address": key[1],
                 "startblock": 0,
                 "endblock": 99999999,
                 "page": 1,
                 "offset": config.MAX_TXNS_PER_ADDRESS,
                 "sort": "desc",
-            }
+            },
+            chain_id=resolved,
         )
 
         transfers: list[Transfer] = []
         if isinstance(raw, list):
             for tx in raw:
-                transfer = _parse_transfer(tx, sender=key)
+                transfer = _parse_native_transfer(tx, wallet=key[1], asset=native_symbol)
                 if transfer is not None:
                     transfers.append(transfer)
 
+        # Second call: ERC-20 movements out of the same wallet. This doubles the
+        # calls per wallet, which the throttle already covers - it serialises on
+        # elapsed time, not on call count, so the 5/sec ceiling still holds.
+        token_raw = await self._request(
+            {
+                "module": "account",
+                "action": "tokentx",
+                "address": key[1],
+                "startblock": 0,
+                "endblock": 99999999,
+                "page": 1,
+                "offset": config.MAX_TXNS_PER_ADDRESS,
+                "sort": "desc",
+            },
+            chain_id=resolved,
+        )
+
+        if isinstance(token_raw, list):
+            for tx in token_raw:
+                transfer, skipped_symbol = _parse_token_transfer(
+                    tx, wallet=key[1], chain_id=resolved
+                )
+                if transfer is not None:
+                    transfers.append(transfer)
+                elif skipped_symbol and (tx.get("from") or "").strip().lower() == key[1]:
+                    # Counted, never followed: the payload reports how much token
+                    # movement we chose not to trace and why. Only rows this
+                    # wallet SENT count - incoming spam is not a trail we
+                    # declined to follow, and counting it would inflate the
+                    # figure now that both directions are fetched.
+                    wallet_tally = self._skipped_by_wallet.setdefault(key, {})
+                    wallet_tally[skipped_symbol] = wallet_tally.get(skipped_symbol, 0) + 1
+
         self._cache[key] = transfers
+        self._count_skipped(key)
         return transfers
 
+    def _count_skipped(self, key: tuple[int, str]) -> None:
+        """
+        Fold one wallet's skipped-token tally into this trace's total.
 
-def _parse_transfer(tx: dict, sender: str) -> Transfer | None:
+        Called on both a fresh fetch and a cache hit, so the disclosure describes
+        the wallets the TRACE visited rather than the wallets this process
+        happened to parse. Guarded against counting a wallet twice.
+        """
+        if key in self._tallied:
+            return
+        self._tallied.add(key)
+        chain_id = key[0]
+        for symbol, count in self._skipped_by_wallet.get(key, {}).items():
+            tally_key = (chain_id, symbol)
+            self.skipped_tokens[tally_key] = self.skipped_tokens.get(tally_key, 0) + count
+
+    async def get_outgoing_transfers(
+        self, address: str, chain_id: int | None = None
+    ) -> list[Transfer]:
+        """
+        Only the transfers this wallet SENT - what the forward walk expands on.
+
+        A filtered view of `get_wallet_transfers`, so it costs no extra API call
+        and cannot disagree with the data the taint pass replays.
+        """
+        transfers = await self.get_wallet_transfers(address, chain_id=chain_id)
+        wallet = normalize_address(address)
+        return [t for t in transfers if t.from_addr == wallet]
+
+
+def _common_fields(tx: dict, wallet: str) -> tuple[str, str] | None:
     """
-    Turn one raw Etherscan row into a Transfer, or None if it is not usable.
+    Shared row checks; returns (from, to) or None when the row is unusable.
 
-    Dropped rows: failed transactions (they moved nothing), contract creations
-    (no recipient), self-sends, incoming transactions, and zero-value calls.
-    A zero-value row is normally a contract interaction - including an ERC-20
-    transfer, whose real value lives in the token contract rather than in the
-    ETH value field - so it carries no ETH flow for us to follow.
+    Keeps rows in EITHER direction - the wallet may be sender or recipient - and
+    drops rows it is not party to, contract creations with no recipient, and
+    self-sends (which move no money between wallets and would add a self-loop to
+    the FIFO ledger, spending a wallet's own funds to refill its own queue).
+    """
+    to_addr = (tx.get("to") or "").strip().lower()
+    from_addr = (tx.get("from") or "").strip().lower()
+    if not to_addr or not from_addr:
+        return None
+    if from_addr == to_addr:
+        return None
+    if wallet not in (from_addr, to_addr):
+        return None
+    return from_addr, to_addr
+
+
+def _parse_native_transfer(tx: dict, wallet: str, asset: str = "ETH") -> Transfer | None:
+    """
+    One `txlist` row as a native-token Transfer, or None if unusable.
+
+    Dropped rows: reverted transactions, contract creations, self-sends, and
+    zero-value calls. A zero-value row here is a contract interaction carrying no
+    native value - very often an ERC-20 transfer, whose real value lives in the
+    token contract. Those are NOT lost any more: the same movement arrives
+    through `tokentx` with its true amount.
     """
     try:
-        to_addr = (tx.get("to") or "").strip().lower()
-        from_addr = (tx.get("from") or "").strip().lower()
-        if not to_addr or from_addr != sender or to_addr == sender:
+        pair = _common_fields(tx, wallet)
+        if pair is None:
             return None
+        from_addr, to_addr = pair
 
         # isError is "1" on a reverted transaction; no value actually moved.
         if str(tx.get("isError", "0")) == "1":
             return None
 
-        value_eth = int(tx.get("value", "0")) / 1e18
-        if value_eth <= 0:
+        value = int(tx.get("value", "0")) / 1e18
+        if value <= 0:
             return None
 
         return Transfer(
             hash=tx.get("hash", ""),
             from_addr=from_addr,
             to_addr=to_addr,
-            value_eth=value_eth,
+            value=value,
             timestamp=int(tx.get("timeStamp", "0")),
             block=int(tx.get("blockNumber", "0")),
+            asset=asset,
+            contract=None,
+            decimals=18,
+            tx_index=int(tx.get("transactionIndex") or 0),
         )
     except (TypeError, ValueError):
         # A malformed row should skip, not kill an entire investigation.
         return None
+
+
+def _parse_token_transfer(
+    tx: dict, wallet: str, chain_id: int
+) -> tuple[Transfer | None, str | None]:
+    """
+    One `tokentx` row as an ERC-20 Transfer.
+
+    Returns (transfer, skipped_symbol). A token that is not on this chain's
+    allowlist yields (None, CLAIMED_SYMBOL) so the caller can count what was
+    deliberately not followed - silence there would recreate the exact blind spot
+    this work removes.
+
+    THE ALLOWLIST IS MATCHED ON `contractAddress`, NOT ON `tokenSymbol`. The
+    symbol in this row is whatever the token's author wrote: anyone can deploy a
+    contract calling itself USDT and send it to the suspect. Matching on it would
+    make the tracer follow that token and report its amount as dollars in a police
+    report. The contract address is the identity; the symbol we attach afterwards
+    is a display label, taken from our own verified table rather than from the row.
+
+    DECIMALS LIKEWISE COME FROM OUR TABLE, not from `tokenDecimal`, for the same
+    reason - and they are not uniform: USDT and USDC use 6 decimals on Ethereum
+    and 18 on BNB Chain. Dividing a 100 USDT payment by 1e18 would understate it
+    by twelve orders of magnitude, and it would then be discarded as dust.
+    """
+    try:
+        pair = _common_fields(tx, wallet)
+        if pair is None:
+            return None, None
+        from_addr, to_addr = pair
+
+        contract = (tx.get("contractAddress") or "").strip().lower()
+        allowed = config.token_asset(chain_id, contract)
+        if allowed is None:
+            # Not followed. Report it under the symbol it CLAIMS, so an
+            # investigator sees what was refused; truncated because that string
+            # comes from the token's author and ends up in our JSON payload.
+            claimed = (tx.get("tokenSymbol") or "").strip()[:20]
+            return None, claimed or "(unnamed token)"
+        symbol, decimals = allowed
+
+        raw = int(tx.get("value", "0"))
+        value = raw / (10 ** decimals)
+        if value <= 0:
+            return None, None
+
+        return (
+            Transfer(
+                hash=tx.get("hash", ""),
+                from_addr=from_addr,
+                to_addr=to_addr,
+                value=value,
+                timestamp=int(tx.get("timeStamp", "0")),
+                block=int(tx.get("blockNumber", "0")),
+                asset=symbol,
+                contract=contract or None,
+                decimals=decimals,
+                tx_index=int(tx.get("transactionIndex") or 0),
+            ),
+            None,
+        )
+    except (TypeError, ValueError):
+        return None, None
 
 
 # Process-wide singleton so the cache is shared across requests and traces.

@@ -163,7 +163,10 @@ def compute_confidence(attribution) -> ConfidenceScore:
         # Not a confidence penalty: a sanctioned hop does not make the trace
         # less reliable. It is surfaced as a risk flag instead.
         pass
-    if not crossed:
+    # The clean-path bonus is about custody: only mixers and bridges break it.
+    # Testing `not crossed` here would let a sanctioned or scam wallet silently
+    # cost 15 points, turning a risk flag into a hidden confidence penalty.
+    if not crossed & {"mixer", "bridge"}:
         components.append(ScoreComponent("no mixer or bridge on path", CLEAN_PATH_POINTS))
 
     raw = sum(c.points for c in components)

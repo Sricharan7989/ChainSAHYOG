@@ -31,9 +31,27 @@ from app import config
 CACHE_DIR = config.DATA_DIR / "cache"
 
 
-def _path_for(address: str) -> Path:
-    """One file per address. Lowercased, so lookups never miss on casing."""
-    return CACHE_DIR / f"{address.strip().lower()}.json"
+DEFAULT_CHAIN = "ethereum"
+
+
+def _path_for(address: str, chain: str | None = None) -> Path:
+    """
+    One file per (chain, address). Lowercased, so lookups never miss on casing.
+
+    Ethereum keeps the bare `<address>.json` filename it has always had, so every
+    recording made before multi-chain support still replays. Other chains are
+    prefixed. A hyphen, not a colon: colons are illegal in Windows filenames.
+    """
+    chain_name = (chain or DEFAULT_CHAIN).strip().lower()
+    stem = address.strip().lower()
+    if chain_name != DEFAULT_CHAIN:
+        stem = f"{chain_name}-{stem}"
+    return CACHE_DIR / f"{stem}.json"
+
+
+def _chain_of(payload: dict) -> str:
+    """Which chain a recorded payload describes; Ethereum when it predates chains."""
+    return str((payload.get("params") or {}).get("chain") or DEFAULT_CHAIN).lower()
 
 
 def save_trace(payload: dict) -> Path:
@@ -49,20 +67,21 @@ def save_trace(payload: dict) -> Path:
     address = payload.get("start_address", "")
     if not address:
         raise ValueError("Cannot cache a trace with no start_address")
+    chain = _chain_of(payload)
 
     recorded = dict(payload)
     recorded["source"] = "cache"
     recorded["recorded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     recorded["recorded_epoch"] = int(time.time())
 
-    path = _path_for(address)
+    path = _path_for(address, chain)
     path.write_text(json.dumps(recorded, indent=2), encoding="utf-8")
     return path
 
 
-def load_trace(address: str) -> dict | None:
-    """The recorded trace for this address, or None if it was never recorded."""
-    path = _path_for(address)
+def load_trace(address: str, chain: str | None = None) -> dict | None:
+    """The recorded trace for this address on this chain, or None."""
+    path = _path_for(address, chain)
     if not path.exists():
         return None
     try:
@@ -74,8 +93,8 @@ def load_trace(address: str) -> dict | None:
     return payload
 
 
-def has_trace(address: str) -> bool:
-    return _path_for(address).exists()
+def has_trace(address: str, chain: str | None = None) -> bool:
+    return _path_for(address, chain).exists()
 
 
 def list_cached() -> list[dict]:
@@ -93,6 +112,8 @@ def list_cached() -> list[dict]:
         entries.append(
             {
                 "address": payload.get("start_address", path.stem),
+                "chain": _chain_of(payload),
+                "chain_name": (payload.get("params") or {}).get("chain_name"),
                 "recorded_at": payload.get("recorded_at"),
                 "headline": summary.get("headline", ""),
                 "exchange": summary.get("exchange"),
@@ -104,8 +125,8 @@ def list_cached() -> list[dict]:
     return entries
 
 
-def delete_trace(address: str) -> bool:
-    path = _path_for(address)
+def delete_trace(address: str, chain: str | None = None) -> bool:
+    path = _path_for(address, chain)
     if path.exists():
         path.unlink()
         return True

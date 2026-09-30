@@ -20,7 +20,7 @@ router = APIRouter()
 
 # Most recent live payload per address, for this process only. Makes
 # "trace, then download the PDF" instant instead of re-walking the chain.
-_RECENT: dict[str, dict] = {}
+_RECENT: dict[tuple[str, str], dict] = {}
 
 
 @router.get("/health")
@@ -31,7 +31,14 @@ def health() -> dict:
     Reports which graph backend is live. Neo4j is optional: "memory" here is a
     healthy state, not a failure, and traces return identical results either way.
     """
-    return {"status": "ok", "graph": graph_store.status()}
+    return {
+        "status": "ok",
+        "graph": graph_store.status(),
+        "chains": {
+            "default": config.DEFAULT_CHAIN_ID,
+            "supported": config.supported_chains(),
+        },
+    }
 
 
 @router.get("/trace")
@@ -47,6 +54,10 @@ async def trace_address(
         "auto",
         pattern="^(auto|live|cache)$",
         description="auto = replay if recorded else live; live = always fresh; cache = recorded only",
+    ),
+    chain_id: int = Query(
+        config.DEFAULT_CHAIN_ID,
+        description="EVM chain to trace: 1 Ethereum, 137 Polygon, 56 BNB Chain, 42161 Arbitrum",
     ),
     save: bool = Query(False, description="Record this result for instant replay later"),
 ) -> dict:
@@ -69,7 +80,11 @@ async def trace_address(
     so each extra hop multiplies both the graph size and the API calls.
     """
     payload = await _run_or_replay(
-        address, max_depth=max_depth, dust_threshold=dust_threshold, mode=mode
+        address,
+        max_depth=max_depth,
+        dust_threshold=dust_threshold,
+        mode=mode,
+        chain_id=chain_id,
     )
 
     if save and payload.get("source") != "cache":
@@ -80,7 +95,12 @@ async def trace_address(
 
 
 async def _run_or_replay(
-    address: str, *, max_depth: int, dust_threshold: float, mode: str
+    address: str,
+    *,
+    max_depth: int,
+    dust_threshold: float,
+    mode: str,
+    chain_id: int = config.DEFAULT_CHAIN_ID,
 ) -> dict:
     """
     Produce a trace payload, from the recording if there is one, else live.
@@ -93,24 +113,38 @@ async def _run_or_replay(
     if not is_valid_address(address):
         raise HTTPException(
             status_code=400,
-            detail=f"'{address}' is not a valid Ethereum address (expected 0x + 40 hex chars).",
+            detail=f"'{address}' is not a valid EVM address (expected 0x + 40 hex chars).",
         )
 
+    # 422 for an unsupported chain: it is an unprocessable parameter value, the
+    # same class of error FastAPI raises for a bad max_depth.
+    try:
+        chain = config.chain(chain_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     key = address.strip().lower()
+    # The in-process map is keyed by chain too: the same address on another
+    # network is a different trace and must not be served from the wrong one.
+    # (The on-disk cache does the same, inside replay._path_for.)
+    recent_key = (chain["slug"], key)
 
     if mode in ("auto", "cache"):
-        cached = replay.load_trace(key)
+        cached = replay.load_trace(key, chain=chain["slug"])
         if cached is not None:
             return cached
         if mode == "cache":
             raise HTTPException(
                 status_code=404,
-                detail=f"No recorded trace for {key}. Run it live first, or use mode=auto.",
+                detail=(
+                    f"No recorded trace for {key} on {chain['name']}. "
+                    f"Run it live first, or use mode=auto."
+                ),
             )
 
     # In-memory result from earlier in this process - what /report normally hits.
     if mode == "auto":
-        recent = _RECENT.get(key)
+        recent = _RECENT.get(recent_key)
         if recent is not None and recent["params"]["max_depth"] == max_depth:
             return recent
 
@@ -122,7 +156,10 @@ async def _run_or_replay(
 
     try:
         result = await tracer.trace(
-            address, max_depth=max_depth, dust_threshold=dust_threshold
+            address,
+            max_depth=max_depth,
+            dust_threshold=dust_threshold,
+            chain_id=chain["chain_id"],
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -133,7 +170,7 @@ async def _run_or_replay(
 
     payload = tracer.to_json(result)
     payload["source"] = "live"
-    _RECENT[key] = payload
+    _RECENT[recent_key] = payload
     return payload
 
 
@@ -143,6 +180,7 @@ async def trace_report(
     max_depth: int = Query(config.MAX_TRACE_DEPTH, ge=1, le=6),
     dust_threshold: float = Query(config.DUST_THRESHOLD_ETH, ge=0.0),
     mode: str = Query("auto", pattern="^(auto|live|cache)$"),
+    chain_id: int = Query(config.DEFAULT_CHAIN_ID),
 ):
     """
     The same finding as /trace, rendered as an investigation-ready PDF.
@@ -152,7 +190,11 @@ async def trace_report(
     returns, so the document can never contradict what was on screen.
     """
     payload = await _run_or_replay(
-        address, max_depth=max_depth, dust_threshold=dust_threshold, mode=mode
+        address,
+        max_depth=max_depth,
+        dust_threshold=dust_threshold,
+        mode=mode,
+        chain_id=chain_id,
     )
 
     pdf = report.build_report(payload)
@@ -186,5 +228,9 @@ def root(request: Request) -> dict:
         # Reports only WHETHER a key is configured, never the key itself.
         "live_trace_available": config.has_etherscan_key(),
         "graph": graph_store.status(),
+        "chains": {
+            "default": config.DEFAULT_CHAIN_ID,
+            "supported": config.supported_chains(),
+        },
         "docs": "/docs",
     }

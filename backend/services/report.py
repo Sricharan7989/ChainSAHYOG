@@ -98,6 +98,27 @@ def _fmt_eth(value) -> str:
     return f"{v:.4f} ETH"
 
 
+def _fmt_assets(totals, fallback=None) -> str:
+    """
+    Per-asset totals as one line: "12.5 ETH + 40,000 USDT".
+
+    Falls back to the legacy scalar for payloads recorded before tokens existed.
+    Assets are never summed: there is no price feed here, so a combined number
+    would be invented.
+    """
+    if not isinstance(totals, dict) or not totals:
+        return _fmt_eth(fallback) if fallback is not None else "—"
+    parts = []
+    for asset, amount in sorted(totals.items(), key=lambda kv: -kv[1]):
+        if amount >= 1000:
+            parts.append(f"{amount:,.0f} {asset}")
+        elif amount >= 1:
+            parts.append(f"{amount:,.2f} {asset}")
+        else:
+            parts.append(f"{amount:.4f} {asset}")
+    return " + ".join(parts)
+
+
 def _short(address: str) -> str:
     return f"{address[:10]}…{address[-8:]}" if address and len(address) > 20 else (address or "")
 
@@ -136,7 +157,11 @@ def _path_section(payload: dict, styles: dict) -> list:
     nodes = {n["id"]: n for n in payload.get("nodes", [])}
     edges = {(e["source"], e["target"]): e for e in payload.get("edges", [])}
 
-    head = ["Hop", "Role", "Address", "Value received", "Transaction"]
+    taint_computed = bool((payload.get("accounting") or {}).get("rule"))
+    head = ["Hop", "Role", "Address", "Value moved"]
+    if taint_computed:
+        head.append("Of which suspect's")
+    head.append("Transaction")
     rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in head]]
 
     for index, address in enumerate(path):
@@ -151,19 +176,43 @@ def _path_section(payload: dict, styles: dict) -> list:
             role = f"{node.get('label')} (mixer)"
         elif node.get("is_bridge"):
             role = f"{node.get('label')} (bridge)"
+        elif node.get("entity_type") == "sanctioned":
+            role = f"{node.get('label')} (OFAC sanctioned)"
         else:
             role = "Intermediate wallet"
 
         edge = edges.get((path[index - 1], address)) if index > 0 else None
-        rows.append([
+        assets = (edge.get("assets") or []) if edge else []
+        row = [
             Paragraph(str(index) if index else "—", styles["small"]),
             Paragraph(role, styles["body"]),
             Paragraph(address, styles["mono"]),
-            Paragraph(_fmt_eth(edge["value_eth"]) if edge else "—", styles["small"]),
-            Paragraph(_short(edge["tx_hash"]) if edge else "—", styles["mono"]),
-        ])
+            Paragraph(
+                _fmt_assets({a["asset"]: a["value"] for a in assets},
+                            edge.get("value_eth")) if edge else "—",
+                styles["small"],
+            ),
+        ]
+        if taint_computed:
+            tainted = {
+                a["asset"]: a.get("tainted_value", 0.0)
+                for a in assets
+                if a.get("tainted_value", 0.0) > 0
+            }
+            row.append(Paragraph(
+                _fmt_assets(tainted) if tainted
+                else ("—" if not edge else '<font color="#b91c1c">none</font>'),
+                styles["small"],
+            ))
+        row.append(Paragraph(_short(edge["tx_hash"]) if edge else "—", styles["mono"]))
+        rows.append(row)
 
-    table = Table(rows, colWidths=[10 * mm, 34 * mm, 62 * mm, 26 * mm, 34 * mm], repeatRows=1)
+    widths = (
+        [10 * mm, 30 * mm, 50 * mm, 24 * mm, 24 * mm, 28 * mm]
+        if taint_computed
+        else [10 * mm, 34 * mm, 62 * mm, 26 * mm, 34 * mm]
+    )
+    table = Table(rows, colWidths=widths, repeatRows=1)
     table.setStyle(
         TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -248,7 +297,8 @@ def _risk_section(payload: dict, styles: dict) -> list:
             Paragraph(str(flag.get("entity", "")), styles["body"]),
             Paragraph("Yes" if flag.get("on_primary_path") else "No", styles["small"]),
             Paragraph(str(flag.get("hop_distance", "")), styles["small"]),
-            Paragraph(_fmt_eth(flag.get("value_received_eth")), styles["small"]),
+            Paragraph(_fmt_assets(flag.get("value_received"),
+                                  flag.get("value_received_eth")), styles["small"]),
         ])
 
     table = Table(rows, colWidths=[20 * mm, 76 * mm, 18 * mm, 12 * mm, 40 * mm], repeatRows=1)
@@ -271,19 +321,141 @@ def _risk_section(payload: dict, styles: dict) -> list:
     return [table, *notes]
 
 
-DISCLAIMER = (
-    "<b>Basis and limitations.</b> This report is derived entirely from public "
-    "Ethereum transaction records. No cryptography was broken, no private data "
-    "was accessed, and no individual was identified by this tool. It establishes "
-    "that funds moved along the path shown and arrived at a wallet attributed to "
-    "the named entity; it does NOT establish who controlled any intermediate "
-    "wallet. Attribution of the endpoint rests on the method stated above and "
-    "carries the confidence score shown, which is never certainty. "
-    "Native ETH transfers only: transfers of ERC-20 tokens such as USDT, and "
-    "internal contract transfers, are not followed in this version, so the trail "
-    "may continue beyond what is shown. Identity can only be established by the "
-    "named exchange, from its own KYC records, in response to a lawful request."
-)
+def _typology_section(payload: dict, styles: dict) -> list:
+    """
+    Matched laundering typologies, each with its explanation and its numbers.
+
+    WHY THE FULL EXPLANATION IS PRINTED, not a code. The point of this section is
+    that an investigator can lift a paragraph into a case file and a magistrate can
+    read it without knowing what "peel chain" means. A table of typology names and
+    scores would be useless for that, and worse, it would read as a verdict.
+
+    Every entry therefore carries the measurements that triggered it and the
+    thresholds it was judged against, so the reasoning is auditable and a reader
+    who thinks our bar is too low can say exactly where.
+    """
+    found = payload.get("typologies") or []
+    summary = payload.get("typology_summary") or {}
+    if not found:
+        return [
+            Paragraph("Laundering typologies", styles["h2"]),
+            Paragraph(
+                "No laundering typology met its threshold on this trace. The rules "
+                "are deliberately strict - a wrongly asserted pattern in a police "
+                "report is more damaging than a missed one - so this is not a "
+                "finding that the movement was ordinary, only that no pattern was "
+                "unambiguous enough to assert.",
+                styles["body"],
+            ),
+        ]
+
+    story = [Paragraph("Laundering typologies", styles["h2"])]
+    story.append(Paragraph(
+        f"<b>{summary.get('count', len(found))} pattern(s) matched.</b> "
+        f"{summary.get('caveat', '')}",
+        styles["small"],
+    ))
+    if summary.get("suppressed"):
+        story.append(Paragraph(
+            f"The {summary['count']} strongest are shown; "
+            f"{summary['suppressed']} further match(es) of the same kinds are not "
+            f"listed individually.",
+            styles["small"],
+        ))
+    if summary.get("scope"):
+        story.append(Paragraph(summary["scope"], styles["small"]))
+    story.append(Spacer(1, 4))
+
+    for entry in found:
+        strength = entry.get("strength", 0)
+        colour = DANGER if strength >= 80 else WARN if strength >= 60 else SOFT
+        heading = (
+            f'<font color="{_hex(colour)}"><b>{entry.get("name", "")}</b></font> '
+            f'· strength {strength}/100'
+        )
+        if entry.get("corroborating_only"):
+            heading += ' · <i>corroborating signal only, not a finding on its own</i>'
+        if entry.get("asset"):
+            heading += f' · {entry["asset"]}'
+
+        measurements = ", ".join(
+            f"{k.replace('_', ' ')} {v}" for k, v in (entry.get("measurements") or {}).items()
+        )
+        thresholds = ", ".join(
+            f"{k.replace('_', ' ')} {v}" for k, v in (entry.get("thresholds") or {}).items()
+        )
+
+        block = [
+            Paragraph(heading, styles["body"]),
+            Paragraph(entry.get("explanation", ""), styles["small"]),
+            Paragraph(
+                f'<font size="7">Measured: {measurements}. '
+                f'Thresholds applied: {thresholds}. '
+                f'Wallets involved: {len(entry.get("wallets") or [])}.</font>',
+                styles["small"],
+            ),
+            Spacer(1, 6),
+        ]
+        story.append(KeepTogether(block))
+
+    story.append(Paragraph(summary.get("thresholds_note", ""), styles["small"]))
+    return story
+
+
+def disclaimer(
+    chain_name: str = "Ethereum", native: str = "ETH", accounting: dict | None = None
+) -> str:
+    """
+    The basis-and-limitations paragraph, named for the chain actually traced.
+
+    A function rather than a constant because this paragraph makes factual claims
+    about WHICH network, WHICH assets and WHICH method were examined. A Polygon
+    report stating "public Ethereum transaction records" would be wrong, in the one
+    part of the document whose whole purpose is to be accurate about scope.
+
+    The taint sentence is conditional for the same reason. It used to say flatly
+    that no value-level taint tracking is performed. That was true; it is now
+    wrong whenever the FIFO pass ran, and a disclaimer that understates the method
+    is as much a defect as one that overstates it. Where the pass did run, the
+    paragraph names the accounting rule instead - which is what makes the figures
+    challengeable, and therefore usable in evidence.
+    """
+    ran = bool((accounting or {}).get("rule"))
+    if ran:
+        taint_sentence = (
+            "Amounts attributed to the suspect are computed by FIFO accounting: "
+            "every observed transfer is replayed in chronological order and each "
+            "outgoing payment is drawn from the front of the wallet's queue of "
+            "received funds. Coins are fungible, so no accounting rule is correct "
+            "in a physical sense; a different rule - last-in-first-out, or "
+            "pro-rata pooling - applied to the same transactions would attribute "
+            "a different amount. Value a wallet sent that its observed inflows "
+            "cannot account for is treated as untainted, which understates the "
+            "attributed amount rather than inflating it. The gross figures and the "
+            "attributed figures are both shown and are clearly distinguished."
+        )
+    else:
+        taint_sentence = (
+            "It does NOT perform value-level taint tracking: each wallet's large "
+            "outgoing transfers are followed regardless of where that value came "
+            "from, so a connected path is not proof that these specific funds "
+            "arrived."
+        )
+    return (
+        f"<b>Basis and limitations.</b> This report is derived entirely from "
+        f"public {chain_name} transaction records. No cryptography was broken, no "
+        f"private data was accessed, and no individual was identified by this "
+        f"tool. It establishes that a chain of transfers connects the suspect "
+        f"address to a wallet attributed to the named entity. {taint_sentence} "
+        f"It does NOT establish who controlled any intermediate wallet. "
+        f"Attribution of the endpoint rests on the method stated above and carries "
+        f"the confidence score shown, which is never certainty. Native {native} "
+        f"transfers and allowlisted ERC-20 tokens are followed; internal contract "
+        f"transfers are not, and attribution does not survive a conversion from "
+        f"one asset to another, so the trail may continue beyond what is shown. "
+        f"Identity can only be established by the named exchange, from its own "
+        f"KYC records, in response to a lawful request."
+    )
 
 
 def build_report(payload: dict) -> bytes:
@@ -314,7 +486,8 @@ def build_report(payload: dict) -> bytes:
     # --- Header ---------------------------------------------------------
     story.append(Paragraph("Cryptocurrency Attribution Report", styles["title"]))
     story.append(Paragraph(
-        "Wallet-to-VASP tracing · prepared for lawful request via SAHYOG / I4C",
+        f"Wallet-to-VASP tracing on {params.get('chain_name') or 'Ethereum'} · "
+        f"prepared for lawful request via SAHYOG / I4C",
         styles["subtitle"],
     ))
     story.append(_rule())
@@ -325,12 +498,17 @@ def build_report(payload: dict) -> bytes:
         recorded = payload.get("recorded_at", "unknown time")
         source_text = f"Recorded trace (captured {recorded})"
 
+    chain_name = params.get("chain_name") or "Ethereum"
+    chain_id = params.get("chain_id", 1)
+    native = params.get("native_symbol") or "ETH"
+
     story.append(_kv_table([
         ("Suspect address", f'<font face="Courier" size="8">{payload.get("start_address", "")}</font>'),
+        ("Network", f"{chain_name} (chain id {chain_id}), native token {native}"),
         ("Report generated", generated),
-        ("Data source", f"Ethereum mainnet via Etherscan · {source_text}"),
+        ("Data source", f"{chain_name} via Etherscan V2 · {source_text}"),
         ("Trace depth", f'{params.get("max_depth", "?")} hops '
-                        f'(dust threshold {params.get("dust_threshold_eth", "?")} ETH)'),
+                        f'(dust threshold {params.get("dust_threshold_eth", "?")} {native})'),
         ("Wallets examined", f'{stats.get("nodes", 0)} wallets, {stats.get("edges", 0)} transfers'),
     ], styles))
 
@@ -338,28 +516,96 @@ def build_report(payload: dict) -> bytes:
     story.append(Paragraph("Finding", styles["h2"]))
 
     if summary.get("found"):
-        story.append(Paragraph(
-            f'<b>Funds reached {summary.get("exchange")}</b>, '
+        hop_text = (
             f'{summary.get("hop_distance")} hop'
             f'{"" if summary.get("hop_distance") == 1 else "s"} from the suspect '
-            f'address, at {summary.get("confidence_score")}% confidence.',
-            styles["headline"],
-        ))
+            f'address, at {summary.get("confidence_score")}% confidence.'
+        )
+        attributed = summary.get("tainted_value_display")
+        if summary.get("taint_computed") and attributed:
+            # Lead with the attributed value: it is the finding, and the hop count
+            # was always the weaker half of the claim.
+            story.append(Paragraph(
+                f'<b>{attributed} of the suspect\'s funds reached '
+                f'{summary.get("exchange")}</b>, {hop_text}',
+                styles["headline"],
+            ))
+        elif summary.get("taint_computed"):
+            story.append(Paragraph(
+                f'<b>Transaction path connects to {summary.get("exchange")}</b>, '
+                f'{hop_text} <font color="#b91c1c">No value attributable to the '
+                f'suspect arrived under FIFO accounting.</font>',
+                styles["headline"],
+            ))
+        else:
+            story.append(Paragraph(
+                f'<b>Transaction path connects to {summary.get("exchange")}</b>, '
+                f'{hop_text}',
+                styles["headline"],
+            ))
+        # Immediately under the claim, not down in the disclaimer: the point is
+        # that a reader cannot take the headline without this qualification.
+        if summary.get("caveat"):
+            story.append(Paragraph(f'<b>{summary["caveat"]}</b>', styles["small"]))
         story.append(Spacer(1, 3))
-        story.append(_kv_table([
+
+        rows = [
             ("Exchange", str(summary.get("exchange", ""))),
             ("Exchange wallet",
              f'<font face="Courier" size="8">{summary.get("address", "")}</font>'),
-            ("Value traced in", _fmt_eth(summary.get("value_received_eth"))),
-            ("Identification method",
-             "Direct match against known exchange wallets"
-             if summary.get("method") == "known_label"
-             else "Deposit-consolidation pattern (unconfirmed)"),
-        ], styles))
+        ]
+        if summary.get("taint_computed"):
+            fraction = summary.get("tainted_inflow_fraction") or {}
+            share = ", ".join(
+                f"{value * 100:.2f}% of the {asset} it received"
+                for asset, value in sorted(fraction.items())
+            )
+            rows.append((
+                "Attributable to the suspect",
+                f'<b>{attributed or "none"}</b>'
+                + (f' <font size="7">({share}, on observed transfers)</font>'
+                   if share else ""),
+            ))
+            rows.append((
+                "Accounting rule",
+                'FIFO - funds leave a wallet in the order they arrived. '
+                '<font size="7">A different rule would attribute a different '
+                'amount; see Basis and limitations.</font>',
+            ))
+            if not summary.get("path_fully_accounted", True):
+                rows.append((
+                    "Uncertainty on this route",
+                    f'{summary.get("path_assumed_pre_existing_display")} of the '
+                    f'value moved on this route could not be accounted for from '
+                    f'observed inflows and was treated as NOT the suspect\'s. '
+                    f'<font size="7">The attributed figure above may therefore be '
+                    f'understated.</font>',
+                ))
+            else:
+                rows.append((
+                    "Uncertainty on this route",
+                    "None: every transfer on this route was accounted for from "
+                    "observed inflows.",
+                ))
+            if summary.get("inflow_note"):
+                rows.append(("Note on the share figure", summary["inflow_note"]))
+        rows.append((
+            "Gross value on traced edges",
+            f'{_fmt_assets(summary.get("value_received"), summary.get("value_received_eth"))}'
+            f' <font size="7">(everything that entered this wallet along traced'
+            f' transfers, whatever its origin)</font>',
+        ))
+        rows.append((
+            "Identification method",
+            "Direct match against known exchange wallets"
+            if summary.get("method") == "known_label"
+            else "Deposit-consolidation pattern (unconfirmed)",
+        ))
+        story.append(_kv_table(rows, styles))
     elif summary.get("lead"):
         story.append(Paragraph(
-            f'<b>No named exchange was reached within {params.get("max_depth")} hops.</b> '
-            f'A possible collection point was identified '
+            f'<b>No named exchange within {params.get("max_depth")} hops.</b> '
+            f'A transaction path connects to a possible collection point '
             f'{summary.get("hop_distance")} hops away at '
             f'{summary.get("confidence_score")}% confidence. '
             f'<font color="#b91c1c">This is an UNCONFIRMED lead, not an '
@@ -370,14 +616,15 @@ def build_report(payload: dict) -> bytes:
         story.append(_kv_table([
             ("Address of interest",
              f'<font face="Courier" size="8">{summary.get("address", "")}</font>'),
-            ("Value traced in", _fmt_eth(summary.get("value_received_eth"))),
+            ("Value traced in", _fmt_assets(summary.get("value_received"),
+                                            summary.get("value_received_eth"))),
             ("Caution", "A criminal re-pooling their own split funds produces the "
                         "same fan-in pattern as an exchange sweeping customer "
                         "deposits. Verify independently before acting."),
         ], styles))
     else:
         story.append(Paragraph(
-            f'<b>No known exchange was reached within '
+            f'<b>No transaction path to a known exchange within '
             f'{params.get("max_depth")} hops of the suspect address.</b>',
             styles["headline"],
         ))
@@ -395,6 +642,115 @@ def build_report(payload: dict) -> bytes:
     story.append(Paragraph("Risk flags", styles["h2"]))
     story.extend(_risk_section(payload, styles))
 
+    # --- Laundering typologies ------------------------------------------
+    # A SECTION OF ITS OWN, deliberately not merged into risk flags above. A risk
+    # flag says what a wallet IS, on the authority of a published label; a
+    # typology says what the movement LOOKS LIKE, on the authority of our own
+    # pattern rules. Printing them together would lend the inference the label's
+    # credibility, which is exactly the confusion a defence lawyer should win.
+    story.extend(_typology_section(payload, styles))
+
+    # --- Entity clusters -------------------------------------------------
+    clusters = payload.get("clusters") or []
+    if clusters:
+        story.append(Paragraph("Entity clusters", styles["h2"]))
+        story.append(Paragraph(
+            "Wallets grouped by the business behind them. A lawful request is "
+            "served on the entity, citing every address below. Hop distance is "
+            "the distance to the first member reached; clustering does not change "
+            "it.",
+            styles["small"],
+        ))
+        story.append(Spacer(1, 4))
+
+        head = ("Entity", "Type", "Wallets", "Hop", "Received")
+        rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in head]]
+        for cluster in clusters:
+            label = str(cluster.get("entity", ""))
+            if not cluster.get("named", True):
+                label += " <font size=\"7\">(unnamed - inferred)</font>"
+            rows.append([
+                Paragraph(label, styles["body"]),
+                Paragraph(str(cluster.get("entity_type", "")), styles["small"]),
+                Paragraph(str(cluster.get("member_count", 0)), styles["small"]),
+                Paragraph(str(cluster.get("hop_distance", "")), styles["small"]),
+                Paragraph(_fmt_assets(cluster.get("value_received"),
+                                      cluster.get("value_received_eth")), styles["small"]),
+            ])
+        table = Table(rows, colWidths=[64 * mm, 30 * mm, 16 * mm, 12 * mm, 44 * mm], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("BACKGROUND", (0, 0), (-1, 0), BAND),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, LINE),
+            ("LINEBELOW", (0, 1), (-1, -2), 0.25, LINE),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+
+        # Member addresses, so the request can cite them and anyone can verify.
+        for cluster in clusters:
+            if cluster.get("member_count", 0) < 1:
+                continue
+            story.append(Spacer(1, 5))
+            story.append(Paragraph(
+                f'<b>{cluster.get("entity", "")}</b> — '
+                f'{cluster.get("member_count", 0)} wallet(s), hop '
+                f'{cluster.get("hop_distance", "")}',
+                styles["small"],
+            ))
+            hops = cluster.get("member_hops") or {}
+            for member in cluster.get("members", []):
+                story.append(Paragraph(
+                    f'hop {hops.get(member, "?")} &nbsp; {member}', styles["mono"]
+                ))
+
+    # --- Why the trace stopped ------------------------------------------
+    termination = summary.get("termination") or payload.get("termination") or {}
+    if termination:
+        story.append(Paragraph("Why the trace stopped", styles["h2"]))
+        story.append(Paragraph(f'<b>{termination.get("label", "")}</b>', styles["body"]))
+        if termination.get("detail"):
+            story.append(Paragraph(termination["detail"], styles["small"]))
+
+    # --- Untraced token activity ----------------------------------------
+    token_note = payload.get("token_warnings") or {}
+    if isinstance(token_note, dict) and token_note.get("skipped_transfers"):
+        story.append(Paragraph("Tokens not followed", styles["h2"]))
+        story.append(Paragraph(
+            f"Transfers of {', '.join(token_note.get('followed_assets', []))} were "
+            f"traced. {token_note['skipped_transfers']} transfer(s) of "
+            f"{token_note.get('distinct_tokens', 0)} other token(s) were not: "
+            f"{token_note.get('reason', '')}",
+            styles["body"],
+        ))
+        # An impostor row must be labelled in the report itself. A bare skipped
+        # "USDT" would read to the recipient as money this trace failed to
+        # follow, when it is a token falsely using that name - refused because
+        # its contract address is not the real one on this chain.
+        if token_note.get("impersonation_note"):
+            story.append(Paragraph(token_note["impersonation_note"], styles["small"]))
+        rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in ("Token", "Transfers")]]
+        for entry in token_note.get("top_skipped", []):
+            asset = str(entry.get("asset", ""))
+            if entry.get("impersonating"):
+                asset += " (impostor - not the real contract)"
+            rows.append([
+                Paragraph(asset, styles["body"]),
+                Paragraph(str(entry.get("transfers", "")), styles["small"]),
+            ])
+        table = Table(rows, colWidths=[120 * mm, 46 * mm], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("BACKGROUND", (0, 0), (-1, 0), BAND),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, LINE),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(table)
+
     # --- Recommended action ---------------------------------------------
     action = summary.get("recommended_action", "")
     if action:
@@ -406,7 +762,10 @@ def build_report(payload: dict) -> bytes:
     # --- Disclaimer -----------------------------------------------------
     story.append(Spacer(1, 10))
     story.append(_rule())
-    story.append(Paragraph(DISCLAIMER, styles["disclaimer"]))
+    story.append(Paragraph(
+        disclaimer(chain_name, native, payload.get("accounting")),
+        styles["disclaimer"],
+    ))
 
     def _footer(canvas, document):
         canvas.saveState()
