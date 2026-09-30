@@ -1,254 +1,388 @@
-// The money-flow graph. Cytoscape renders the wallets and the transfers
-// between them; colour carries the meaning an investigator needs at a glance:
-// where the trace started, what is an exchange, and what is a mixer or bridge.
+import { useState, useEffect, useRef, useMemo } from 'react';
+import cytoscape from 'cytoscape';
+import { ZoomIn, ZoomOut, Maximize2, Crosshair, Filter, Eye } from 'lucide-react';
+import { CYTOSCAPE_STYLES, LAYOUT_CONFIG } from '../utils/graphStyle';
+import { findPath, extractPathNodes } from '../utils/pathfinder';
+import { shortAddress } from '../utils/formatters';
 
-import { useEffect, useRef, useState } from 'react'
-import cytoscape from 'cytoscape'
-import { explorerAddressUrl, findingPath, pathEdges } from '../trace-path.js'
+export default function TraceGraph({
+  data,
+  onSelectNode,
+  onSelectEdge,
+  selectedNodeId,
+}) {
+  const containerRef = useRef(null);
+  const cyRef = useRef(null);
+  const [focusHighSignal, setFocusHighSignal] = useState(true);
 
-const STYLE = [
-  {
-    selector: 'node',
-    style: {
-      'background-color': '#94a3b8',
-      label: 'data(display)',
-      color: '#475569',
-      'font-size': '9px',
-      'text-valign': 'bottom',
-      'text-margin-y': 4,
-      width: 16,
-      height: 16,
-    },
-  },
-  {
-    selector: 'node[kind = "start"]',
-    style: { 'background-color': '#dc2626', width: 30, height: 30, color: '#b91c1c', 'font-size': '11px', 'font-weight': 'bold' },
-  },
-  {
-    selector: 'node[kind = "vasp"]',
-    style: { 'background-color': '#16a34a', width: 30, height: 30, color: '#15803d', 'font-size': '11px', 'font-weight': 'bold' },
-  },
-  {
-    selector: 'node[kind = "suspect_vasp"]',
-    style: { 'background-color': '#f0fdf4', 'border-color': '#16a34a', 'border-width': 3, width: 22, height: 22 },
-  },
-  {
-    selector: 'node[kind = "mixer"]',
-    style: { 'background-color': '#ea580c', width: 26, height: 26, color: '#c2410c', 'font-size': '10px', 'font-weight': 'bold' },
-  },
-  {
-    selector: 'node[kind = "bridge"]',
-    style: { 'background-color': '#7c3aed', width: 26, height: 26, color: '#6d28d9', 'font-size': '10px', 'font-weight': 'bold' },
-  },
-  {
-    selector: 'node[kind = "sanctioned"]',
-    style: { 'background-color': '#7f1d1d', 'border-color': '#fecaca', 'border-width': 2, width: 24, height: 24, color: '#7f1d1d', 'font-size': '10px', 'font-weight': 'bold' },
-  },
-  {
-    // A cluster stands for several wallets, so it is drawn larger and squarer
-    // than a single wallet - the shape says "this is a group", not one address.
-    selector: 'node[isCluster = 1]',
-    style: {
-      shape: 'round-rectangle',
-      width: 'label',
-      height: 26,
-      padding: '8px',
-      'font-size': '10px',
-      'font-weight': 'bold',
-      'text-valign': 'center',
-      'text-margin-y': 0,
-      'border-width': 2,
-      'border-color': '#0f172a',
-      color: '#0f172a',
-    },
-  },
-  {
-    selector: 'edge',
-    style: {
-      width: 1,
-      'line-color': '#cbd5e1',
-      'target-arrow-color': '#cbd5e1',
-      'target-arrow-shape': 'triangle',
-      'arrow-scale': 0.7,
-      'curve-style': 'bezier',
-    },
-  },
-  {
-    // The route the Finding panel is describing, lit up so the two views agree.
-    selector: 'edge[onPath = 1]',
-    style: { width: 3, 'line-color': '#dc2626', 'target-arrow-color': '#dc2626', 'z-index': 10 },
-  },
-  { selector: 'node[onPath = 1]', style: { 'border-color': '#dc2626', 'border-width': 2 } },
-]
+  // Compute primary path
+  const targetAddress = data?.summary?.address;
+  const startAddress = data?.start_address;
+  const primaryPathEdges = useMemo(
+    () => findPath(data?.edges, startAddress, targetAddress),
+    [data?.edges, startAddress, targetAddress]
+  );
+  const primaryPathNodes = useMemo(
+    () => extractPathNodes(primaryPathEdges, startAddress),
+    [primaryPathEdges, startAddress]
+  );
 
-// A cluster has a type but no per-node flags, so map the type directly.
-function nodeKindForType(entityType) {
-  if (entityType === 'sanctioned') return 'sanctioned'
-  if (entityType === 'mixer') return 'mixer'
-  if (entityType === 'bridge') return 'bridge'
-  if (entityType === 'suspected_exchange') return 'suspect_vasp'
-  return 'vasp'
-}
+  // Filter nodes & edges for High-Signal Focus Mode
+  const { displayNodes, displayEdges, hiddenCount } = useMemo(() => {
+    if (!data?.nodes || !data?.edges) {
+      return { displayNodes: [], displayEdges: [], hiddenCount: 0 };
+    }
 
+    if (!focusHighSignal) {
+      return {
+        displayNodes: data.nodes,
+        displayEdges: data.edges,
+        hiddenCount: 0,
+      };
+    }
 
-function nodeKind(node) {
-  if (node.is_start) return 'start'
-  if (node.entity_type === 'sanctioned') return 'sanctioned'
-  if (node.is_mixer) return 'mixer'
-  if (node.is_bridge) return 'bridge'
-  if (node.entity_type === 'suspected_exchange') return 'suspect_vasp'
-  if (node.is_vasp) return 'vasp'
-  return 'plain'
-}
+    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => n.toLowerCase()));
+    const flaggedAddressSet = new Set(
+      (data.risk_flags || []).map((f) => f.address?.toLowerCase()).filter(Boolean)
+    );
 
-export default function TraceGraph({ data }) {
-  const container = useRef(null)
-  const cyRef = useRef(null)
-  // Which clusters the investigator has opened. Collapsed is the default: the
-  // graph should first answer "which businesses", not "which 400 addresses".
-  const [expanded, setExpanded] = useState(() => new Set())
+    // Keep only high-value forensic nodes:
+    // - Suspect origin
+    // - Every hop on the primary path to the exchange
+    // - Regulated VASP / Exchanges
+    // - Suspected Exchange hubs
+    // - Mixers and Bridges
+    // - Sanctioned wallets
+    // - Explicitly labeled entities or flagged risk addresses
+    const highSignalNodes = data.nodes.filter((n) => {
+      const idLower = n.id.toLowerCase();
+      const isStart = n.is_start || idLower === startAddress?.toLowerCase();
+      const onPath = primaryNodeKeys.has(idLower);
+      const isVasp = n.is_vasp || n.entity_type === 'exchange';
+      const isSuspectedExchange = n.entity_type === 'suspected_exchange';
+      const isMixer = n.is_mixer;
+      const isBridge = n.is_bridge;
+      const isSanctioned = n.entity_type === 'sanctioned';
+      const hasLabel = Boolean(n.label);
+      const isFlagged = flaggedAddressSet.has(idLower);
+
+      return (
+        isStart ||
+        onPath ||
+        isVasp ||
+        isSuspectedExchange ||
+        isMixer ||
+        isBridge ||
+        isSanctioned ||
+        hasLabel ||
+        isFlagged
+      );
+    });
+
+    const highSignalNodeIds = new Set(highSignalNodes.map((n) => n.id.toLowerCase()));
+
+    // Keep edges between visible nodes
+    const highSignalEdges = data.edges.filter(
+      (e) =>
+        highSignalNodeIds.has(e.source.toLowerCase()) &&
+        highSignalNodeIds.has(e.target.toLowerCase())
+    );
+
+    // Guarantee all primary path edges are present
+    for (const pe of primaryPathEdges) {
+      const key = `${pe.source.toLowerCase()}->${pe.target.toLowerCase()}`;
+      if (!highSignalEdges.some((e) => `${e.source.toLowerCase()}->${e.target.toLowerCase()}` === key)) {
+        highSignalEdges.push(pe);
+      }
+    }
+
+    const hiddenCount = data.nodes.length - highSignalNodes.length;
+
+    return {
+      displayNodes: highSignalNodes.length > 0 ? highSignalNodes : data.nodes,
+      displayEdges: highSignalEdges,
+      hiddenCount: Math.max(0, hiddenCount),
+    };
+  }, [data, focusHighSignal, primaryPathNodes, primaryPathEdges, startAddress]);
 
   useEffect(() => {
-    if (!container.current || !data) return
+    if (!containerRef.current || !displayNodes.length) return;
 
-    // The route comes from the backend payload, so the highlighted path and the
-    // path printed in the PDF are always the same route.
-    const routeAddresses = findingPath(data)
-    const onPath = new Set(routeAddresses)
-    const routeEdges = new Set(
-      pathEdges(data, routeAddresses)
-        .filter(Boolean)
-        .map((e) => `${e.source}->${e.target}`),
-    )
+    const primaryEdgeKeys = new Set(
+      primaryPathEdges.map((e) => `${e.source.toLowerCase()}->${e.target.toLowerCase()}`)
+    );
+    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => n.toLowerCase()));
 
-    // --- entity clusters -------------------------------------------------
-    // A cluster is drawn as ONE node until the investigator expands it, because
-    // five Binance wallets are one business. Expanding restores the individual
-    // members so any single address can still be opened on the explorer.
-    const clusters = data.clusters ?? []
-    const memberToCluster = new Map()
-    for (const cluster of clusters) {
-      if (expanded.has(cluster.cluster_id)) continue
-      if (cluster.member_count < 2) continue // a single wallet gains nothing
-      for (const member of cluster.members) {
-        memberToCluster.set(member, cluster)
-      }
-    }
-    const idFor = (address) => memberToCluster.get(address)?.cluster_id ?? address
+    // Prepare Cytoscape elements
+    const elements = [
+      // Nodes
+      ...displayNodes.map((n) => {
+        const idLower = n.id.toLowerCase();
+        const isStart = n.is_start || idLower === startAddress?.toLowerCase();
+        const onPath = primaryNodeKeys.has(idLower);
 
-    const clusterNodes = clusters
-      .filter((c) => !expanded.has(c.cluster_id) && c.member_count >= 2)
-      .map((cluster) => ({
-        data: {
-          id: cluster.cluster_id,
-          display: `${cluster.named ? cluster.entity : 'collection point?'} ×${cluster.member_count}`,
-          kind: cluster.entity_type === 'suspected_exchange' ? 'suspect_vasp' : nodeKindForType(cluster.entity_type),
-          isCluster: 1,
-          onPath: cluster.members.some((m) => onPath.has(m)) ? 1 : 0,
-        },
-      }))
+        // Clear, readable forensic label for every visible node
+        let displayLabel;
+        if (isStart) {
+          displayLabel = 'SUSPECT';
+        } else if (n.label) {
+          displayLabel = n.label.toUpperCase();
+        } else if (n.is_vasp && n.entity_type === 'exchange') {
+          displayLabel = (n.entity || data?.summary?.exchange || 'VASP').toUpperCase();
+        } else if (n.entity_type === 'suspected_exchange') {
+          displayLabel = 'DEPOSIT HUB?';
+        } else if (n.is_mixer) {
+          displayLabel = (n.entity || 'MIXER').toUpperCase();
+        } else if (n.is_bridge) {
+          displayLabel = (n.entity || 'BRIDGE').toUpperCase();
+        } else if (n.entity_type === 'sanctioned') {
+          displayLabel = 'SANCTIONED';
+        } else {
+          displayLabel = shortAddress(n.id, 6, 4);
+        }
 
-    const walletNodes = data.nodes
-      .filter((node) => !memberToCluster.has(node.id))
-      .map((node) => ({
-        data: {
-          id: node.id,
-          // Only labelled entities and the start wallet get text. Labelling all
-          // 400 anonymous wallets would be noise, not information.
-          display: node.is_start
-            ? 'SUSPECT'
-            : node.entity_type === 'suspected_exchange'
-              ? 'collection point?'
-              : (node.label ?? ''),
-          kind: nodeKind(node),
-          isCluster: 0,
-          onPath: onPath.has(node.id) ? 1 : 0,
-        },
-      }))
+        return {
+          group: 'nodes',
+          data: {
+            ...n,
+            id: n.id,
+            displayLabel,
+            on_primary_path: onPath,
+          },
+        };
+      }),
 
-    // Edges are rewired onto cluster nodes, and edges that fall entirely inside
-    // one collapsed cluster are dropped - an exchange shuffling between its own
-    // wallets is not part of the money trail.
-    const edgeMap = new Map()
-    for (const edge of data.edges) {
-      const source = idFor(edge.source)
-      const target = idFor(edge.target)
-      if (source === target) continue
-      const id = `${source}->${target}`
-      const highlighted = routeEdges.has(`${edge.source}->${edge.target}`)
-      const existing = edgeMap.get(id)
-      if (existing) {
-        existing.data.onPath = existing.data.onPath || (highlighted ? 1 : 0)
-        continue
-      }
-      edgeMap.set(id, { data: { id, source, target, onPath: highlighted ? 1 : 0 } })
-    }
+      // Edges
+      ...displayEdges.map((e, idx) => {
+        const key = `${e.source.toLowerCase()}->${e.target.toLowerCase()}`;
+        const onPath = primaryEdgeKeys.has(key);
 
-    const elements = [...walletNodes, ...clusterNodes, ...edgeMap.values()]
+        return {
+          group: 'edges',
+          data: {
+            ...e,
+            id: `e-${idx}-${e.source}-${e.target}`,
+            source: e.source,
+            target: e.target,
+            on_primary_path: onPath,
+          },
+        };
+      }),
+    ];
 
+    // Initialize Cytoscape with Top-to-Bottom Layout
     const cy = cytoscape({
-      container: container.current,
+      container: containerRef.current,
       elements,
-      style: STYLE,
-      layout: {
-        name: 'breadthfirst',
-        directed: true,
-        roots: [data.start_address],
-        spacingFactor: 1.1,
-        padding: 24,
-      },
-      minZoom: 0.15,
-      maxZoom: 3,
-    })
+      style: CYTOSCAPE_STYLES,
+      layout: LAYOUT_CONFIG(startAddress),
+      minZoom: 0.2,
+      maxZoom: 3.5,
+      wheelSensitivity: 0.25,
+      boxSelectionEnabled: false,
+    });
 
+    cyRef.current = cy;
+
+    // Node click handler
     cy.on('tap', 'node', (evt) => {
-      const id = evt.target.id()
-      if (evt.target.data('isCluster')) {
-        // First click expands the group rather than navigating away: the member
-        // addresses are what an investigator needs next.
-        setExpanded((prev) => new Set(prev).add(id))
-        return
+      const nodeData = evt.target.data();
+      onSelectNode(nodeData);
+    });
+
+    // Edge click handler
+    cy.on('tap', 'edge', (evt) => {
+      const edgeData = evt.target.data();
+      onSelectEdge(edgeData);
+    });
+
+    // Background tap clears selection
+    cy.on('tap', (evt) => {
+      if (evt.target === cy) {
+        onSelectNode(null);
+        onSelectEdge(null);
       }
-      // Chain-aware: a Polygon wallet must not open an Etherscan page.
-      window.open(explorerAddressUrl(data, id), '_blank')
-    })
+    });
 
-    cyRef.current = cy
-    return () => cy.destroy()
-  }, [data, expanded])
+    return () => {
+      cy.destroy();
+      cyRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayNodes, displayEdges, startAddress]);
 
-  if (!data) {
-    return (
-      <div className="graph graph-empty">
-        <p className="muted">The money-flow graph will appear here.</p>
-      </div>
-    )
-  }
+  // Sync external selection with Cytoscape
+  useEffect(() => {
+    if (!cyRef.current) return;
+    const cy = cyRef.current;
+
+    cy.elements().unselect();
+    if (selectedNodeId) {
+      cy.$(`node[id = "${selectedNodeId}"]`).select();
+    }
+  }, [selectedNodeId]);
+
+  // Graph Controls
+  const handleZoomIn = () => cyRef.current?.zoom(cyRef.current.zoom() * 1.25);
+  const handleZoomOut = () => cyRef.current?.zoom(cyRef.current.zoom() * 0.8);
+  const handleFit = () => cyRef.current?.fit(undefined, 40);
+  const handleCenterSuspect = () => {
+    if (!cyRef.current || !startAddress) return;
+    const node = cyRef.current.$(`node[id = "${startAddress}"]`);
+    if (node.length > 0) {
+      cyRef.current.center(node);
+      cyRef.current.zoom(1.15);
+    }
+  };
+
+  const nodeStats = {
+    suspect: 1,
+    vasps: displayNodes.filter((n) => n.is_vasp && n.entity_type === 'exchange').length,
+    leads: displayNodes.filter((n) => n.entity_type === 'suspected_exchange').length,
+    mixers: displayNodes.filter((n) => n.is_mixer).length,
+    bridges: displayNodes.filter((n) => n.is_bridge).length,
+    unhosted: displayNodes.filter((n) => !n.is_vasp && !n.is_mixer && !n.is_bridge && !n.is_start).length,
+  };
 
   return (
-    <div className="graph-wrap">
-      <div className="graph" ref={container} />
-      <div className="legend">
-        <span><i className="dot dot-start" /> Suspect wallet</span>
-        <span><i className="dot dot-plain" /> Unhosted wallet</span>
-        <span><i className="dot dot-vasp" /> Exchange</span>
-        <span><i className="dot dot-mixer" /> Mixer</span>
-        <span><i className="dot dot-bridge" /> Bridge</span>
-        <span><i className="dot dot-sanctioned" /> Sanctioned</span>
-        {expanded.size > 0 && (
+    <div className="relative w-full h-full min-h-[580px] lg:min-h-[640px] bg-white dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-zinc-800/80 overflow-hidden shadow-sm dark:shadow-2xl flex flex-col">
+      {/* Top Floating Control Bar */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        {/* Left: Navigation Tools */}
+        <div className="flex items-center gap-1.5 bg-white/95 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 rounded-xl p-1.5 shadow-lg backdrop-blur-md pointer-events-auto">
           <button
             type="button"
-            className="legend-reset"
-            onClick={() => setExpanded(new Set())}
+            onClick={handleZoomIn}
+            className="p-1.5 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            title="Zoom In"
           >
-            collapse {expanded.size} expanded cluster{expanded.size === 1 ? '' : 's'}
+            <ZoomIn className="w-4 h-4" />
           </button>
-        )}
-        <span className="legend-hint">
-          {data.stats.nodes} wallets · {(data.clusters ?? []).length} clusters ·
-          click a group to expand, a wallet to open the explorer
-        </span>
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            className="p-1.5 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-0.5" />
+          <button
+            type="button"
+            onClick={handleFit}
+            className="p-1.5 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            title="Fit to Screen"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleCenterSuspect}
+            className="p-1.5 text-slate-700 dark:text-zinc-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            title="Center Suspect Origin"
+          >
+            <Crosshair className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Right: High-Signal Focus Filter & Path Pill */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Segmented Filter Control */}
+          <div className="flex items-center bg-white/95 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 rounded-xl p-1 shadow-lg backdrop-blur-md text-xs">
+            <button
+              type="button"
+              onClick={() => setFocusHighSignal(true)}
+              className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                focusHighSignal
+                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              }`}
+              title="Filter out low-volume dust nodes to reveal high-risk flow clearly"
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>High-Signal Focus ({displayNodes.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFocusHighSignal(false)}
+              className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                !focusHighSignal
+                  ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 border border-slate-300 dark:border-zinc-700 shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              }`}
+              title="Show all unfiltered nodes in graph"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>All Nodes ({data?.nodes?.length || 0})</span>
+            </button>
+          </div>
+
+          {/* Hidden dust nodes notice pill */}
+          {focusHighSignal && hiddenCount > 0 && (
+            <div className="hidden xl:flex items-center px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 text-[11px] font-mono text-slate-500 dark:text-zinc-400 shadow-sm backdrop-blur-md">
+              <span>Hiding {hiddenCount} dust nodes</span>
+            </div>
+          )}
+
+          {/* Active Trail Pill */}
+          {primaryPathNodes.length > 1 && (
+            <div className="hidden sm:flex items-center gap-2 bg-white/95 dark:bg-zinc-900/90 border border-cyan-500/30 rounded-xl px-3 py-1.5 shadow-lg backdrop-blur-md">
+              <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
+              <span className="text-xs font-mono text-cyan-700 dark:text-cyan-300 font-semibold">
+                Trail: {primaryPathNodes.length - 1} Hops ({primaryPathNodes.length} Wallets)
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Cytoscape Canvas Container */}
+      <div ref={containerRef} className="w-full flex-1 cursor-grab active:cursor-grabbing" />
+
+      {/* Forensic Category Legend at Bottom */}
+      <div className="border-t border-slate-200 dark:border-zinc-800/80 bg-slate-50/95 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-2.5 z-20 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded-full bg-red-600 ring-2 ring-red-400/40" />
+            <span className="text-slate-800 dark:text-zinc-300 font-medium">Suspect</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 ring-2 ring-emerald-400/40" />
+            <span className="text-slate-800 dark:text-zinc-300 font-medium">VASP ({nodeStats.vasps})</span>
+          </span>
+          {nodeStats.leads > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-emerald-800 border border-emerald-400 border-dashed" />
+              <span className="text-slate-800 dark:text-zinc-300 font-medium">Deposit Hub ({nodeStats.leads})</span>
+            </span>
+          )}
+          {nodeStats.mixers > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-amber-600 ring-2 ring-amber-400/40" />
+              <span className="text-slate-800 dark:text-zinc-300 font-medium">Mixer ({nodeStats.mixers})</span>
+            </span>
+          )}
+          {nodeStats.bridges > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-violet-600 ring-2 ring-violet-400/40" />
+              <span className="text-slate-800 dark:text-zinc-300 font-medium">Bridge ({nodeStats.bridges})</span>
+            </span>
+          )}
+          <span className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded-full bg-slate-600" />
+            <span className="text-slate-600 dark:text-zinc-400">Unhosted ({nodeStats.unhosted})</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-5 h-1 bg-cyan-500 rounded-full" />
+            <span className="text-cyan-700 dark:text-cyan-300 font-mono text-[11px] font-semibold">Traced Trail</span>
+          </span>
+        </div>
+
+        <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono hidden md:block">
+          Top-down flow · Click any wallet or hop to inspect forensics
+        </div>
       </div>
     </div>
-  )
+  );
 }

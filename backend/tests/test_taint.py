@@ -392,4 +392,5 @@ def run_all():
     return fail
 
 
-sys.exit(run_all())
+if __name__ == '__main__':
+    sys.exit(run_all())
