@@ -1,4 +1,4 @@
-# CLAUDE.md — Crypto Wallet → VASP Attribution Engine (SIH26182)
+# AGENTS.md — Crypto Wallet → VASP Attribution Engine (SIH26182)
 
 This file is the project's north star. Read it before every task.
 
