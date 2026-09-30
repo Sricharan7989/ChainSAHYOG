@@ -157,7 +157,11 @@ def _path_section(payload: dict, styles: dict) -> list:
     nodes = {n["id"]: n for n in payload.get("nodes", [])}
     edges = {(e["source"], e["target"]): e for e in payload.get("edges", [])}
 
-    head = ["Hop", "Role", "Address", "Value received", "Transaction"]
+    taint_computed = bool((payload.get("accounting") or {}).get("rule"))
+    head = ["Hop", "Role", "Address", "Value moved"]
+    if taint_computed:
+        head.append("Of which suspect's")
+    head.append("Transaction")
     rows = [[Paragraph(f"<b>{h}</b>", styles["small"]) for h in head]]
 
     for index, address in enumerate(path):
@@ -178,19 +182,37 @@ def _path_section(payload: dict, styles: dict) -> list:
             role = "Intermediate wallet"
 
         edge = edges.get((path[index - 1], address)) if index > 0 else None
-        rows.append([
+        assets = (edge.get("assets") or []) if edge else []
+        row = [
             Paragraph(str(index) if index else "—", styles["small"]),
             Paragraph(role, styles["body"]),
             Paragraph(address, styles["mono"]),
             Paragraph(
-                _fmt_assets({a["asset"]: a["value"] for a in (edge.get("assets") or [])},
+                _fmt_assets({a["asset"]: a["value"] for a in assets},
                             edge.get("value_eth")) if edge else "—",
                 styles["small"],
             ),
-            Paragraph(_short(edge["tx_hash"]) if edge else "—", styles["mono"]),
-        ])
+        ]
+        if taint_computed:
+            tainted = {
+                a["asset"]: a.get("tainted_value", 0.0)
+                for a in assets
+                if a.get("tainted_value", 0.0) > 0
+            }
+            row.append(Paragraph(
+                _fmt_assets(tainted) if tainted
+                else ("—" if not edge else '<font color="#b91c1c">none</font>'),
+                styles["small"],
+            ))
+        row.append(Paragraph(_short(edge["tx_hash"]) if edge else "—", styles["mono"]))
+        rows.append(row)
 
-    table = Table(rows, colWidths=[10 * mm, 34 * mm, 62 * mm, 26 * mm, 34 * mm], repeatRows=1)
+    widths = (
+        [10 * mm, 30 * mm, 50 * mm, 24 * mm, 24 * mm, 28 * mm]
+        if taint_computed
+        else [10 * mm, 34 * mm, 62 * mm, 26 * mm, 34 * mm]
+    )
+    table = Table(rows, colWidths=widths, repeatRows=1)
     table.setStyle(
         TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -299,32 +321,59 @@ def _risk_section(payload: dict, styles: dict) -> list:
     return [table, *notes]
 
 
-def disclaimer(chain_name: str = "Ethereum", native: str = "ETH") -> str:
+def disclaimer(
+    chain_name: str = "Ethereum", native: str = "ETH", accounting: dict | None = None
+) -> str:
     """
     The basis-and-limitations paragraph, named for the chain actually traced.
 
     A function rather than a constant because this paragraph makes factual claims
-    about WHICH network and WHICH token were examined. A Polygon report stating
-    "public Ethereum transaction records" and "native ETH transfers only" would be
-    wrong on both counts, in the one part of the document whose whole purpose is
-    to be accurate about scope.
+    about WHICH network, WHICH assets and WHICH method were examined. A Polygon
+    report stating "public Ethereum transaction records" would be wrong, in the one
+    part of the document whose whole purpose is to be accurate about scope.
+
+    The taint sentence is conditional for the same reason. It used to say flatly
+    that no value-level taint tracking is performed. That was true; it is now
+    wrong whenever the FIFO pass ran, and a disclaimer that understates the method
+    is as much a defect as one that overstates it. Where the pass did run, the
+    paragraph names the accounting rule instead - which is what makes the figures
+    challengeable, and therefore usable in evidence.
     """
+    ran = bool((accounting or {}).get("rule"))
+    if ran:
+        taint_sentence = (
+            "Amounts attributed to the suspect are computed by FIFO accounting: "
+            "every observed transfer is replayed in chronological order and each "
+            "outgoing payment is drawn from the front of the wallet's queue of "
+            "received funds. Coins are fungible, so no accounting rule is correct "
+            "in a physical sense; a different rule - last-in-first-out, or "
+            "pro-rata pooling - applied to the same transactions would attribute "
+            "a different amount. Value a wallet sent that its observed inflows "
+            "cannot account for is treated as untainted, which understates the "
+            "attributed amount rather than inflating it. The gross figures and the "
+            "attributed figures are both shown and are clearly distinguished."
+        )
+    else:
+        taint_sentence = (
+            "It does NOT perform value-level taint tracking: each wallet's large "
+            "outgoing transfers are followed regardless of where that value came "
+            "from, so a connected path is not proof that these specific funds "
+            "arrived."
+        )
     return (
         f"<b>Basis and limitations.</b> This report is derived entirely from "
         f"public {chain_name} transaction records. No cryptography was broken, no "
         f"private data was accessed, and no individual was identified by this "
         f"tool. It establishes that a chain of transfers connects the suspect "
-        f"address to a wallet attributed to the named entity. It does NOT perform "
-        f"value-level taint tracking: each wallet's large outgoing transfers are "
-        f"followed regardless of where that value came from, so a connected path "
-        f"is not proof that these specific funds arrived. It does NOT establish "
-        f"who controlled any intermediate wallet. Attribution of the endpoint "
-        f"rests on the method stated above and carries the confidence score shown, "
-        f"which is never certainty. Native {native} transfers only: transfers of "
-        f"ERC-20 tokens such as USDT, and internal contract transfers, are not "
-        f"followed in this version, so the trail may continue beyond what is "
-        f"shown. Identity can only be established by the named exchange, from its "
-        f"own KYC records, in response to a lawful request."
+        f"address to a wallet attributed to the named entity. {taint_sentence} "
+        f"It does NOT establish who controlled any intermediate wallet. "
+        f"Attribution of the endpoint rests on the method stated above and carries "
+        f"the confidence score shown, which is never certainty. Native {native} "
+        f"transfers and allowlisted ERC-20 tokens are followed; internal contract "
+        f"transfers are not, and attribution does not survive a conversion from "
+        f"one asset to another, so the trail may continue beyond what is shown. "
+        f"Identity can only be established by the named exchange, from its own "
+        f"KYC records, in response to a lawful request."
     )
 
 
@@ -386,31 +435,92 @@ def build_report(payload: dict) -> bytes:
     story.append(Paragraph("Finding", styles["h2"]))
 
     if summary.get("found"):
-        story.append(Paragraph(
-            f'<b>Transaction path connects to {summary.get("exchange")}</b>, '
+        hop_text = (
             f'{summary.get("hop_distance")} hop'
             f'{"" if summary.get("hop_distance") == 1 else "s"} from the suspect '
-            f'address, at {summary.get("confidence_score")}% confidence.',
-            styles["headline"],
-        ))
+            f'address, at {summary.get("confidence_score")}% confidence.'
+        )
+        attributed = summary.get("tainted_value_display")
+        if summary.get("taint_computed") and attributed:
+            # Lead with the attributed value: it is the finding, and the hop count
+            # was always the weaker half of the claim.
+            story.append(Paragraph(
+                f'<b>{attributed} of the suspect\'s funds reached '
+                f'{summary.get("exchange")}</b>, {hop_text}',
+                styles["headline"],
+            ))
+        elif summary.get("taint_computed"):
+            story.append(Paragraph(
+                f'<b>Transaction path connects to {summary.get("exchange")}</b>, '
+                f'{hop_text} <font color="#b91c1c">No value attributable to the '
+                f'suspect arrived under FIFO accounting.</font>',
+                styles["headline"],
+            ))
+        else:
+            story.append(Paragraph(
+                f'<b>Transaction path connects to {summary.get("exchange")}</b>, '
+                f'{hop_text}',
+                styles["headline"],
+            ))
         # Immediately under the claim, not down in the disclaimer: the point is
         # that a reader cannot take the headline without this qualification.
         if summary.get("caveat"):
             story.append(Paragraph(f'<b>{summary["caveat"]}</b>', styles["small"]))
         story.append(Spacer(1, 3))
-        story.append(_kv_table([
+
+        rows = [
             ("Exchange", str(summary.get("exchange", ""))),
             ("Exchange wallet",
              f'<font face="Courier" size="8">{summary.get("address", "")}</font>'),
-            ("ETH on traced edges",
-             f'{_fmt_assets(summary.get("value_received"), summary.get("value_received_eth"))}'
-             f' <font size="7">(total into this wallet along traced transfers;'
-             f' not an amount attributable to the suspect)</font>'),
-            ("Identification method",
-             "Direct match against known exchange wallets"
-             if summary.get("method") == "known_label"
-             else "Deposit-consolidation pattern (unconfirmed)"),
-        ], styles))
+        ]
+        if summary.get("taint_computed"):
+            fraction = summary.get("tainted_inflow_fraction") or {}
+            share = ", ".join(
+                f"{value * 100:.2f}% of the {asset} it received"
+                for asset, value in sorted(fraction.items())
+            )
+            rows.append((
+                "Attributable to the suspect",
+                f'<b>{attributed or "none"}</b>'
+                + (f' <font size="7">({share}, on observed transfers)</font>'
+                   if share else ""),
+            ))
+            rows.append((
+                "Accounting rule",
+                'FIFO - funds leave a wallet in the order they arrived. '
+                '<font size="7">A different rule would attribute a different '
+                'amount; see Basis and limitations.</font>',
+            ))
+            if not summary.get("path_fully_accounted", True):
+                rows.append((
+                    "Uncertainty on this route",
+                    f'{summary.get("path_assumed_pre_existing_display")} of the '
+                    f'value moved on this route could not be accounted for from '
+                    f'observed inflows and was treated as NOT the suspect\'s. '
+                    f'<font size="7">The attributed figure above may therefore be '
+                    f'understated.</font>',
+                ))
+            else:
+                rows.append((
+                    "Uncertainty on this route",
+                    "None: every transfer on this route was accounted for from "
+                    "observed inflows.",
+                ))
+            if summary.get("inflow_note"):
+                rows.append(("Note on the share figure", summary["inflow_note"]))
+        rows.append((
+            "Gross value on traced edges",
+            f'{_fmt_assets(summary.get("value_received"), summary.get("value_received_eth"))}'
+            f' <font size="7">(everything that entered this wallet along traced'
+            f' transfers, whatever its origin)</font>',
+        ))
+        rows.append((
+            "Identification method",
+            "Direct match against known exchange wallets"
+            if summary.get("method") == "known_label"
+            else "Deposit-consolidation pattern (unconfirmed)",
+        ))
+        story.append(_kv_table(rows, styles))
     elif summary.get("lead"):
         story.append(Paragraph(
             f'<b>No named exchange within {params.get("max_depth")} hops.</b> '
@@ -563,7 +673,10 @@ def build_report(payload: dict) -> bytes:
     # --- Disclaimer -----------------------------------------------------
     story.append(Spacer(1, 10))
     story.append(_rule())
-    story.append(Paragraph(disclaimer(chain_name, native), styles["disclaimer"]))
+    story.append(Paragraph(
+        disclaimer(chain_name, native, payload.get("accounting")),
+        styles["disclaimer"],
+    ))
 
     def _footer(canvas, document):
         canvas.saveState()

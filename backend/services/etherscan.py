@@ -46,6 +46,11 @@ class Transfer:
 
     `contract` is None for the chain's native token and the token address
     otherwise, which is what makes two tokens sharing a symbol distinguishable.
+
+    `tx_index` is the transaction's position within its block. It is carried for
+    FIFO taint accounting: a block gives every transaction in it the SAME
+    timestamp, so timestamps alone cannot order two transfers out of one wallet,
+    and the order decides which funds were spent first.
     """
 
     hash: str
@@ -57,6 +62,7 @@ class Transfer:
     asset: str = "ETH"
     contract: str | None = None
     decimals: int = 18
+    tx_index: int = 0
 
     @property
     def is_native(self) -> bool:
@@ -179,15 +185,24 @@ class EtherscanClient:
         # result field usually carries the human-readable reason.
         raise EtherscanError(f"Etherscan error: {message or 'unknown'} / {result}")
 
-    async def get_outgoing_transfers(
+    async def get_wallet_transfers(
         self, address: str, chain_id: int | None = None
     ) -> list[Transfer]:
         """
         Every ETH transfer SENT BY `address`, most recent first.
 
-        WHY only outgoing: a trace follows the money forward. Transactions where
-        this wallet is the recipient tell us where the funds came from, which is
-        backwards from what the investigator needs here.
+        BOTH DIRECTIONS, and this is deliberate. The trace itself only ever
+        follows outgoing edges - see the direction argument in tracer.py, which
+        has not changed. But FIFO taint accounting cannot work from outgoing
+        transfers alone: to know which funds a wallet passed on, you have to know
+        the order in which funds arrived, including arrivals from wallets the
+        trace never visited. Those clean inflows are exactly what dilutes taint.
+
+        THIS COSTS NOTHING EXTRA. Etherscan's `txlist` returns every transaction
+        where the address is sender OR recipient, in the same single call we were
+        already making - on one real demo wallet, 1000 rows of which 647 were
+        incoming and were being thrown away. Same for `tokentx`. Callers wanting
+        the old behaviour use `get_outgoing_transfers`, which filters this list.
 
         Covers BOTH native transfers (`txlist`) and ERC-20 transfers (`tokentx`),
         merged into one stream. They have to be merged rather than chosen between:
@@ -223,7 +238,7 @@ class EtherscanClient:
         transfers: list[Transfer] = []
         if isinstance(raw, list):
             for tx in raw:
-                transfer = _parse_native_transfer(tx, sender=key[1], asset=native_symbol)
+                transfer = _parse_native_transfer(tx, wallet=key[1], asset=native_symbol)
                 if transfer is not None:
                     transfers.append(transfer)
 
@@ -247,13 +262,16 @@ class EtherscanClient:
         if isinstance(token_raw, list):
             for tx in token_raw:
                 transfer, skipped_symbol = _parse_token_transfer(
-                    tx, sender=key[1], chain_id=resolved
+                    tx, wallet=key[1], chain_id=resolved
                 )
                 if transfer is not None:
                     transfers.append(transfer)
-                elif skipped_symbol:
+                elif skipped_symbol and (tx.get("from") or "").strip().lower() == key[1]:
                     # Counted, never followed: the payload reports how much token
-                    # movement we chose not to trace and why.
+                    # movement we chose not to trace and why. Only rows this
+                    # wallet SENT count - incoming spam is not a trail we
+                    # declined to follow, and counting it would inflate the
+                    # figure now that both directions are fetched.
                     tally_key = (resolved, skipped_symbol)
                     self.skipped_tokens[tally_key] = (
                         self.skipped_tokens.get(tally_key, 0) + 1
@@ -262,28 +280,52 @@ class EtherscanClient:
         self._cache[key] = transfers
         return transfers
 
+    async def get_outgoing_transfers(
+        self, address: str, chain_id: int | None = None
+    ) -> list[Transfer]:
+        """
+        Only the transfers this wallet SENT - what the forward walk expands on.
 
-def _common_fields(tx: dict, sender: str) -> tuple[str, str] | None:
-    """Shared row checks; returns (from, to) or None when the row is unusable."""
+        A filtered view of `get_wallet_transfers`, so it costs no extra API call
+        and cannot disagree with the data the taint pass replays.
+        """
+        transfers = await self.get_wallet_transfers(address, chain_id=chain_id)
+        wallet = normalize_address(address)
+        return [t for t in transfers if t.from_addr == wallet]
+
+
+def _common_fields(tx: dict, wallet: str) -> tuple[str, str] | None:
+    """
+    Shared row checks; returns (from, to) or None when the row is unusable.
+
+    Keeps rows in EITHER direction - the wallet may be sender or recipient - and
+    drops rows it is not party to, contract creations with no recipient, and
+    self-sends (which move no money between wallets and would add a self-loop to
+    the FIFO ledger, spending a wallet's own funds to refill its own queue).
+    """
     to_addr = (tx.get("to") or "").strip().lower()
     from_addr = (tx.get("from") or "").strip().lower()
-    if not to_addr or from_addr != sender or to_addr == sender:
+    if not to_addr or not from_addr:
+        return None
+    if from_addr == to_addr:
+        return None
+    if wallet not in (from_addr, to_addr):
         return None
     return from_addr, to_addr
 
 
-def _parse_native_transfer(tx: dict, sender: str, asset: str = "ETH") -> Transfer | None:
+def _parse_native_transfer(tx: dict, wallet: str, asset: str = "ETH") -> Transfer | None:
     """
     One `txlist` row as a native-token Transfer, or None if unusable.
 
-    Dropped rows: reverted transactions, contract creations, self-sends, incoming
-    transactions, and zero-value calls. A zero-value row here is a contract
-    interaction carrying no native value - very often an ERC-20 transfer, whose
-    real value lives in the token contract. Those are NOT lost any more: the same
-    movement arrives through `tokentx` with its true amount.
+    Dropped rows: reverted transactions, contract creations, self-sends, and
+    zero-value calls. A zero-value row here is a contract interaction carrying no
+    native value - very often an ERC-20 transfer, whose real value lives in the
+    token contract. Those are NOT lost any more: the same movement arrives
+    through `tokentx` with its true amount.
     """
     try:
-        pair = _common_fields(tx, sender)
+        pair = _common_fields(tx, wallet)
         if pair is None:
             return None
         from_addr, to_addr = pair
@@ -306,6 +348,7 @@ def _parse_native_transfer(tx: dict, sender: str, asset: str = "ETH") -> Transfe
             asset=asset,
             contract=None,
             decimals=18,
+            tx_index=int(tx.get("transactionIndex") or 0),
         )
     except (TypeError, ValueError):
         # A malformed row should skip, not kill an entire investigation.
@@ -313,7 +356,7 @@ def _parse_native_transfer(tx: dict, sender: str, asset: str = "ETH") -> Transfe
 
 
 def _parse_token_transfer(
-    tx: dict, sender: str, chain_id: int
+    tx: dict, wallet: str, chain_id: int
 ) -> tuple[Transfer | None, str | None]:
     """
     One `tokentx` row as an ERC-20 Transfer.
@@ -336,7 +379,7 @@ def _parse_token_transfer(
     by twelve orders of magnitude, and it would then be discarded as dust.
     """
     try:
-        pair = _common_fields(tx, sender)
+        pair = _common_fields(tx, wallet)
         if pair is None:
             return None, None
         from_addr, to_addr = pair
@@ -367,6 +410,7 @@ def _parse_token_transfer(
                 asset=symbol,
                 contract=contract or None,
                 decimals=decimals,
+                tx_index=int(tx.get("transactionIndex") or 0),
             ),
             None,
         )

@@ -73,6 +73,18 @@ class FakeClient:
         self.api_calls = 0
         self.skipped_tokens = {}
 
+    async def get_wallet_transfers(self, address, chain_id=None):
+        """Both directions, as Etherscan returns them: the book is the world."""
+        self.api_calls += 1
+        outgoing = self.book.get(address, [])
+        incoming = [
+            t
+            for transfers in self.book.values()
+            for t in transfers
+            if t.to_addr == address
+        ]
+        return outgoing + incoming
+
     async def get_outgoing_transfers(self, address, chain_id=None):
         self.api_calls += 1
         return self.book.get(address, [])
@@ -97,7 +109,7 @@ async def main():
         "contractAddress": USDT_CONTRACT,
         "value": "100000000",  # 100.000000 USDT at 6 decimals
     }
-    transfer, skipped = _parse_token_transfer(row, sender="0xaaa", chain_id=1)
+    transfer, skipped = _parse_token_transfer(row, wallet="0xaaa", chain_id=1)
     check("100 USDT parsed as 100.0, not 1e-10", transfer.value, 100.0)
     check("symbol", transfer.asset, "USDT")
     check("decimals from the verified table, not assumed", transfer.decimals, 6)
@@ -113,13 +125,13 @@ async def main():
     # 18-decimal token still works
     dai_row = dict(row, tokenSymbol="DAI", tokenDecimal="18",
                    value="5000000000000000000", contractAddress=DAI_CONTRACT)
-    dai, _ = _parse_token_transfer(dai_row, sender="0xaaa", chain_id=1)
+    dai, _ = _parse_token_transfer(dai_row, wallet="0xaaa", chain_id=1)
     check("18-decimal token converts too", dai.value, 5.0)
 
     # allowlist
     spam_row = dict(row, tokenSymbol="FREEAIRDROP", tokenDecimal="18",
                     contractAddress="0xfeed000000000000000000000000000000000001")
-    spam, spam_symbol = _parse_token_transfer(spam_row, sender="0xaaa", chain_id=1)
+    spam, spam_symbol = _parse_token_transfer(spam_row, wallet="0xaaa", chain_id=1)
     check("non-allowlisted token not followed", spam, None)
     check("but it is counted, with its symbol", spam_symbol, "FREEAIRDROP")
 
@@ -127,7 +139,7 @@ async def main():
     nat = _parse_native_transfer(
         {"from": "0xaaa", "to": "0xbbb", "hash": "0x2", "timeStamp": "1",
          "blockNumber": "1", "value": "1000000000000000000", "isError": "0"},
-        sender="0xaaa", asset="ETH")
+        wallet="0xaaa", asset="ETH")
     check("native 1 ETH still parses", nat.value, 1.0)
     check("native has no contract", nat.contract, None)
 
@@ -201,12 +213,12 @@ async def main():
         "contractAddress": FAKE_USDT,
         "value": "40000000000",  # would read as 40,000 USDT
     }
-    fake, fake_symbol = _parse_token_transfer(fake_row, sender="0xaaa", chain_id=1)
+    fake, fake_symbol = _parse_token_transfer(fake_row, wallet="0xaaa", chain_id=1)
     check("a token calling itself USDT from another contract is REJECTED", fake, None)
     check("it is counted under the symbol it claimed", fake_symbol, "USDT")
     check("and the real USDT contract is still accepted",
           _parse_token_transfer(
-              dict(fake_row, contractAddress=USDT_CONTRACT), sender="0xaaa", chain_id=1
+              dict(fake_row, contractAddress=USDT_CONTRACT), wallet="0xaaa", chain_id=1
           )[0].value,
           40000.0)
 
@@ -221,7 +233,7 @@ async def main():
     # contract would otherwise scale the amount by orders of magnitude.
     lying = dict(fake_row, contractAddress=USDT_CONTRACT, tokenDecimal="18")
     check("decimals come from our table, not the row",
-          _parse_token_transfer(lying, sender="0xaaa", chain_id=1)[0].value, 40000.0)
+          _parse_token_transfer(lying, wallet="0xaaa", chain_id=1)[0].value, 40000.0)
 
     # PER CHAIN. The same address is not the same asset everywhere.
     check("Ethereum's USDT address is not USDT on Polygon",
@@ -230,14 +242,14 @@ async def main():
           config.token_asset(137, POLYGON_USDT), ("USDT", 6))
     check("a Polygon-USDT row is refused on an Ethereum trace",
           _parse_token_transfer(
-              dict(fake_row, contractAddress=POLYGON_USDT), sender="0xaaa", chain_id=1
+              dict(fake_row, contractAddress=POLYGON_USDT), wallet="0xaaa", chain_id=1
           )[0],
           None)
     check("BNB Chain USDT carries 18 decimals, not 6",
           config.token_asset(56, BNB_USDT), ("USDT", 18))
     bnb = _parse_token_transfer(
         dict(fake_row, contractAddress=BNB_USDT, value="40000" + "0" * 18),
-        sender="0xaaa", chain_id=56,
+        wallet="0xaaa", chain_id=56,
     )[0]
     check("so 40,000 BNB-Chain USDT parses at 18 decimals", bnb.value, 40000.0)
     check("an unsupported chain follows no tokens at all",

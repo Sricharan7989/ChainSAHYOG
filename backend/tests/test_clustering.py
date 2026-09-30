@@ -53,6 +53,17 @@ class FakeClient:
     async def has_token_activity(self, address, chain_id=None):
         return False  # offline: no token probe in these suites
 
+    async def get_wallet_transfers(self, address, chain_id=None):
+        """Both directions, as Etherscan returns them: the book is the world."""
+        outgoing = self.book.get(address, [])
+        incoming = [
+            t
+            for transfers in self.book.values()
+            for t in transfers
+            if t.to_addr == address
+        ]
+        return outgoing + incoming
+
     async def get_outgoing_transfers(self, address, chain_id=None):
         return self.book.get(address, [])
 

@@ -94,6 +94,37 @@ function AddressLink({ address, children, data }) {
   )
 }
 
+/**
+ * How much of one leg was the suspect's money.
+ *
+ * Shown per leg because that is where a route stops being about the suspect. A
+ * leg that moved 17,969 ETH of which none is attributable looks identical to the
+ * real thing without this, and it is the exact misreading taint tracking exists
+ * to prevent - so "none of it" is stated loudly rather than left as an absence.
+ */
+function LegTaint({ edge, data }) {
+  const tainted = Object.fromEntries(
+    (edge.assets ?? [])
+      .filter((a) => (a.tainted_value ?? 0) > 0)
+      .map((a) => [a.asset, a.tainted_value]),
+  )
+  const computed = (edge.assets ?? []).some((a) => a.tainted_value !== undefined)
+  if (!computed) return null
+
+  if (Object.keys(tainted).length === 0) {
+    return (
+      <span className="leg-taint leg-taint-none">
+        none of it traceable to the suspect
+      </span>
+    )
+  }
+  return (
+    <span className="leg-taint">
+      of which {formatAssets(tainted, undefined, nativeSymbol(data))} the suspect&rsquo;s
+    </span>
+  )
+}
+
 function TracedPath({ data }) {
   // Straight from the payload: the same route the PDF prints.
   const addresses = findingPath(data)
@@ -148,6 +179,7 @@ function TracedPath({ data }) {
                     nativeSymbol(data),
                   )}
                   {incoming.tx_count > 1 && ` across ${incoming.tx_count} transactions`}
+                  <LegTaint edge={incoming} data={data} />
                 </div>
               )}
             </div>
@@ -221,6 +253,61 @@ function ReportActions({ data }) {
         breakdown, risk flags and the basis-and-limitations statement.
       </p>
     </section>
+  )
+}
+
+/**
+ * Attributed value, gross value, and the uncertainty between them.
+ *
+ * These are two different numbers and the panel must never let them blur. The
+ * gross figure is everything that landed in the wallet along traced transfers;
+ * the attributed figure is the part FIFO accounting traces to the suspect. On the
+ * recorded demo those were 17,969 and 198 - showing only the first is the bug
+ * this replaces, and showing only the second hides the context an investigator
+ * needs to judge it.
+ */
+function ValueBreakdown({ summary, data }) {
+  const native = nativeSymbol(data)
+  const gross = formatAssets(summary.value_received, summary.value_received_eth, native)
+
+  if (!summary.taint_computed) {
+    return (
+      <div className="finding-amount">
+        {gross} received by this wallet on traced transfers — not an amount
+        attributable to the suspect
+      </div>
+    )
+  }
+
+  const fractions = Object.entries(summary.tainted_inflow_fraction ?? {})
+
+  return (
+    <div className="value-breakdown">
+      <div className="vb-row vb-primary">
+        <span className="vb-label">Attributable to the suspect</span>
+        <span className="vb-figure">
+          {summary.tainted_value_display ?? 'none'}
+        </span>
+      </div>
+      {fractions.length > 0 && (
+        <p className="vb-note">
+          {fractions
+            .map(([asset, f]) => `${(f * 100).toFixed(2)}% of the ${asset} this wallet received`)
+            .join(', ')}
+          {summary.inflow_fully_observed ? '' : ' (of the transfers the trace observed)'}
+        </p>
+      )}
+      <div className="vb-row">
+        <span className="vb-label">Gross on traced transfers</span>
+        <span className="vb-figure vb-muted">{gross}</span>
+      </div>
+      <p className="vb-rule">
+        FIFO accounting · {summary.path_fully_accounted
+          ? 'every transfer on this route was accounted for'
+          : `${summary.path_assumed_pre_existing_display} on this route could not be
+             accounted for from observed inflows and was treated as not the suspect's`}
+      </p>
+    </div>
   )
 }
 
@@ -502,7 +589,21 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         <SourceBadge data={data} />
         <div className="eyebrow">Finding · {chainName(data)}</div>
         <h2 className="finding-title">
-          Transaction path connects to <strong>{summary.exchange}</strong>
+          {summary.taint_computed && summary.tainted_value_display ? (
+            <>
+              <strong>{summary.tainted_value_display}</strong> of the suspect&rsquo;s
+              funds reached <strong>{summary.exchange}</strong>
+            </>
+          ) : summary.taint_computed ? (
+            <>
+              Path connects to <strong>{summary.exchange}</strong>, but no value
+              attributable to the suspect arrived
+            </>
+          ) : (
+            <>
+              Transaction path connects to <strong>{summary.exchange}</strong>
+            </>
+          )}
           <span className="finding-hops">
             {summary.hop_distance} hop{summary.hop_distance === 1 ? '' : 's'}
             {summary.cluster_members > 1 &&
@@ -511,11 +612,7 @@ export default function FindingPanel({ data, loading, error, onToast }) {
         </h2>
         <Caveat text={summary.caveat} />
         <ConfidenceBar summary={summary} />
-        <div className="finding-amount">
-          {formatAssets(summary.value_received, summary.value_received_eth, nativeSymbol(data))}{' '}
-          received by this wallet on traced
-          transfers — not an amount attributable to the suspect
-        </div>
+        <ValueBreakdown summary={summary} data={data} />
       </header>
 
       <div className="panel-body">

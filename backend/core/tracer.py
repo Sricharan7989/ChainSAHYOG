@@ -52,11 +52,31 @@ Four limits keep this bounded, and each discards the LEAST informative work:
                       If a wallet split funds 500 ways, the big branches are
                       where the principal went; the long tail is chaff.
 
+WHAT THE WALK PROVES, AND WHAT THE TAINT PASS ADDS
+-------------------------------------------------
+The walk above proves CONNECTIVITY: transfers link the suspect to an exchange.
+On its own that is weaker than it reads, because expanding a wallet follows its
+large outgoing transfers regardless of where those particular coins came from.
+A wallet that received 198 ETH from the suspect and later sent 17,969 ETH onward
+was simply busy; the old output reported the 17,969 at the next hop.
+
+So after the walk, `taint.compute_taint` replays every transfer we fetched in
+chronological order under a stated accounting rule (FIFO) and works out how much
+of each edge is attributable to the suspect's funds. That is a SEPARATE pass, not
+a change to the walk: taint has to be computed in time order, and the walk visits
+in breadth-first order, which is not the same thing. See core/taint.py.
+
+Both figures are kept. `value_received` remains the gross amount an endpoint
+received along traced edges; `tainted_value_received` is the part attributable to
+the suspect. Reporting only the first overstates the case and reporting only the
+second hides the context, so the output carries both and says which is which.
+
 SCOPE (current stage)
 ---------------------
-Native ETH transfers only. ERC-20 movements (USDT, USDC) and internal contract
-transfers are NOT traced yet - a real laundering path often converts to a
-stablecoin, so this is the first gap to close.
+Native transfers and allowlisted ERC-20 tokens are traced. Internal transactions
+(value moved by contract execution) are still NOT fetched, so a wallet that
+forwarded funds through a contract call looks like it still holds them. Taint does
+not cross assets: a swap from ETH to USDT breaks the chain of attribution.
 """
 
 import time
@@ -66,7 +86,7 @@ from dataclasses import dataclass, field
 import networkx as nx
 
 from app import config
-from core import clustering, identify, scoring
+from core import clustering, identify, scoring, taint as taint_engine
 from services import graph_store
 from services.etherscan import EtherscanClient, Transfer, get_client, normalize_address
 
@@ -91,6 +111,11 @@ class Hop:
     tx_hash: str  # the single largest transaction, as a citable example
     asset: str = "ETH"
     contract: str | None = None
+    # Of `value`, how much is attributable to the suspect under FIFO accounting,
+    # and how much was only payable by assuming an unobserved prior balance.
+    # Filled in by the taint pass after the walk; 0.0 when taint was not computed.
+    tainted_value: float = 0.0
+    assumed_pre_existing: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -106,6 +131,13 @@ class Hop:
             "tx_count": self.tx_count,
             "timestamp": self.timestamp,
             "tx_hash": self.tx_hash,
+            # How much of this leg is the suspect's money under FIFO, and how
+            # much of it rests on assuming an unobserved prior balance.
+            "tainted_value": round(self.tainted_value, 8),
+            "tainted_fraction": (
+                round(self.tainted_value / self.value, 6) if self.value else 0.0
+            ),
+            "assumed_pre_existing": round(self.assumed_pre_existing, 8),
         }
 
 
@@ -132,6 +164,16 @@ class Attribution:
     # an ETH/USDT sum that means nothing.
     value_received: dict = field(default_factory=dict)
     value_received_eth: float = 0.0
+    # Per-asset value attributable to the SUSPECT that reached this wallet, and
+    # what share of the wallet's observed inflow that represents. The gross
+    # `value_received` above answers "what landed here"; these answer "how much of
+    # it was the suspect's money", which is the question a court cares about.
+    tainted_value_received: dict = field(default_factory=dict)
+    tainted_inflow_fraction: dict = field(default_factory=dict)
+    # False when we never pulled this wallet's own history - an exchange at the
+    # boundary of the trace, typically - so the inflow fraction above is measured
+    # against only the part of its inflow the trace happened to see.
+    inflow_fully_observed: bool = False
 
     # The shortest route from the suspect wallet to this address, and the label
     # types crossed along it. Both are filled in after the walk, because a path
@@ -161,6 +203,19 @@ class Attribution:
             "value_received": {k: round(v, 8) for k, v in self.value_received.items()},
             "value_received_display": format_assets(self.value_received),
             "value_received_eth": round(self.value_received_eth, 6),
+            # The suspect-attributable share, which is the figure a lawful request
+            # should quote. Empty when the taint pass did not run or attributed
+            # nothing to this wallet - `summary.taint_computed` tells them apart.
+            "tainted_value_received": {
+                k: round(v, 8) for k, v in self.tainted_value_received.items()
+            },
+            "tainted_value_display": (
+                format_assets(self.tainted_value_received)
+                if self.tainted_value_received
+                else None
+            ),
+            "tainted_inflow_fraction": self.tainted_inflow_fraction,
+            "inflow_fully_observed": self.inflow_fully_observed,
             "path": self.path,
             "crossed": sorted(self.path_risk_types),
             "cluster_id": self.cluster_id,
@@ -238,6 +293,10 @@ class TraceResult:
     # Entity clusters: the wallets of one business collapsed into one object,
     # which is what a lawful request is actually served against.
     clusters: list = field(default_factory=list)
+
+    # The FIFO taint pass. None when it could not run (no transfers fetched), in
+    # which case every consumer must fall back to connectivity-only wording.
+    taint: object | None = None
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -382,6 +441,11 @@ async def trace(
     expanded: set[str] = set()
     queue: deque[tuple[str, int]] = deque([(start, 0)])
 
+    # Every wallet whose history we pulled, with BOTH directions, for the taint
+    # pass. Held here rather than re-read from the client cache so the replay sees
+    # exactly the data the walk saw.
+    fetched: dict[str, list[Transfer]] = {}
+
     # Why did the walk stop? Counted as it happens, because after the fact the
     # graph cannot tell you whether a branch ended at a mixer, ran out of depth,
     # or simply had nothing above the dust threshold.
@@ -423,9 +487,15 @@ async def trace(
         expanded.add(address)
 
         try:
-            transfers = await client.get_outgoing_transfers(
+            # BOTH directions, in the same API calls the walk always made. The
+            # walk itself uses only the outgoing half; the incoming half is what
+            # lets the taint pass order each wallet's balance. Fetching it here
+            # rather than in a second sweep is what keeps taint free.
+            fetched_transfers = await client.get_wallet_transfers(
                 address, chain_id=chain["chain_id"]
             )
+            fetched[address] = fetched_transfers
+            transfers = [t for t in fetched_transfers if t.from_addr == address]
         except Exception as exc:  # noqa: BLE001 - one bad wallet must not kill the trace
             if address == start:
                 # No data for the suspect wallet means there is nothing to show.
@@ -527,11 +597,38 @@ async def trace(
                 f"the walk completed; its onward transfers were still followed."
             )
 
-    # Attach how much value actually reached each identified endpoint.
+    # VALUE-LEVEL TAINT. Runs on the transfers already fetched, in chronological
+    # order, under the FIFO rule documented in core/taint.py. Separate from the
+    # walk because FIFO needs time order and the walk runs in breadth-first order.
+    taint = taint_engine.compute_taint(fetched, start) if fetched else None
+
+    # Attach how much value actually reached each identified endpoint - gross, and
+    # the part attributable to the suspect.
     for attribution in attributions.values():
         totals = _value_received(store, attribution.address)
         attribution.value_received = totals
         attribution.value_received_eth = _native_total(totals, chain)
+        if taint is not None:
+            attribution.tainted_value_received = taint.tainted_into(attribution.address)
+            attribution.tainted_inflow_fraction = taint.inflow_fractions(
+                attribution.address
+            )
+            attribution.inflow_fully_observed = taint.fully_observed(
+                attribution.address
+            )
+
+    # Per-hop taint, so an investigator can see which leg of the route carried the
+    # suspect's money and which merely existed.
+    if taint is not None:
+        for hop in hops:
+            flow = taint.edge(hop.from_addr, hop.to_addr, hop.asset)
+            if flow is None:
+                continue
+            # The hop's value is the dust-filtered, aggregated total for this
+            # edge; the taint pass replays every transfer including dust. Cap so a
+            # hop can never claim more tainted value than it moved.
+            hop.tainted_value = min(flow.tainted, hop.value)
+            hop.assumed_pre_existing = min(flow.assumed_pre_existing, hop.value)
 
     # Reconstruct each attribution's route and score it. This has to happen
     # after the walk: a path is only knowable once the graph is complete, and
@@ -604,6 +701,7 @@ async def trace(
         token_warnings=token_warnings,
         chain=chain,
         clusters=clusters,
+        taint=taint,
     )
 
 
@@ -969,10 +1067,96 @@ def format_assets(totals: dict[str, float], limit: int = 3) -> str:
 # tracer expands every large outgoing transfer of a wallet regardless of where
 # that value came from, so a connected path is NOT proof the suspect's funds
 # arrived. In the recorded demo 198 ETH enter a wallet that forwards 17,969 ETH.
+# Three different things can be true of a finding, and they must not share one
+# sentence. Which caveat a result carries is chosen per finding, in _caveat_for().
 CONNECTIVITY_CAVEAT = (
     "Path connectivity, not value-level taint tracking: transfers link these "
     "wallets, which does not prove these specific funds arrived."
 )
+
+FIFO_CAVEAT = (
+    "Amounts attributed to the suspect are computed by FIFO accounting: funds "
+    "leave a wallet in the order they arrived. A different rule - last-in-"
+    "first-out, or pro-rata pooling - would give different figures from the same "
+    "transactions."
+)
+
+NO_TAINT_CAVEAT = (
+    "Transfers link these wallets, but under FIFO accounting none of the value "
+    "arriving here traces back to the suspect's funds - the wallets on the route "
+    "moved other money in between, and on this accounting those are the coins "
+    "that went on. The connection may still be worth pursuing; a different "
+    "accounting rule would give a different answer."
+)
+
+
+def _caveat_for(result: TraceResult, attribution: Attribution | None) -> str:
+    """
+    The honest caveat for THIS finding.
+
+    Phase 2 attached one connectivity caveat to everything, which was right when
+    no taint was computed and is wrong now that it usually is. The three cases:
+
+      * taint computed, value attributed  -> name the accounting rule (FIFO_CAVEAT)
+      * taint computed, nothing attributed -> say so plainly (NO_TAINT_CAVEAT),
+        because "a path connects" would otherwise imply money arrived
+      * taint not computed at all          -> the original wording still applies
+    """
+    if result.taint is None or attribution is None:
+        return CONNECTIVITY_CAVEAT
+    if attribution.tainted_value_received:
+        return FIFO_CAVEAT
+    return NO_TAINT_CAVEAT
+
+
+def _path_assumption(result: TraceResult, attribution: Attribution) -> dict[str, float]:
+    """
+    How much of THIS finding's route rested on the pre-existing-balance assumption.
+
+    WHY THIS IS NOT THE GRAPH-WIDE FIGURE. `accounting.assumed_pre_existing` sums
+    that assumption across every wallet the trace touched, which on a busy graph
+    runs to six figures - printing it beside a 1,220 ETH finding implies the
+    finding is swamped by uncertainty even when the route to it was fully
+    accounted for. What an investigator needs is the uncertainty on the legs of
+    the route they are about to act on, which is what this returns.
+    """
+    legs = set(zip(attribution.path, attribution.path[1:]))
+    totals: dict[str, float] = {}
+    for hop in result.hops:
+        if (hop.from_addr, hop.to_addr) in legs and hop.assumed_pre_existing > 0:
+            totals[hop.asset] = totals.get(hop.asset, 0.0) + hop.assumed_pre_existing
+    return {asset: round(value, 8) for asset, value in totals.items()}
+
+
+def _taint_fields(attribution: Attribution, result: TraceResult) -> dict:
+    """The per-finding taint block, shared by every branch of summarize()."""
+    if result.taint is None:
+        return {"taint_computed": False}
+    tainted = attribution.tainted_value_received
+    on_path = _path_assumption(result, attribution)
+    return {
+        "taint_computed": True,
+        "tainted_value_received": {k: round(v, 8) for k, v in tainted.items()},
+        "tainted_value_display": format_assets(tainted) if tainted else None,
+        "tainted_inflow_fraction": attribution.tainted_inflow_fraction,
+        "inflow_fully_observed": attribution.inflow_fully_observed,
+        # The uncertainty that applies to THIS route, not to the whole graph.
+        "path_assumed_pre_existing": on_path,
+        "path_assumed_pre_existing_display": (
+            format_assets(on_path) if on_path else None
+        ),
+        "path_fully_accounted": not on_path,
+        "inflow_note": (
+            None
+            if attribution.inflow_fully_observed
+            else (
+                "This wallet's own transaction history was not fetched - the trace "
+                "stops at it - so the share-of-inflow figure is measured only "
+                "against the transfers the trace itself observed, not against "
+                "everything the wallet received."
+            )
+        ),
+    }
 
 
 def summarize(result: TraceResult) -> dict:
@@ -1004,7 +1188,8 @@ def summarize(result: TraceResult) -> dict:
                 f"path connects to one collection point {lead.hop_distance} hops "
                 f"away ({lead.confidence_score}% confidence) - UNCONFIRMED."
             ),
-            "caveat": CONNECTIVITY_CAVEAT,
+            "caveat": _caveat_for(result, lead),
+            **_taint_fields(lead, result),
             "termination": result.termination,
             "address": lead.address,
             "hop_distance": lead.hop_distance,
@@ -1059,16 +1244,14 @@ def summarize(result: TraceResult) -> dict:
         "value_received_display": format_assets(nearest.value_received),
         "value_received_eth": round(nearest.value_received_eth, 6),
         "value_received_note": (
-            "Per-asset totals this wallet received along traced edges - not "
-            "amounts attributable to the suspect. Assets are never summed "
+            "Per-asset totals this wallet received along traced edges - the gross "
+            "amount that landed here, NOT the amount attributable to the suspect. "
+            "See tainted_value_received for that. Assets are never summed "
             "together; there is no price feed in this build."
         ),
-        "headline": (
-            f"Transaction path connects to {nearest.entity}, "
-            f"{nearest.hop_distance} hop{'s' if nearest.hop_distance != 1 else ''}, "
-            f"{nearest.confidence_score}% confidence"
-        ),
-        "caveat": CONNECTIVITY_CAVEAT,
+        **_taint_fields(nearest, result),
+        "headline": _headline(result, nearest),
+        "caveat": _caveat_for(result, nearest),
         "recommended_action": (
             f"Serve a lawful data request to {nearest.entity} via SAHYOG for "
             f"KYC records on deposits to {nearest.address}, covering the "
@@ -1084,6 +1267,35 @@ def summarize(result: TraceResult) -> dict:
         "other_exchanges_reached": [a.entity for a in exchanges[1:]],
         "unconfirmed_collection_points": [a.address for a in suspected],
     }
+
+
+def _headline(result: TraceResult, nearest: Attribution) -> str:
+    """
+    The one sentence an investigator reads first.
+
+    Where taint was computed it leads with VALUE ARRIVAL - "12.4 ETH of the
+    suspect's funds reached Binance, 2 hops" - because that is the finding, and
+    the hop count alone was always the weaker half of it. Where taint was
+    computed and came out empty, it says so rather than falling back to wording
+    that implies money arrived. Where taint could not be computed, the original
+    connectivity wording stands.
+    """
+    hops = f"{nearest.hop_distance} hop{'s' if nearest.hop_distance != 1 else ''}"
+    confidence = f"{nearest.confidence_score}% confidence"
+
+    if result.taint is None:
+        return f"Transaction path connects to {nearest.entity}, {hops}, {confidence}"
+
+    tainted = nearest.tainted_value_received
+    if not tainted:
+        return (
+            f"Transaction path connects to {nearest.entity}, {hops} - but no value "
+            f"attributable to the suspect arrived under FIFO accounting"
+        )
+    return (
+        f"{format_assets(tainted)} of the suspect's funds reached "
+        f"{nearest.entity}, {hops}, {confidence}"
+    )
 
 
 def to_json(result: TraceResult) -> dict:
@@ -1105,17 +1317,40 @@ def to_json(result: TraceResult) -> dict:
             "is_bridge": data.get("is_bridge", False),
             "confidence": data.get("confidence"),
             "method": data.get("method"),
+            # Per-asset value attributable to the suspect that reached this
+            # wallet. Lets the graph show WHERE the money went, not just what
+            # is connected to what.
+            "tainted_in": result.taint.tainted_into(address) if result.taint else {},
         }
         for address, data in result.graph.nodes(data=True)
     ]
     nodes.sort(key=lambda n: (n["depth"], n["id"]))
+
+    def _asset_entry(src: str, dst: str, entry: dict) -> dict:
+        """One asset on one edge, with its tainted share attached."""
+        out = {
+            k: (round(v, 8) if isinstance(v, float) else v) for k, v in entry.items()
+        }
+        flow = result.taint.edge(src, dst, entry.get("asset", "")) if result.taint else None
+        if flow is not None:
+            # Capped at the edge's own value: the taint pass replays every
+            # transfer, including the dust this aggregated edge filtered out.
+            out["tainted_value"] = round(min(flow.tainted, entry.get("value", 0.0)), 8)
+            out["tainted_fraction"] = (
+                round(out["tainted_value"] / entry["value"], 6)
+                if entry.get("value") else 0.0
+            )
+            out["assumed_pre_existing"] = round(
+                min(flow.assumed_pre_existing, entry.get("value", 0.0)), 8
+            )
+        return out
 
     edges = [
         {
             "source": src,
             "target": dst,
             "assets": [
-                {k: (round(v, 8) if isinstance(v, float) else v) for k, v in entry.items()}
+                _asset_entry(src, dst, entry)
                 for entry in (data.get("assets") or {}).values()
             ],
             "asset": data.get("asset", ""),
@@ -1173,6 +1408,14 @@ def to_json(result: TraceResult) -> dict:
         },
         "termination": result.termination,
         "token_warnings": result.token_warnings,
+        # How the tainted figures above were produced, and their uncertainties.
+        # Present even when taint could not run, so a consumer can tell the
+        # difference between "nothing was attributable" and "not computed".
+        "accounting": (
+            taint_engine.summarise(result.taint, result.start_address)
+            if result.taint is not None
+            else {"rule": None, "rule_label": CONNECTIVITY_CAVEAT}
+        ),
         "notes": result.notes,
         "nodes": nodes,
         "edges": edges,

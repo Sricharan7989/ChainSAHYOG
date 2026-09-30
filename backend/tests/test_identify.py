@@ -114,6 +114,19 @@ class FakeClient:
     async def has_token_activity(self, address, chain_id=None):
         return False  # offline: no token probe in these suites
 
+    async def get_wallet_transfers(self, address, chain_id=None):
+        """Both directions, as Etherscan returns them: the book is the world."""
+        self.api_calls += 1
+        self.fetched.append(address)
+        outgoing = self.book.get(address, [])
+        incoming = [
+            t
+            for transfers in self.book.values()
+            for t in transfers
+            if t.to_addr == address
+        ]
+        return outgoing + incoming
+
     async def get_outgoing_transfers(self, address, chain_id=None):
         self.api_calls += 1
         self.fetched.append(address)
@@ -146,13 +159,39 @@ async def main():
 
     s = tracer.summarize(r)
     check("summary found", s["found"], True)
-    check("summary headline", s["headline"], "Transaction path connects to Binance, 3 hops, 81% confidence")
     check("summary names SAHYOG action", "SAHYOG" in s["recommended_action"], True)
-    # Honesty of the claim: connectivity wording, the caveat, and a reason.
-    check("headline states connectivity", s["headline"].startswith("Transaction path connects to"), True)
-    check("headline does not claim value arrival", "Funds reached" in s["headline"], False)
-    check("caveat travels with the finding", "not value-level taint tracking" in s.get("caveat", ""), True)
     check("termination reason reported", s["termination"]["reason"], "exchange_reached")
+
+    # HONESTY OF THE CLAIM. Phase 2 required the headline to state connectivity
+    # and explicitly NOT to claim value arrival, because no taint was computed.
+    # Taint is computed now, so the headline states value arrival instead - and
+    # that is the point: the old wording understated a finding we can now make.
+    # What must not change is that every figure names its accounting rule.
+    check("summary headline",
+          s["headline"],
+          "8.00 ETH of the suspect's funds reached Binance, 3 hops, 81% confidence")
+    check("headline leads with value arrival, not mere connectivity",
+          s["headline"].startswith("8.00 ETH of the suspect's funds reached"), True)
+    check("taint was computed for this finding", s["taint_computed"], True)
+    check("the attributed amount is carried as data too",
+          s["tainted_value_received"], {"ETH": 8.0})
+    check("the caveat now names the accounting rule",
+          "FIFO accounting" in s.get("caveat", ""), True)
+    check("and no longer claims taint is untracked",
+          "not value-level taint tracking" in s.get("caveat", ""), False)
+
+    # The Phase 2 wording is not deleted, it is CONDITIONAL. With no taint pass
+    # the old caveat and the old connectivity headline are still the honest ones.
+    import copy  # noqa: PLC0415 - local to keep this check self-contained
+    untainted = copy.copy(r)
+    untainted.taint = None
+    s_untainted = tracer.summarize(untainted)
+    check("without a taint pass the connectivity wording returns",
+          s_untainted["headline"],
+          "Transaction path connects to Binance, 3 hops, 81% confidence")
+    check("and so does the connectivity caveat",
+          "not value-level taint tracking" in s_untainted.get("caveat", ""), True)
+    check("which is flagged as such", s_untainted["taint_computed"], False)
 
     j = tracer.to_json(r)
     check("json exposes attributions", len(j["attributions"]), 1)

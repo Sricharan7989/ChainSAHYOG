@@ -9,6 +9,7 @@ Runs the same deterministic fake trace through both stores and diffs the full
 JSON payload, field by field.
 """
 import asyncio
+import itertools
 import json
 import sys
 
@@ -39,10 +40,20 @@ def A(n):
     return "0x" + f"{n:040x}"
 
 
+# Every transfer used to carry the same timestamp and block, which made the whole
+# fixture simultaneous. FIFO taint accounting then had no causal order to work
+# from - a wallet could spend before it received - so every attributed amount came
+# out zero and this test compared zeros. Transfers are now ordered in the sequence
+# the book declares them, which is the order they would really have happened in,
+# so the comparison covers real taint figures on both backends.
+_clock = itertools.count(1_700_000_000)
+
+
 def tx(frm, to, val, h=None):
+    moment = next(_clock)
     return Transfer(hash=h or f"0x{abs(hash((frm,to,val)))%10**16:016x}",
                     from_addr=frm, to_addr=to, value=val,
-                    timestamp=1700000000, block=1)
+                    timestamp=moment, block=moment - 1_700_000_000)
 
 
 class FakeClient:
@@ -56,6 +67,17 @@ class FakeClient:
 
     async def has_token_activity(self, address, chain_id=None):
         return False  # offline: no token probe in these suites
+
+    async def get_wallet_transfers(self, address, chain_id=None):
+        """Both directions, as Etherscan returns them: the book is the world."""
+        outgoing = self.book.get(address, [])
+        incoming = [
+            t
+            for transfers in self.book.values()
+            for t in transfers
+            if t.to_addr == address
+        ]
+        return outgoing + incoming
 
     async def get_outgoing_transfers(self, address, chain_id=None):
         return self.book.get(address, [])
@@ -131,6 +153,21 @@ async def main():
     check("edges identical", m["edges"], n["edges"])
     check("hops identical", m["hops"], n["hops"])
     check("notes identical", m["notes"], n["notes"])
+    # Taint has to be compared explicitly. "Both payloads match" is satisfied by
+    # two payloads that both attribute nothing, which is what this fixture used to
+    # produce - so state that real figures were compared, not two absences.
+    check("the fixture attributes real value to the suspect",
+          bool(m["summary"].get("tainted_value_received")), True)
+    check("both backends agree on the attributed value",
+          m["summary"].get("tainted_value_received"),
+          n["summary"].get("tainted_value_received"))
+    check("per-edge taint agrees",
+          [x.get("tainted_value") for e in m["edges"] for x in e["assets"]],
+          [x.get("tainted_value") for e in n["edges"] for x in e["assets"]])
+    check("per-hop taint agrees",
+          [h.get("tainted_value") for h in m["hops"]],
+          [h.get("tainted_value") for h in n["hops"]])
+    check("the accounting block agrees", m["accounting"], n["accounting"])
     check("WHOLE PAYLOAD identical", m, n)
 
     if m != n:
