@@ -1,62 +1,98 @@
-# VASP Attribution Engine — Backend
+# ChainSAHYOG — Backend Engine
 
-Traces Ethereum funds forward from a suspect address to the centralised exchange
-(VASP) where they land, providing the actionable chokepoint for a SAHYOG/I4C
-lawful request.
+> Crypto Wallet → VASP Attribution Engine for India's SAHYOG / I4C Cybercrime Workflow (SIH26182).
 
-## Quick start
+The backend traces stolen cryptocurrency forward from a suspect address through unhosted intermediate wallets, cross-chain bridges, and mixers until it reaches a centralized Virtual Asset Service Provider (VASP), providing the actionable chokepoint for lawful data requests.
+
+---
+
+## Quick Start
 
 ```bash
-cp .env.example .env          # fill in ETHERSCAN_API_KEY
-uv sync                       # install dependencies
+# 1. Setup environment configuration
+cp .env.example .env
+# Edit .env and supply your ETHERSCAN_API_KEY
+
+# 2. Install dependencies via uv
+uv sync
+
+# 3. Start development server
 uv run uvicorn main:app --reload --port 8000
 ```
 
-## Project structure
+- **Interactive API Documentation (Swagger)**: `http://localhost:8000/docs`
+- **Alternative Documentation (ReDoc)**: `http://localhost:8000/redoc`
+
+---
+
+## Package Structure
 
 ```
 backend/
 ├── main.py                    # Entry point: uvicorn main:app
-├── app/                       # FastAPI application
-│   ├── __init__.py            #   App factory + lifespan
-│   ├── config.py              #   Central configuration + secrets
-│   └── routes.py              #   API endpoints (/trace, /report, /health, /demos)
-├── core/                      # Business logic
+├── app/                       # FastAPI application & configuration
+│   ├── __init__.py            #   App factory, CORS, and lifecycle management
+│   ├── config.py              #   Central configuration, secrets, token allowlists
+│   └── routes.py              #   API routes (/trace, /report, /health, /demos, /)
+├── core/                      # Analytical & forensic modules
 │   ├── __init__.py
-│   ├── tracer.py              #   Forward BFS tracing engine
-│   ├── identify.py            #   Exchange identification (4 methods)
-│   └── scoring.py             #   Confidence scoring (weighted, explainable)
-├── services/                  # Data layer + integrations
+│   ├── tracer.py              #   Forward BFS multi-asset tracing engine
+│   ├── identify.py            #   Exchange identification (known labels & consolidation)
+│   ├── clustering.py          #   Entity resolution & hub grouping
+│   ├── taint.py               #   FIFO value taint tracking & chronological replay
+│   ├── typologies.py          #   Laundering pattern recognition (peel chains, layering, structuring)
+│   └── scoring.py             #   Explainable, additive confidence scoring
+├── services/                  # Data layer & external integrations
 │   ├── __init__.py
-│   ├── etherscan.py           #   Etherscan API client + in-memory cache
-│   ├── graph_store.py         #   Graph storage (Neo4j + NetworkX fallback)
-│   ├── replay.py              #   Demo replay / cache
-│   └── report.py              #   PDF report generation (reportlab)
-└── scripts/                   # CLI tools
-    ├── __init__.py
-    ├── record_demo.py         #   Record a trace for instant demo replay
-    └── import_tagpacks.py     #   Import labels from GraphSense TagPacks
+│   ├── etherscan.py           #   Etherscan API V2 multichain client & cache
+│   ├── graph_store.py         #   Dual-engine graph storage (Neo4j + NetworkX)
+│   ├── replay.py              #   Recorded demo replay & cache management
+│   └── report.py              #   Forensic PDF report generation (ReportLab)
+├── scripts/                   # Operational CLI utilities
+│   ├── __init__.py
+│   ├── import_ofac.py         #   Ingest OFAC SDN cryptocurrency sanctions list
+│   ├── import_tagpacks.py     #   Ingest GraphSense TagPacks entity labels
+│   └── record_demo.py         #   Record a trace snapshot for instant demo replay
+└── tests/                     # Comprehensive test suites
+    ├── test_tracer.py         #   BFS traversal & guard rails
+    ├── test_tokens.py         #   Contract-pinned token allowlists & decimals
+    ├── test_taint.py          #   FIFO taint accounting & tie breaking
+    ├── test_typologies.py     #   Laundering pattern rules
+    ├── test_clustering.py     #   Entity clustering & hop distance rules
+    ├── test_identify.py       #   Label matching & consolidation heuristics
+    ├── test_scoring.py        #   Explainable confidence scoring
+    └── test_backends_agree.py #   Dual backend agreement (Neo4j vs NetworkX)
 ```
 
-## API endpoints
+---
 
-| Endpoint  | Description |
-|-----------|-------------|
-| `GET /`   | Service info + liveness |
-| `GET /health` | Liveness probe, reports graph backend status |
-| `GET /trace?address=0x...` | Run or replay a forward trace |
-| `GET /report?address=0x...` | Same finding as a downloadable PDF |
-| `GET /demos` | List recorded demo traces |
+## Comprehensive Documentation
 
-## CLI scripts
+For complete technical specifications, mathematical definitions, and API schemas, refer to the **[`docs/`](../docs/)** directory in the repository root:
+
+- **[Master Documentation Index](../docs/README.md)**
+- **[System Architecture & Dual Graph Engine](../docs/ARCHITECTURE.md)**
+- **[API Routes Catalog](../docs/ROUTES.md)**
+- **[Exhaustive API Specification & JSON Schemas](../docs/API.md)**
+- **[Tracing Engine & Multi-Asset Flow Analysis](../docs/TRACING_ENGINE.md)**
+- **[Entity Resolution & Clustering](../docs/ENTITY_RESOLUTION.md)**
+- **[FIFO Taint Tracking & Chronological Replay](../docs/TAINT_TRACKING.md)**
+- **[Laundering Typology Detection](../docs/TYPOLOGIES.md)**
+- **[Explainable Confidence Scoring](../docs/CONFIDENCE_SCORING.md)**
+- **[Data Sources, Labels, & OFAC Sanctions](../docs/DATA_SOURCES.md)**
+- **[Deployment & Configuration Guide](../docs/DEPLOYMENT_AND_CONFIG.md)**
+
+---
+
+## Running Verification Tests
 
 ```bash
-# Record a demo trace for instant replay
-uv run python -m scripts.record_demo 0x62425cd6bdcb6bfe51558ea465b063486b70dc9f --depth 3
-
-# List recorded demos
-uv run python -m scripts.record_demo --list
-
-# Import labels from GraphSense TagPacks
-uv run python -m scripts.import_tagpacks --dry-run
+uv run python -m tests.test_tracer
+uv run python -m tests.test_tokens
+uv run python -m tests.test_taint
+uv run python -m tests.test_typologies
+uv run python -m tests.test_clustering
+uv run python -m tests.test_identify
+uv run python -m tests.test_scoring
+uv run python -m tests.test_backends_agree
 ```

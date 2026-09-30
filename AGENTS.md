@@ -27,75 +27,74 @@ and anonymous). We follow the money THROUGH them until we recognize the
 EXCHANGE at the end, which cannot hide because it is a large regulated business
 with a stable, recognizable on-chain fingerprint.
 
-## Scope discipline (IMPORTANT — do not over-build)
+## Scope & Capabilities
 
-Priority order for this project:
-1. A reliable, working forward trace that reaches an exchange.  <-- most important
-2. A clear money-flow visualization.
-3. Breadth: mixer flags, risk scoring.  <-- least important, only if time
+The engine supports forward tracing, multi-asset flow analysis, and forensic attribution across EVM networks:
+1. **Multi-Chain EVM Tracing**: Ethereum (1), Polygon (137), BNB Chain (56), Arbitrum One (42161) via Etherscan V2.
+2. **Contract-Pinned Token Tracing**: Follows allowlisted stablecoins and wrapped assets (USDT, USDC, DAI, WETH, WBTC, USDC.e) pinned strictly to verified contract addresses with per-chain decimals.
+3. **FIFO Taint Tracking**: Mathematical First-In-First-Out accounting over chronological events to quantify suspect funds reaching an exchange.
+4. **Laundering Typologies**: Algorithmic detection of peel chains, layering, structuring/smurfing, and rapid pass-throughs with challengeable parameters.
+5. **Entity Resolution & Clustering**: Consolidating thousands of deposit and sweep addresses into unified business entities (e.g., Binance) using the minimum-hop-distance rule.
+6. **Dual-Engine Graph Architecture**: Persistent Neo4j graph storage with transparent, automatic fallback to in-memory NetworkX.
+7. **OFAC Sanctions & Risk Flagging**: Real-time cross-referencing against US Treasury SDN lists and known obfuscators (mixers, bridges).
+8. **Forensic PDF Reports**: Court- and investigator-ready documentation generated via ReportLab.
 
-Build the FULL skeleton, but only methods (a) known-label lookup and
-(b) deposit-consolidation clustering must work WELL for exchange identification.
-Methods (c) behavioral classifier and (d) co-spend clustering can be stubbed or
-partially implemented and described as "future scope". Do NOT gold-plate.
-Ethereum only. No multi-chain. No real-time streaming.
+Methods (c) behavioral classifier and (d) co-spend clustering remain marked as future scope.
 
 ## Architecture
 
 ```
 Frontend (React + Vite)
-  - address input, "Trace" button
-  - money-flow graph (Cytoscape.js)
-  - finding panel: exchange, hops, confidence, flags, recommended action
+  - address input, chain selector, "Trace" button
+  - money-flow graph (Cytoscape.js) with path highlighting
+  - finding panel: exchange, hops, confidence, typologies, taint tracking, flags
         |
         v  (HTTP / JSON)
 Backend (Python + FastAPI)
-  - /trace endpoint
-  - Tracing engine (NetworkX directed graph, forward BFS with depth cap)
-  - Exchange identification module:
-      a. known-label lookup   (WORKS — from labels file)
-      b. consolidation cluster (WORKS — fan-in heuristic)
+  - /trace, /report, /health, /demos endpoints
+  - Tracing engine (NetworkX / Neo4j directed graph, forward BFS with depth & dust caps)
+  - Token tracking engine (Contract-pinned allowlist, decimals normalization)
+  - FIFO taint engine (Chronological event replay, per-route attribution)
+  - Typologies detector (Peel chains, layering, structuring, pass-through)
+  - Exchange identification & clustering:
+      a. known-label lookup   (WORKS — from labels.json + OFAC)
+      b. consolidation cluster (WORKS — fan-in heuristic & hub models)
       c. behavioral classifier (STUB — future scope)
       d. co-spend clustering   (STUB / N/A on account model — future scope)
-  - Risk + confidence scoring (weighted, explainable)
-  - Report generator (PDF, later)
+  - Risk + confidence scoring (weighted, explainable arithmetic)
+  - Report generator (PDF via ReportLab)
         |
         v
-Data sources
-  - Etherscan API (transaction history)  [ETHERSCAN_API_KEY]
-  - Alchemy API (optional, cleaner transfers) [ALCHEMY_API_KEY]
-  - labels.json (address -> entity: exchanges, mixers, bridges)
-    seeded from Etherscan public labels + GraphSense TagPacks
+Data sources & Storage
+  - Etherscan V2 Multichain API [ETHERSCAN_API_KEY]
+  - Alchemy API (optional) [ALCHEMY_API_KEY]
+  - Neo4j Graph Database (optional, docker-compose) [NEO4J_URI]
+  - labels.json (address -> entity: exchanges, mixers, bridges, OFAC)
+  - Replay cache (data/cache/<address>.json for instant pitch playback)
 ```
 
-## Tech stack (do not substitute without asking)
+## Tech stack
 
-- Backend: Python 3.11+, FastAPI, uvicorn, httpx (async requests), networkx
-- Data: pydantic models, python-dotenv for keys
-- Frontend: React + Vite (JavaScript), Cytoscape.js for the graph
-- PDF: reportlab (only when we reach that task)
-- No database needed for the demo; in-memory + a labels.json file is fine.
+- Backend: Python 3.11+, FastAPI, uvicorn, httpx (async requests), networkx, neo4j
+- Data: pydantic models, python-dotenv for keys, pyyaml
+- Frontend: React + Vite (JavaScript), Cytoscape.js for graph visualization
+- PDF: ReportLab (forensic multi-page reports)
+- Graph Store: Neo4j (optional) with automatic NetworkX in-memory fallback
 
 ## Hard rules
 
 - API keys live ONLY in backend `.env` (gitignored). NEVER in frontend code.
-- Cap trace depth (default 4) and ignore dust transfers (< a threshold) or the
-  graph explodes. A single busy wallet can have tens of thousands of txns.
+- Cap trace depth (default 4) and ignore dust transfers (< threshold) to prevent combinatorial explosion.
 - Cache fetched wallets in memory during a trace so we never refetch.
-- Respect Etherscan free-tier rate limit (5 calls/sec) — add small delays.
-- Every attribution carries a confidence score. Never claim 100% certainty.
-- Write clear docstrings explaining the WHY (this doubles as our PPT material).
+- Respect Etherscan free-tier rate limit (5 calls/sec) — 250ms serial delay.
+- Every attribution carries an explainable confidence score. Never claim 100% certainty.
+- Write clear docstrings explaining the WHY (this doubles as court-ready documentation).
 
 ## Demo reliability
 
-We will demo with a known real scam/ransomware Ethereum address. Support a
-cache/replay mode so the demo runs instantly and never depends on a live API
-call succeeding mid-pitch, while still being able to do a fresh live trace on a
-second address.
+Always support cache/replay mode (`mode=auto` or `mode=cache`) so demos run instantly and never depend on live third-party network calls during a pitch, while retaining the capability to run fresh live traces.
 
-## Definition of done (for the finale)
+## Definition of done
 
-Enter a real Ethereum address -> see an animated money-flow graph -> the path
-lights up to a recognized exchange node -> a panel states
-"Funds reached <Exchange>, N hops away, XX% confidence" with any mixer/bridge
-flags -> a "Route to SAHYOG" button (simulated) and a downloadable PDF report.
+Enter a suspect EVM address -> see money-flow graph -> path lights up to a recognized exchange entity -> panel states:
+"XX ETH/USDT of the suspect's funds reached <Exchange>, N hops away, YY% confidence" with typology detections and risk flags -> simulated "Route to SAHYOG" action and downloadable court-ready PDF report.
