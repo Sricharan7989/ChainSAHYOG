@@ -358,6 +358,16 @@ PEEL_DOMINANT_SHARE = _env_float("PEEL_DOMINANT_SHARE", 0.80)
 PEEL_MAX_SIDE_SHARE = _env_float("PEEL_MAX_SIDE_SHARE", 0.20)
 PEEL_MIN_SIDE_OUTPUTS = _env_int("PEEL_MIN_SIDE_OUTPUTS", 1)
 
+# THE PRINCIPAL MUST NOT GROW down the chain. A peel chain peels a slice off at
+# each step, so what continues is less than what arrived. Without this, the walk
+# just follows the biggest recipient and strings together unrelated large wallets
+# that each happen to have a dominant forward - searching real addresses for a
+# demo case produced "chains" of 3.4 -> 517 -> 5,894 ETH and 10.7M -> 11.9M ->
+# 35.9M DAI, neither of which is one chain of money. 1.05 allows a wallet to add a
+# little of its own balance to the principal before forwarding; anything more ends
+# the chain.
+PEEL_MAX_GROWTH = _env_float("PEEL_MAX_GROWTH", 1.05)
+
 # LAYERING. Rapid multi-hop movement with no apparent economic purpose: each
 # wallet holds the funds briefly and forwards nearly all of them.
 #

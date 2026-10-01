@@ -380,6 +380,33 @@ def _peel_link(view: FlowView, wallet: str, asset: str) -> dict | None:
     }
 
 
+def peel_continues(previous: dict, nxt: dict) -> bool:
+    """
+    Can these two peel steps be the SAME chain of money?
+
+    A peel chain's principal shrinks: a slice comes off at every step, so what
+    travels onward is less than what arrived. Without this rule the walk merely
+    follows the largest recipient, and it will happily string together unrelated
+    wallets that each independently have a dominant-forward shape.
+
+    That is not a hypothetical. Probing real wallets for a demo case produced
+    "chains" of 3.4 -> 517 -> 5,894 ETH and 10.7M -> 11.9M -> 35.9M DAI. Each
+    wallet did forward most of its own outflow to one recipient, but the money
+    leaving step two was overwhelmingly not the money that arrived from step one -
+    these were large independent wallets that happened to be adjacent. Reporting
+    that as a single peel chain in a police report would be a false statement of
+    fact, so a growing principal ends the chain.
+
+    PEEL_MAX_GROWTH allows a little slack rather than demanding a strict decrease,
+    because a wallet can legitimately combine the arriving principal with a small
+    balance of its own before forwarding.
+    """
+    if previous is None:
+        return True
+    allowance = previous["dominant_value"] * config.PEEL_MAX_GROWTH
+    return nxt["dominant_value"] <= allowance
+
+
 def _walk_peel_chain(view: FlowView, wallet: str, asset: str) -> list[dict]:
     """Follow dominant forwards while each step is a peel. Cycle-safe."""
     chain: list[dict] = []
@@ -388,6 +415,8 @@ def _walk_peel_chain(view: FlowView, wallet: str, asset: str) -> list[dict]:
     while True:
         link = _peel_link(view, current, asset)
         if link is None or link["to"] in seen:
+            break
+        if not peel_continues(chain[-1] if chain else None, link):
             break
         chain.append(link)
         seen.add(link["to"])
@@ -944,7 +973,39 @@ def detect(fetched: dict[str, list], store=None, taint=None, start=None):
 
     detections.sort(key=lambda d: (-d.strength, d.typology, d.wallets[0]))
     suppressed = max(0, len(detections) - config.TYPOLOGY_MAX_REPORTED)
-    return detections[: config.TYPOLOGY_MAX_REPORTED], suppressed
+    return _cap(detections), suppressed
+
+
+def _cap(detections: list[Detection]) -> list[Detection]:
+    """
+    Trim to the reporting cap, but keep every typology represented.
+
+    A PLAIN "STRONGEST N" IS WRONG HERE, and this was found the hard way. A real
+    2-link peel chain scoring 75 was dropped entirely because fifteen rapid
+    pass-throughs scored 82-90 and filled the whole budget. That inverts the value
+    of the output: pass-throughs are numerous and near-identical, while a peel
+    chain is rare and says far more about intent. The rarest finding must not be
+    the one most likely to be cut.
+
+    So the strongest example of EACH typology is admitted first, and the remaining
+    budget is filled by strength. Order stays strength-descending either way.
+    """
+    cap = config.TYPOLOGY_MAX_REPORTED
+    if len(detections) <= cap:
+        return detections
+
+    chosen: list[int] = []
+    seen: set[str] = set()
+    for index, detection in enumerate(detections):
+        if detection.typology not in seen:
+            seen.add(detection.typology)
+            chosen.append(index)
+    for index in range(len(detections)):
+        if len(chosen) >= cap:
+            break
+        if index not in chosen:
+            chosen.append(index)
+    return [detections[i] for i in sorted(chosen)][:cap]
 
 
 def summarise(detections: list[Detection], suppressed: int = 0) -> dict:
