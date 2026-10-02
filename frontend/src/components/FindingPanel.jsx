@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { FileText, Route, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import HeadlineCard from './findings/HeadlineCard';
 import ConfidenceMeter from './findings/ConfidenceMeter';
 import TaintCard from './findings/TaintCard';
@@ -20,14 +21,15 @@ export default function FindingPanel({
   onSelectAddress,
 }) {
   const panelRef = useRef(null);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'forensics' | 'trail'
+  // 'summary' | 'trail' | 'evidence'
+  const [activeTab, setActiveTab] = useState('summary');
 
   useGSAP(() => {
     if (data) {
       gsap.from(panelRef.current, {
-        x: 30,
+        x: 20,
         opacity: 0,
-        duration: 0.6,
+        duration: 0.5,
         ease: 'power3.out',
       });
     }
@@ -42,48 +44,53 @@ export default function FindingPanel({
   return (
     <div
       ref={panelRef}
-      className="flex flex-col gap-4 w-full h-full overflow-y-auto pr-1"
+      className="flex flex-col gap-3.5 w-full h-full overflow-y-auto pr-0.5"
     >
-      {/* Category Tabs Navigation */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 rounded-xl">
+      {/* 3 Intuitive Tabs: Plain-English & High-Contrast */}
+      <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
         <button
           type="button"
-          onClick={() => setActiveTab('overview')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === 'overview'
-              ? 'bg-white dark:bg-zinc-800 text-cyan-700 dark:text-cyan-300 border border-slate-200 dark:border-transparent shadow-xs'
-              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+          onClick={() => setActiveTab('summary')}
+          className={`flex-1 py-1.5 px-2.5 text-xs font-mono transition-all cursor-pointer brutal-press flex items-center justify-center gap-1.5 ${
+            activeTab === 'summary'
+              ? 'bg-[#627EEA]/15 text-[#627EEA] border border-[#627EEA] shadow-[2px_2px_0px_#627EEA] font-bold'
+              : 'text-[#52525b] dark:text-[#a3a3a3] hover:text-[#09090b] dark:hover:text-[#f5f5f5] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] border border-transparent font-medium'
           }`}
         >
-          Attribution Overview
+          <FileText className="w-3.5 h-3.5" />
+          <span>Case Summary</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('forensics')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === 'forensics'
-              ? 'bg-white dark:bg-zinc-800 text-cyan-700 dark:text-cyan-300 border border-slate-200 dark:border-transparent shadow-xs'
-              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
-          }`}
-        >
-          Laundering Forensics
-        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('trail')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-2.5 text-xs font-mono transition-all cursor-pointer brutal-press flex items-center justify-center gap-1.5 ${
             activeTab === 'trail'
-              ? 'bg-white dark:bg-zinc-800 text-cyan-700 dark:text-cyan-300 border border-slate-200 dark:border-transparent shadow-xs'
-              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              ? 'bg-[#627EEA]/15 text-[#627EEA] border border-[#627EEA] shadow-[2px_2px_0px_#627EEA] font-bold'
+              : 'text-[#52525b] dark:text-[#a3a3a3] hover:text-[#09090b] dark:hover:text-[#f5f5f5] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] border border-transparent font-medium'
           }`}
         >
-          Trail Steps ({pathEdges.length})
+          <Route className="w-3.5 h-3.5" />
+          <span>Money Trail ({pathEdges.length} {pathEdges.length === 1 ? 'hop' : 'hops'})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('evidence')}
+          className={`flex-1 py-1.5 px-2.5 text-xs font-mono transition-all cursor-pointer brutal-press flex items-center justify-center gap-1.5 ${
+            activeTab === 'evidence'
+              ? 'bg-[#627EEA]/15 text-[#627EEA] border border-[#627EEA] shadow-[2px_2px_0px_#627EEA] font-bold'
+              : 'text-[#52525b] dark:text-[#a3a3a3] hover:text-[#09090b] dark:hover:text-[#f5f5f5] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] border border-transparent font-medium'
+          }`}
+        >
+          <ShieldAlert className="w-3.5 h-3.5" />
+          <span>Forensic Evidence</span>
         </button>
       </div>
 
-      {/* TAB 1: OVERVIEW */}
-      {activeTab === 'overview' && (
-        <div className="space-y-4 animate-in fade-in duration-200">
+      {/* TAB 1: CASE SUMMARY & ACTION (Executive Verdict for Naive User) */}
+      {activeTab === 'summary' && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
           <HeadlineCard
             summary={data.summary}
             params={data.params}
@@ -91,6 +98,49 @@ export default function FindingPanel({
             onDownloadReport={onDownloadReport}
           />
 
+          <RiskFlagsCard
+            riskFlags={data.risk_flags}
+            explorerBase={data.params?.explorer}
+          />
+
+          {/* Quick Legal Guidance Box */}
+          <div className="bg-white dark:bg-[#111111] border border-[#d4d4d8] dark:border-[#262626] p-4 space-y-2 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              Investigator Action Checklist
+            </h4>
+            <ol className="text-xs text-[#52525b] dark:text-[#a3a3a3] space-y-1.5 list-decimal pl-4 leading-relaxed font-sans">
+              <li>
+                Click <strong className="text-[#09090b] dark:text-[#f5f5f5]">Route to SAHYOG</strong> to generate an official freeze notice under Indian cybercrime laws.
+              </li>
+              <li>
+                Export and print the <strong className="text-[#09090b] dark:text-[#f5f5f5]">PDF Dossier</strong> to attach with the formal FIR / Case Diary.
+              </li>
+              <li>
+                Inspect the <strong className="text-[#09090b] dark:text-[#f5f5f5]">Money Trail</strong> tab if you need individual transaction hashes for court submission.
+              </li>
+            </ol>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: MONEY TRAIL (Chronological Hop Story) */}
+      {activeTab === 'trail' && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
+          <PathTimeline
+            pathEdges={pathEdges}
+            startAddress={startAddress}
+            targetAddress={targetAddress}
+            summary={data.summary}
+            explorerBase={data.params?.explorer}
+            onSelectAddress={onSelectAddress}
+          />
+        </div>
+      )}
+
+      {/* TAB 3: FORENSIC EVIDENCE (Deep Auditable Telemetry) */}
+      {activeTab === 'evidence' && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
           <ConfidenceMeter
             score={data.summary?.confidence_score}
             breakdown={data.summary?.confidence_breakdown}
@@ -100,16 +150,6 @@ export default function FindingPanel({
 
           <TaintCard summary={data.summary} accounting={data.accounting} />
 
-          <RiskFlagsCard
-            riskFlags={data.risk_flags}
-            explorerBase={data.params?.explorer}
-          />
-        </div>
-      )}
-
-      {/* TAB 2: FORENSICS */}
-      {activeTab === 'forensics' && (
-        <div className="space-y-4 animate-in fade-in duration-200">
           <TypologiesCard
             typologies={data.typologies}
             summary={data.typology_summary}
@@ -118,20 +158,6 @@ export default function FindingPanel({
           <ClustersCard clusters={data.clusters} />
 
           <TokenWarningsCard tokenWarnings={data.token_warnings} />
-        </div>
-      )}
-
-      {/* TAB 3: TRAIL STEPS */}
-      {activeTab === 'trail' && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          <PathTimeline
-            pathEdges={pathEdges}
-            startAddress={startAddress}
-            targetAddress={targetAddress}
-            summary={data.summary}
-            explorerBase={data.params?.explorer}
-            onSelectAddress={onSelectAddress}
-          />
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext({
-  theme: 'light',
+  theme: 'dark',
   toggleTheme: () => {},
 });
 
@@ -9,9 +9,9 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
       const saved = localStorage.getItem('chainsahyog-theme');
-      return saved === 'dark' ? 'dark' : 'light'; // Default to light mode
+      return saved === 'light' ? 'light' : 'dark'; // Default to dark mode
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
 

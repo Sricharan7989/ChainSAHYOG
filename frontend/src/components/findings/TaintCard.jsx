@@ -11,10 +11,9 @@ export default function TaintCard({ summary, accounting }) {
 
   useGSAP(() => {
     gsap.from(cardRef.current, {
-      y: 15,
+      y: 12,
       opacity: 0,
-      duration: 0.5,
-      delay: 0.1,
+      duration: 0.4,
       ease: 'power2.out',
     });
   }, { dependencies: [summary], scope: cardRef });
@@ -27,74 +26,81 @@ export default function TaintCard({ summary, accounting }) {
 
   const hasTaint = taintedValue && Object.keys(taintedValue).length > 0;
   const percentStr =
-    typeof inflowFraction === 'number' ? `${(inflowFraction * 100).toFixed(1)}%` : null;
+    typeof inflowFraction === 'number' ? `${(inflowFraction * 100).toFixed(1)}%` : '100%';
 
   return (
     <div
       ref={cardRef}
-      className="bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm dark:shadow-xl transition-all"
+      className="bg-white dark:bg-[#111111] border border-[#d4d4d8] dark:border-[#262626] p-4 sm:p-5 transition-all shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] space-y-3"
     >
       {/* Title */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-          <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100">FIFO Taint Tracking</h3>
+          <Layers className="w-4 h-4 text-[#627EEA]" />
+          <h3 className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">
+            Stolen Funds Accounting
+          </h3>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/20 font-semibold">
-          First-In, First-Out
+        <span className="text-[10px] font-mono px-2 py-0.5 bg-[#627EEA]/10 text-[#627EEA] border border-[#627EEA]/30 font-semibold uppercase">
+          FIFO Ledger Replay
         </span>
       </div>
 
       {/* Main Metric comparison */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {/* Tainted Value */}
-        <div className="bg-slate-50 dark:bg-zinc-950 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800/80">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-1">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Suspect-Attributable Value
+        <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] p-3 border border-[#d4d4d8] dark:border-[#262626]">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1 mb-0.5">
+            <CheckCircle2 className="w-3 h-3" />
+            Stolen Portion at Destination
           </span>
-          <p className="font-mono text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
-            {hasTaint ? formatAssets(taintedValue) : '0.00'}
+          <p className="font-mono text-base font-extrabold text-[#09090b] dark:text-[#f5f5f5]">
+            {summary.tainted_value_display || (hasTaint ? formatAssets(taintedValue) : '0.00')}
           </p>
-          <span className="text-[10px] text-slate-500 dark:text-zinc-500 block mt-0.5">
-            Stolen funds reaching this destination
+          <span className="text-[10px] text-[#71717a] dark:text-[#888888] block mt-0.5 font-mono">
+            Stolen crypto reaching this wallet
           </span>
         </div>
 
         {/* Gross Value */}
-        <div className="bg-slate-50 dark:bg-zinc-950 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800/80">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 block mb-1">
-            Gross Traced Inflow
+        <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] p-3 border border-[#d4d4d8] dark:border-[#262626]">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#71717a] dark:text-[#888888] block mb-0.5">
+            Total Inflow Observed
           </span>
-          <p className="font-mono text-base sm:text-lg font-semibold text-slate-700 dark:text-zinc-300">
-            {grossValue ? formatAssets(grossValue) : '0.00'}
+          <p className="font-mono text-base font-bold text-[#09090b] dark:text-[#f5f5f5]">
+            {summary.value_received_display || (grossValue ? formatAssets(grossValue) : '0.00')}
           </p>
-          <span className="text-[10px] text-slate-500 dark:text-zinc-500 block mt-0.5">
-            Total deposit volume at endpoint
+          <span className="text-[10px] text-[#71717a] dark:text-[#888888] block mt-0.5 font-mono">
+            Total volume traced into endpoint
           </span>
         </div>
       </div>
 
       {/* Inflow Fraction Progress Bar */}
       {percentStr && (
-        <div className="mb-3 bg-slate-50 dark:bg-zinc-950/60 p-3 rounded-xl border border-slate-200 dark:border-zinc-800">
-          <div className="flex justify-between items-center text-xs mb-1.5 font-medium">
-            <span className="text-slate-600 dark:text-zinc-400">Tainted Share of Observed Inflow</span>
-            <span className="font-mono text-cyan-600 dark:text-cyan-400 font-bold">{percentStr}</span>
+        <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] p-2.5 border border-[#d4d4d8] dark:border-[#262626] space-y-1.5">
+          <div className="flex justify-between items-center text-xs font-mono">
+            <span className="text-[#52525b] dark:text-[#a3a3a3]">Suspect Share of Observed Inflow</span>
+            <span className="text-[#627EEA] font-bold">{percentStr}</span>
           </div>
-          <div className="w-full bg-slate-200 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-[#d4d4d8] dark:bg-[#262626] h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${Math.min(100, (inflowFraction || 0) * 100)}%` }}
+              className="bg-[#627EEA] h-full transition-all duration-700 ease-out"
+              style={{ width: `${Math.min(100, (inflowFraction || 1) * 100)}%` }}
             />
           </div>
         </div>
       )}
 
-      {/* Clean Accounting Metadata Footer */}
+      {/* Explanatory footer */}
+      <p className="text-[11px] text-[#71717a] dark:text-[#888888] leading-tight">
+        Calculated using First-In, First-Out (FIFO) ledger math: funds leave intermediary wallets in the exact order received, providing deterministic evidence for court filings.
+      </p>
+
+      {/* Accounting Replay Stats if present */}
       {accounting?.events_replayed > 0 && (
-        <div className="pt-2 border-t border-slate-200 dark:border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-zinc-400">
-          <span>Replayed {accounting.events_replayed} transfers</span>
+        <div className="pt-2 border-t border-[#d4d4d8] dark:border-[#262626] flex items-center justify-between text-[11px] font-mono text-[#71717a] dark:text-[#888888]">
+          <span>Replayed {accounting.events_replayed} transactions</span>
           <span>{accounting.observed_wallets} wallets tracked</span>
         </div>
       )}

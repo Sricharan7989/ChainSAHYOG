@@ -3,8 +3,9 @@ import { useTheme } from '../../context/ThemeContext';
 
 /**
  * BackgroundCanvas
- * High-density, interactive HTML5 Canvas animation depicting an interconnected
- * forensic blockchain network with magnetic cursor laser threads and traveling packets.
+ * High-visibility, interactive neo-brutalist network canvas.
+ * Interactive dots, vector connections, traveling packets, and magnetic cursor lasers.
+ * Theme-aware: adapts contrast and colors between dark and light modes.
  */
 export default function BackgroundCanvas() {
   const canvasRef = useRef(null);
@@ -26,36 +27,33 @@ export default function BackgroundCanvas() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Dynamic density: 120-160 nodes
-    const count = Math.min(Math.floor((width * height) / 9000), 160);
+    const isDark = theme === 'dark';
+    const count = Math.min(Math.floor((width * height) / 8500), 160);
     const nodes = [];
 
-    const isDark = theme === 'dark';
-    const palette = isDark
-      ? ['#06b6d4', '#3b82f6', '#10b981', '#8b5cf6']
-      : ['#0284c7', '#2563eb', '#059669', '#7c3aed'];
+    // Distinct theme palette
+    const nodeColor = isDark ? '#71717a' : '#52525b';
+    const hubColor = '#627EEA';
+    const lineColor = isDark ? '#3f3f46' : '#a1a1aa';
 
     for (let i = 0; i < count; i++) {
-      const isHub = Math.random() < 0.15; // 15% are major hubs
+      const isHub = Math.random() < 0.16;
       nodes.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
-        radius: isHub ? Math.random() * 2 + 3.5 : Math.random() * 2 + 1.8,
-        color: palette[Math.floor(Math.random() * palette.length)],
-        alpha: isHub ? 0.8 : Math.random() * 0.4 + 0.3,
+        vx: (Math.random() - 0.5) * 0.55,
+        vy: (Math.random() - 0.5) * 0.55,
+        radius: isHub ? Math.random() * 2 + 3.5 : Math.random() * 1.5 + 2,
+        color: isHub ? hubColor : nodeColor,
+        alpha: isHub ? (isDark ? 0.9 : 0.85) : (isDark ? 0.55 : 0.45),
         isHub,
         pulsePhase: Math.random() * Math.PI * 2,
       });
     }
 
-    // Traveling energy packets along network connections
     const packets = [];
-    const maxPackets = 24;
-
-    // Mouse coordinates for interactive magnetic beacon
-    let mouse = { x: -1000, y: -1000, radius: 180 };
+    const maxPackets = 22;
+    let mouse = { x: -1000, y: -1000, radius: 200 };
 
     const handleMouseMove = (e) => {
       mouse.x = e.clientX;
@@ -72,7 +70,7 @@ export default function BackgroundCanvas() {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Draw connecting lines between nodes
+      // 1. Draw connecting vector lines
       for (let i = 0; i < nodes.length; i++) {
         const p1 = nodes[i];
 
@@ -80,16 +78,16 @@ export default function BackgroundCanvas() {
         p1.y += p1.vy;
         p1.pulsePhase += 0.03;
 
-        // Bounce screen edges
+        // Bounce at boundaries
         if (p1.x < 0 || p1.x > width) p1.vx *= -1;
         if (p1.y < 0 || p1.y > height) p1.vy *= -1;
 
-        // Mouse repulsion & attraction balance
+        // Magnetic cursor interaction
         const dxMouse = p1.x - mouse.x;
         const dyMouse = p1.y - mouse.y;
         const distMouse = Math.hypot(dxMouse, dyMouse);
         if (distMouse < mouse.radius) {
-          const force = (1 - distMouse / mouse.radius) * 1.5;
+          const force = (1 - distMouse / mouse.radius) * 1.6;
           p1.x += (dxMouse / distMouse) * force;
           p1.y += (dyMouse / distMouse) * force;
 
@@ -97,58 +95,58 @@ export default function BackgroundCanvas() {
           ctx.beginPath();
           ctx.moveTo(mouse.x, mouse.y);
           ctx.lineTo(p1.x, p1.y);
-          ctx.strokeStyle = isDark ? '#06b6d4' : '#0284c7';
-          ctx.globalAlpha = (1 - distMouse / mouse.radius) * 0.45;
-          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = '#627EEA';
+          ctx.globalAlpha = (1 - distMouse / mouse.radius) * 0.65;
+          ctx.lineWidth = 1.4;
           ctx.stroke();
         }
 
-        // Connect near neighbors
+        // Connect near neighbor nodes
         for (let j = i + 1; j < nodes.length; j++) {
           const p2 = nodes[j];
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
           const dist = Math.hypot(dx, dy);
 
-          if (dist < 120) {
+          if (dist < 125) {
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = isDark ? '#38bdf8' : '#0284c7';
-            ctx.globalAlpha = (1 - dist / 120) * (isDark ? 0.22 : 0.16);
-            ctx.lineWidth = 0.9;
+            ctx.strokeStyle = p1.isHub || p2.isHub ? '#627EEA' : lineColor;
+            ctx.globalAlpha = (1 - dist / 125) * (p1.isHub || p2.isHub ? 0.45 : 0.28);
+            ctx.lineWidth = p1.isHub || p2.isHub ? 1.2 : 0.9;
             ctx.stroke();
 
-            // Spawn occasional energy packet along connection
-            if (packets.length < maxPackets && Math.random() < 0.003) {
+            // Spawn traveling data packets along connections
+            if (packets.length < maxPackets && Math.random() < 0.0035) {
               packets.push({
                 x: p1.x,
                 y: p1.y,
                 targetX: p2.x,
                 targetY: p2.y,
                 progress: 0,
-                speed: 0.015 + Math.random() * 0.02,
-                color: p1.color,
+                speed: 0.0001 + Math.random() * 0.02,
+                color: p1.isHub || p2.isHub ? '#627EEA' : (isDark ? '#e4e4e7' : '#27272a'),
               });
             }
           }
         }
 
-        // Draw node
+        // Draw node dot
         ctx.beginPath();
         ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
         ctx.fillStyle = p1.color;
         ctx.globalAlpha = p1.alpha;
         ctx.fill();
 
-        // Hub nodes get a pulsing outer glow ring
+        // Hub outer pulse rings
         if (p1.isHub) {
           const pulseR = p1.radius + Math.sin(p1.pulsePhase) * 3 + 4;
           ctx.beginPath();
           ctx.arc(p1.x, p1.y, pulseR, 0, Math.PI * 2);
-          ctx.strokeStyle = p1.color;
-          ctx.globalAlpha = 0.25 + Math.sin(p1.pulsePhase) * 0.15;
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#627EEA';
+          ctx.globalAlpha = 0.35 + Math.sin(p1.pulsePhase) * 0.2;
+          ctx.lineWidth = 1.2;
           ctx.stroke();
         }
       }
@@ -167,9 +165,9 @@ export default function BackgroundCanvas() {
         const currY = pkt.y + (pkt.targetY - pkt.y) * pkt.progress;
 
         ctx.beginPath();
-        ctx.arc(currX, currY, 2.5, 0, Math.PI * 2);
+        ctx.arc(currX, currY, 2.8, 0, Math.PI * 2);
         ctx.fillStyle = pkt.color;
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.95;
         ctx.fill();
       }
 
@@ -177,9 +175,17 @@ export default function BackgroundCanvas() {
       if (mouse.x > 0 && mouse.y > 0) {
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? '#38bdf8' : '#0284c7';
-        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#627EEA';
+        ctx.globalAlpha = 0.9;
         ctx.fill();
+
+        // Subtle outer pulse
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 14, 0, Math.PI * 2);
+        ctx.strokeStyle = '#627EEA';
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
       ctx.globalAlpha = 1;
@@ -199,7 +205,7 @@ export default function BackgroundCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 opacity-50 transition-opacity"
+      className="fixed inset-0 pointer-events-none z-0 opacity-60 select-none transition-opacity duration-300"
       aria-hidden="true"
     />
   );

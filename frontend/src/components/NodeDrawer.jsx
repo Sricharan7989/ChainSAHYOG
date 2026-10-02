@@ -1,12 +1,18 @@
 import { useRef, useState } from 'react';
-import { X, ExternalLink, Copy, Check, Shield, Coins } from 'lucide-react';
+import { X, ExternalLink, Copy, Check, Coins } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { shortAddress, formatAssets, getExplorerUrl, getTxUrl } from '../utils/formatters';
 
 gsap.registerPlugin(useGSAP);
 
-export default function NodeDrawer({ selectedNode, selectedEdge, onClose, explorerBase }) {
+export default function NodeDrawer({
+  selectedNode,
+  selectedEdge,
+  onClose,
+  explorerBase,
+  position,
+}) {
   const drawerRef = useRef(null);
   const [copied, setCopied] = useState(false);
 
@@ -14,8 +20,8 @@ export default function NodeDrawer({ selectedNode, selectedEdge, onClose, explor
     if (selectedNode || selectedEdge) {
       gsap.fromTo(
         drawerRef.current,
-        { x: 300, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.35, ease: 'power3.out' }
+        { scale: 0.95, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.2, ease: 'power2.out' }
       );
     }
   }, { dependencies: [selectedNode, selectedEdge], scope: drawerRef });
@@ -28,179 +34,164 @@ export default function NodeDrawer({ selectedNode, selectedEdge, onClose, explor
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Compute smart contextual coordinates near the clicked node / edge
+  const containerW = position?.containerWidth || 600;
+  const containerH = position?.containerHeight || 640;
+  const popoverW = 268;
+  const popoverH = 190;
+
+  let left;
+  let top;
+
+  if (position?.x !== undefined && position?.y !== undefined) {
+    // Attempt placing to the right of node
+    if (position.x + 28 + popoverW < containerW - 12) {
+      left = position.x + 28;
+    } else if (position.x - 28 - popoverW > 12) {
+      // Place to the left if right side overflows
+      left = position.x - 28 - popoverW;
+    } else {
+      left = Math.max(12, (containerW - popoverW) / 2);
+    }
+
+    // Vertically clamp between top controls bar (76px) and bottom container border
+    top = Math.max(76, Math.min(position.y - 25, containerH - popoverH - 12));
+  } else {
+    left = Math.max(12, containerW - popoverW - 16);
+    top = 76;
+  }
+
+  // Determine node role badge styling
+  const isStart = selectedNode?.is_start;
+  const isVasp = selectedNode?.is_vasp || selectedNode?.entity_type === 'exchange';
+  const isObfuscator =
+    selectedNode?.is_mixer ||
+    selectedNode?.is_bridge ||
+    selectedNode?.entity_type === 'suspected_exchange' ||
+    selectedNode?.entity_type === 'sanctioned';
+
+  const roleLabel = isStart
+    ? 'SUSPECT'
+    : isVasp
+    ? (selectedNode?.entity || 'EXCHANGE').toUpperCase()
+    : isObfuscator
+    ? (selectedNode?.entity || (selectedNode?.is_mixer ? 'MIXER' : 'BRIDGE')).toUpperCase()
+    : 'CONDUIT';
+
+  const badgeColor = isStart
+    ? 'bg-red-500/20 text-red-400 border-red-500/40'
+    : isVasp
+    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+    : isObfuscator
+    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+    : 'bg-[#18181b] text-[#a3a3a3] border-[#333338]';
+
   return (
     <div
       ref={drawerRef}
-      className="absolute top-4 right-4 z-30 w-80 sm:w-96 bg-white/95 dark:bg-zinc-900/95 border border-slate-200 dark:border-zinc-700/80 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl p-5 overflow-y-auto max-h-[85vh] text-slate-800 dark:text-zinc-100"
+      style={{ left: `${left}px`, top: `${top}px` }}
+      className="absolute z-30 w-[268px] bg-[#121214] border border-[#2a2a2a] p-3 text-[#f5f5f5] shadow-[4px_4px_0px_#000000] transition-[left,top] duration-75 select-none"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 mb-4">
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-zinc-200">
-            {selectedNode ? 'Wallet Forensics' : 'Transaction Hop'}
-          </h3>
+      {/* Header Row */}
+      <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-[#262626]">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={`px-2 py-0.5 text-[10px] font-mono font-bold border truncate ${badgeColor}`}>
+            {selectedNode ? roleLabel : 'TRANSFER HOP'}
+          </span>
+          {selectedNode?.depth !== undefined && (
+            <span className="text-[10px] font-mono text-[#888888] bg-[#1a1a1a] px-1.5 py-0.5 border border-[#262626] shrink-0">
+              Hop {selectedNode.depth}
+            </span>
+          )}
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="p-1 text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
+          className="p-1 text-[#888888] hover:text-white hover:bg-[#222225] transition-colors cursor-pointer border border-[#262626] shrink-0"
+          title="Close details"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* NODE DETAILS */}
+      {/* NODE FORENSICS */}
       {selectedNode && (
-        <div className="space-y-4">
-          {/* Identity Tag */}
-          <div>
-            <span className="text-[11px] text-slate-500 dark:text-zinc-500 uppercase tracking-wider font-semibold block mb-1">
-              Entity Role
+        <div className="mt-2.5 space-y-2.5 text-xs font-mono">
+          {/* Address with Action Buttons */}
+          <div className="bg-[#0a0a0a] border border-[#262626] p-2 flex items-center justify-between gap-1.5">
+            <span className="text-[#627EEA] font-bold tracking-tight text-[11px] truncate">
+              {shortAddress(selectedNode.id, 8, 6)}
             </span>
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                  selectedNode.is_start
-                    ? 'bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30'
-                    : selectedNode.is_vasp
-                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                    : selectedNode.entity_type === 'suspected_exchange'
-                    ? 'bg-emerald-100 dark:bg-emerald-800/40 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 border-dashed'
-                    : selectedNode.is_mixer
-                    ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-                    : selectedNode.is_bridge
-                    ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30'
-                    : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700'
-                }`}
-              >
-                {selectedNode.is_start
-                  ? 'SUSPECT ORIGIN'
-                  : selectedNode.label ||
-                    (selectedNode.entity_type === 'suspected_exchange'
-                      ? 'SUSPECTED COLLECTION HUB'
-                      : 'UNHOSTED WALLET')}
-              </span>
-              {selectedNode.depth !== undefined && (
-                <span className="text-xs font-mono text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-700">
-                  Hop {selectedNode.depth}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Full Address */}
-          <div>
-            <span className="text-[11px] text-slate-500 dark:text-zinc-500 uppercase tracking-wider font-semibold block mb-1">
-              Address
-            </span>
-            <div className="flex items-center justify-between bg-slate-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 font-mono text-xs">
-              <span className="text-cyan-700 dark:text-cyan-300 break-all">{selectedNode.id}</span>
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => handleCopy(selectedNode.id)}
-                className="p-1 ml-2 text-slate-400 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors cursor-pointer"
+                className="p-1 text-[#888888] hover:text-white hover:bg-[#1a1a1a] transition-colors cursor-pointer border border-[#262626]"
                 title="Copy Address"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
               </button>
+              <a
+                href={getExplorerUrl(explorerBase, selectedNode.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 text-[#888888] hover:text-[#627EEA] hover:bg-[#1a1a1a] transition-colors cursor-pointer border border-[#262626]"
+                title="View on Explorer"
+              >
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
 
-          {/* Tainted Value Received */}
+          {/* Tainted Value Card if Available */}
           {selectedNode.tainted_in && Object.keys(selectedNode.tainted_in).length > 0 && (
-            <div className="bg-cyan-50/70 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-500/30 rounded-xl p-3">
-              <span className="text-[11px] text-cyan-700 dark:text-cyan-400 uppercase tracking-wider font-semibold flex items-center gap-1.5 mb-1">
-                <Coins className="w-3.5 h-3.5" />
-                Tainted Value Reached Here
+            <div className="bg-[#151726] border border-[#627EEA]/30 p-2">
+              <span className="text-[10px] text-[#627EEA] font-bold flex items-center gap-1 mb-0.5">
+                <Coins className="w-3 h-3" />
+                <span>Tainted Inflow</span>
               </span>
-              <p className="font-mono text-sm font-semibold text-slate-900 dark:text-zinc-100">
+              <p className="text-xs font-bold text-white">
                 {formatAssets(selectedNode.tainted_in)}
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1">
-                Calculated strictly via chronological FIFO accounting
-              </p>
+              <span className="text-[9px] text-[#888888] block mt-0.5">
+                FIFO chronological taint
+              </span>
             </div>
           )}
-
-          {/* Explorer Button */}
-          <a
-            href={getExplorerUrl(explorerBase, selectedNode.id)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full mt-2 py-2 px-3 rounded-lg bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-xs font-medium text-slate-700 dark:text-zinc-200 flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-700 transition-colors cursor-pointer"
-          >
-            <span>View on Blockchain Explorer</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
         </div>
       )}
 
-      {/* EDGE DETAILS */}
+      {/* EDGE FORENSICS */}
       {selectedEdge && (
-        <div className="space-y-4">
-          <div>
-            <span className="text-[11px] text-slate-500 dark:text-zinc-500 uppercase tracking-wider font-semibold block mb-1">
-              Transfer Movement
-            </span>
-            <div className="bg-slate-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 space-y-2 text-xs font-mono">
-              <div>
-                <span className="text-slate-500 dark:text-zinc-500 block text-[10px]">FROM:</span>
-                <span className="text-slate-700 dark:text-zinc-300">{shortAddress(selectedEdge.source, 8, 6)}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 dark:text-zinc-500 block text-[10px]">TO:</span>
-                <span className="text-cyan-700 dark:text-cyan-300">{shortAddress(selectedEdge.target, 8, 6)}</span>
-              </div>
+        <div className="mt-2.5 space-y-2 text-xs font-mono">
+          <div className="bg-[#0a0a0a] border border-[#262626] p-2 space-y-1 text-[11px]">
+            <div className="flex justify-between text-[#888888]">
+              <span>FROM:</span>
+              <span className="text-[#f5f5f5]">{shortAddress(selectedEdge.source, 6, 4)}</span>
+            </div>
+            <div className="flex justify-between text-[#888888]">
+              <span>TO:</span>
+              <span className="text-[#627EEA]">{shortAddress(selectedEdge.target, 6, 4)}</span>
             </div>
           </div>
 
-          {/* Asset Breakdown on Edge */}
-          {selectedEdge.assets && selectedEdge.assets.length > 0 ? (
-            <div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500 uppercase tracking-wider font-semibold block mb-1.5">
-                Transferred Assets ({selectedEdge.assets.length})
-              </span>
-              <div className="space-y-2">
-                {selectedEdge.assets.map((asset, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 rounded-lg p-2.5 text-xs font-mono space-y-1"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-900 dark:text-zinc-200">{asset.asset}</span>
-                      <span className="text-cyan-700 dark:text-cyan-400 font-semibold">{asset.value} {asset.asset}</span>
-                    </div>
-                    {asset.tainted_value > 0 && (
-                      <div className="text-[11px] text-amber-600 dark:text-amber-400 flex justify-between">
-                        <span>FIFO Taint:</span>
-                        <span>{asset.tainted_value} {asset.asset} ({(asset.tainted_fraction * 100).toFixed(1)}%)</span>
-                      </div>
-                    )}
-                    {asset.tx_hash && (
-                      <a
-                        href={getTxUrl(explorerBase, asset.tx_hash)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] text-slate-500 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 flex items-center gap-1 pt-1"
-                      >
-                        <span>Tx: {shortAddress(asset.tx_hash, 6, 6)}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500 uppercase tracking-wider font-semibold block mb-1">
-                Value Transferred
-              </span>
-              <p className="font-mono text-sm text-cyan-700 dark:text-cyan-300">
-                {selectedEdge.value} {selectedEdge.asset || 'ETH'}
-              </p>
-            </div>
+          <div className="bg-[#151726] border border-[#627EEA]/30 p-2 flex items-center justify-between">
+            <span className="text-[10px] text-[#627EEA] font-bold">Transfer Amount</span>
+            <span className="text-xs font-bold text-white">
+              {selectedEdge.value} {selectedEdge.asset || 'ETH'}
+            </span>
+          </div>
+
+          {selectedEdge.tx_hash && (
+            <a
+              href={getTxUrl(explorerBase, selectedEdge.tx_hash)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-1.5 px-2 bg-[#1a1a1a] hover:bg-[#222225] text-[10px] text-[#a3a3a3] hover:text-white flex items-center justify-center gap-1.5 border border-[#262626] transition-colors cursor-pointer"
+            >
+              <span>Tx: {shortAddress(selectedEdge.tx_hash, 6, 4)}</span>
+              <ExternalLink className="w-3 h-3 text-[#627EEA]" />
+            </a>
           )}
         </div>
       )}

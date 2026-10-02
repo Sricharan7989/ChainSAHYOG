@@ -25,7 +25,7 @@ const STAGES = [
     color: 'red',
     badge: 'Suspect Origin',
     address: '0x62425cd6bdcb6bfe51558ea465b063486b70dc9f',
-    desc: 'An unhosted private key executes an unauthorized transfer of 500 ETH (~$1.6M). Unhosted wallets are generated locally without KYC, central ownership, or user identity records.',
+    desc: 'An unhosted private key executes an unauthorized transfer of 500 ETH (~₹13.5 Cr). Unhosted wallets are generated locally without KYC, central ownership, or user identity records.',
     lawEnforcementDilemma:
       'Investigators cannot subpoena a private key. There is no intermediary to freeze funds or produce identity files at this stage.',
     actionLabel: 'Trace Obfuscation Hops →',
@@ -51,20 +51,20 @@ const STAGES = [
     color: 'emerald',
     badge: 'Binance Deposit (2 Hops)',
     address: '0x28c6c06298d514db089934071355e5743bf21d60',
-    desc: 'To liquidate crypto into fiat currency, funds are deposited into a centralized exchange. ChainSAHYOG tracks the path directly to Binance with 88% confidence and FIFO taint accounting.',
+    desc: 'To convert crypto into Indian Rupees (INR) via bank accounts, funds are deposited into a centralized exchange. ChainSAHYOG tracks the path directly to Binance with 88% confidence and FIFO taint accounting.',
     lawEnforcementDilemma:
       'Centralized exchanges are regulated financial entities. They cluster deposit addresses and maintain mandatory KYC identity records.',
     actionLabel: 'Generate Lawful Requisition →',
   },
   {
     id: 4,
-    title: 'Enforcement Action: Sec 91 CrPC / 94 BNSS Notice',
+    title: 'Enforcement Action: Lawful Account Freezing Notice',
     tag: 'Step 04 • Actionable Output',
     icon: FileCheck2,
     color: 'cyan',
     badge: 'SAHYOG Dossier',
-    address: 'Binance Compliance Desk • Requisition #I4C-2026-CRPC91-8842',
-    desc: 'ChainSAHYOG generates a court-ready forensic PDF and statutory requisition. Police serve the notice to the exchange compliance desk to freeze accounts and obtain verified KYC (PAN, Aadhaar, bank accounts, IP logs).',
+    address: 'Exchange Compliance Desk • Requisition #I4C-CYBER-IPC-8842',
+    desc: 'ChainSAHYOG generates a court-ready forensic PDF and statutory notice. Police serve the notice to the exchange compliance desk to freeze accounts and obtain verified KYC (PAN, Aadhaar, bank accounts, IP logs) under cybercrime law and the IPC.',
     lawEnforcementDilemma:
       'The perpetrator is unmasked through regulated KYC records using public blockchain data, without breaking cryptography.',
     actionLabel: 'Replay Simulation ↺',
@@ -132,22 +132,22 @@ export default function InteractiveHeistVisualizer() {
       <div className="max-w-6xl mx-auto space-y-10">
         {/* Section Header */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-100 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400 text-xs font-mono">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#ffffff] dark:bg-[#111111] border border-[#18181b] dark:border-[#627EEA]/40 text-[#627EEA] text-xs font-mono shadow-[2px_2px_0px_#627EEA]">
             <span>Visual Demonstration</span>
-            <span className="text-slate-400 dark:text-zinc-500">•</span>
+            <span className="text-[#a1a1aa] dark:text-[#555555]">•</span>
             <span>The Core Insight in Action</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-zinc-100">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#09090b] dark:text-[#f5f5f5]">
             How ChainSAHYOG Solves the Blockchain Money Trail
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
-            Follow a real 500 ETH cyber-fraud incident through unhosted burner wallets to the
+          <p className="text-xs sm:text-sm text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
+            Follow a real 500 ETH (~₹13.5 Cr) cyber-fraud incident through unhosted burner wallets to the
             centralized exchange chokepoint that unmasks the human behind the heist.
           </p>
         </div>
 
         {/* Stepper Navigation Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-slate-100 dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-[#ffffff] dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000]">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 w-full md:w-auto flex-1">
             {STAGES.map((s) => {
               const Icon = s.icon;
@@ -156,26 +156,26 @@ export default function InteractiveHeistVisualizer() {
                 <button
                   key={s.id}
                   onClick={() => handleSelectStage(s.id)}
-                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium transition-all text-left cursor-pointer brutal-press ${
                     isSelected
-                      ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 border border-cyan-500/40 shadow-sm dark:shadow-cyan-950/40'
-                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/50 dark:hover:bg-zinc-800/40 border border-transparent'
+                      ? 'bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#09090b] dark:text-[#f5f5f5] border border-[#627EEA] shadow-[2px_2px_0px_#627EEA]'
+                      : 'text-[#71717a] dark:text-[#a3a3a3] hover:text-[#09090b] dark:hover:text-[#f5f5f5] hover:bg-[#f4f4f5] dark:hover:bg-[#161616] border border-transparent'
                   }`}
                 >
                   <span
-                    className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                    className={`w-6 h-6 flex items-center justify-center shrink-0 border ${
                       isSelected
-                        ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400'
-                        : 'bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500'
+                        ? 'bg-[#627EEA] text-white border-[#627EEA]'
+                        : 'bg-[#ffffff] dark:bg-[#111111] text-[#71717a] dark:text-[#666666] border-[#18181b] dark:border-[#262626]'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
                   </span>
                   <div className="truncate">
-                    <span className="text-[10px] block font-mono text-slate-500 dark:text-zinc-500 uppercase">
+                    <span className="text-[10px] block font-mono text-[#71717a] dark:text-[#666666] uppercase">
                       Step 0{s.id}
                     </span>
-                    <span className="truncate block font-semibold text-slate-800 dark:text-zinc-200">
+                    <span className="truncate block font-semibold text-[#09090b] dark:text-[#f5f5f5]">
                       {s.badge}
                     </span>
                   </div>
@@ -185,20 +185,20 @@ export default function InteractiveHeistVisualizer() {
           </div>
 
           {/* Play/Pause & Reset Controls */}
-          <div className="flex items-center gap-2 mx-auto md:mx-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200 dark:border-zinc-800 w-full md:w-auto justify-end">
+          <div className="flex items-center gap-2 mx-auto md:mx-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#18181b] dark:border-[#262626] w-full md:w-auto justify-end">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="p-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent transition-colors cursor-pointer"
+              className="p-2 bg-[#ffffff] dark:bg-[#111111] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] text-[#09090b] dark:text-[#a3a3a3] hover:text-[#627EEA] border border-[#18181b] dark:border-[#262626] hover:border-[#627EEA] transition-colors cursor-pointer brutal-press"
               title={isPlaying ? 'Pause Auto-Play' : 'Start Auto-Play'}
             >
-              {isPlaying ? <Pause className="w-4 h-4 text-cyan-500" /> : <Play className="w-4 h-4 text-slate-500 dark:text-zinc-400" />}
+              {isPlaying ? <Pause className="w-4 h-4 text-[#627EEA]" /> : <Play className="w-4 h-4 text-[#71717a] dark:text-[#a3a3a3]" />}
             </button>
             <button
               onClick={() => {
                 setCurrentStage(1);
                 setIsPlaying(false);
               }}
-              className="p-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent transition-colors cursor-pointer"
+              className="p-2 bg-[#ffffff] dark:bg-[#111111] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] text-[#09090b] dark:text-[#a3a3a3] hover:text-[#627EEA] border border-[#18181b] dark:border-[#262626] hover:border-[#627EEA] transition-colors cursor-pointer brutal-press"
               title="Reset Simulation"
             >
               <RotateCcw className="w-4 h-4" />
@@ -209,14 +209,14 @@ export default function InteractiveHeistVisualizer() {
         {/* Visualizer Display Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* Left Column: Interactive Animated SVG Schematic (7 cols) */}
-          <div className="lg:col-span-7 bg-white dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800/90 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden shadow-sm dark:shadow-2xl">
+          <div className="lg:col-span-7 bg-[#ffffff] dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] p-6 flex flex-col justify-between relative overflow-hidden shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000]">
             {/* Visual Header */}
             <div className="flex items-center justify-between z-10">
-              <span className="text-xs font-mono text-slate-600 dark:text-zinc-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-cyan-500" />
-                Live Heist Flow Graph
+              <span className="text-xs font-mono text-[#52525b] dark:text-[#a3a3a3] flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#627EEA]" />
+                Live Flow Graph
               </span>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400">
+              <span className="text-[11px] font-mono px-2 py-0.5 bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#18181b] dark:border-[#262626] text-[#09090b] dark:text-[#a3a3a3]">
                 Ethereum Mainnet (Chain 1)
               </span>
             </div>
@@ -238,50 +238,47 @@ export default function InteractiveHeistVisualizer() {
                   <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
                     <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#10b981" floodOpacity="0.9" />
                   </filter>
-                  <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#06b6d4" floodOpacity="0.9" />
+                  <filter id="glow-purple" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#627EEA" floodOpacity="0.9" />
                   </filter>
                 </defs>
 
                 {/* Connecting Edges */}
-                {/* Edge 1: Suspect -> Burner 1 */}
                 <path
                   d="M 100 160 L 250 80"
-                  stroke={currentStage >= 2 ? '#f59e0b' : '#3f3f46'}
+                  stroke={currentStage >= 2 ? '#f59e0b' : '#71717a'}
                   strokeWidth={currentStage >= 2 ? '3' : '1.5'}
                   strokeDasharray={currentStage >= 2 ? '6 4' : 'none'}
                   className={currentStage >= 2 ? 'animate-pulse' : ''}
                 />
-                {/* Edge 2: Suspect -> Burner 2 */}
                 <path
                   d="M 100 160 L 250 160"
-                  stroke={currentStage >= 2 ? '#f59e0b' : '#3f3f46'}
+                  stroke={currentStage >= 2 ? '#f59e0b' : '#71717a'}
                   strokeWidth={currentStage >= 2 ? '3' : '1.5'}
                   strokeDasharray={currentStage >= 2 ? '6 4' : 'none'}
                 />
-                {/* Edge 3: Suspect -> Burner 3 */}
                 <path
                   d="M 100 160 L 250 240"
-                  stroke={currentStage >= 2 ? '#f59e0b' : '#3f3f46'}
+                  stroke={currentStage >= 2 ? '#f59e0b' : '#71717a'}
                   strokeWidth={currentStage >= 2 ? '3' : '1.5'}
                   strokeDasharray={currentStage >= 2 ? '6 4' : 'none'}
                 />
 
-                {/* Edge 4: Burners -> Binance Hub */}
+                {/* Edges to Binance Hub */}
                 <path
                   d="M 250 80 L 480 160"
-                  stroke={currentStage >= 3 ? '#10b981' : '#3f3f46'}
+                  stroke={currentStage >= 3 ? '#10b981' : '#71717a'}
                   strokeWidth={currentStage >= 3 ? '3.5' : '1.5'}
                   className={currentStage >= 3 ? 'animate-pulse' : ''}
                 />
                 <path
                   d="M 250 160 L 480 160"
-                  stroke={currentStage >= 3 ? '#10b981' : '#3f3f46'}
+                  stroke={currentStage >= 3 ? '#10b981' : '#71717a'}
                   strokeWidth={currentStage >= 3 ? '3.5' : '1.5'}
                 />
                 <path
                   d="M 250 240 L 480 160"
-                  stroke={currentStage >= 3 ? '#10b981' : '#3f3f46'}
+                  stroke={currentStage >= 3 ? '#10b981' : '#71717a'}
                   strokeWidth={currentStage >= 3 ? '3.5' : '1.5'}
                 />
 
@@ -289,35 +286,34 @@ export default function InteractiveHeistVisualizer() {
                 {currentStage === 4 && (
                   <path
                     d="M 480 40 L 480 130"
-                    stroke="#06b6d4"
+                    stroke="#627EEA"
                     strokeWidth="3"
                     strokeDasharray="4 3"
-                    markerEnd="url(#arrow)"
                   />
                 )}
 
                 {/* NODE 1: Suspect Wallet */}
                 <g transform="translate(100, 160)">
                   <circle
-                    r={currentStage === 1 ? '26' : '20'}
+                    r={currentStage === 1 ? '28' : '20'}
                     fill={currentStage >= 1 ? '#7f1d1d' : '#27272a'}
                     stroke={currentStage >= 1 ? '#ef4444' : '#52525b'}
                     strokeWidth="3"
                     filter={currentStage === 1 ? 'url(#glow-red)' : undefined}
                     className={currentStage === 1 ? 'visualizer-active-node' : ''}
                   />
-                  <text y="5" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">
+                  <text y="5" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="bold">
                     SUSPECT
                   </text>
                   <text y="42" textAnchor="middle" fill="#f87171" fontSize="10" fontFamily="monospace">
                     0x6242...dc9f
                   </text>
-                  <text y="56" textAnchor="middle" fill="#a1a1aa" fontSize="9">
-                    -500 ETH Loot
+                  <text y="56" textAnchor="middle" fill="#a1a1aa" fontSize="9" fontFamily="monospace">
+                    -500 ETH (₹13.5 Cr)
                   </text>
                 </g>
 
-                {/* NODE CLUSTER: Burner Wallets (The Fog) */}
+                {/* NODE CLUSTER: Burner Wallets */}
                 <g transform="translate(250, 80)">
                   <circle
                     r={currentStage === 2 ? '22' : '16'}
@@ -372,7 +368,7 @@ export default function InteractiveHeistVisualizer() {
                 {/* NODE 3: Regulated VASP Endpoint */}
                 <g transform="translate(480, 160)">
                   <circle
-                    r={currentStage >= 3 ? '32' : '22'}
+                    r={currentStage >= 3 ? '32' : '25'}
                     fill={currentStage >= 3 ? '#064e3b' : '#27272a'}
                     stroke={currentStage >= 3 ? '#10b981' : '#52525b'}
                     strokeWidth={currentStage >= 3 ? '3.5' : '2'}
@@ -388,30 +384,30 @@ export default function InteractiveHeistVisualizer() {
                   <text y="46" textAnchor="middle" fill="#34d399" fontSize="10" fontFamily="monospace">
                     0x28c6...1d60
                   </text>
-                  <text y="60" textAnchor="middle" fill="#a1a1aa" fontSize="9">
+                  <text y="60" textAnchor="middle" fill="#a1a1aa" fontSize="9" fontFamily="monospace">
                     Attributed: 100.96 ETH
                   </text>
                 </g>
 
-                {/* STAGE 4 OVERLAY: SAHYOG Lawful Interception Notice */}
+                {/* STAGE 4 OVERLAY: Account Freezing Order */}
                 {currentStage === 4 && (
                   <g transform="translate(480, 40)">
                     <rect
-                      x="-85"
+                      x="-95"
                       y="-25"
-                      width="170"
-                      height="38"
-                      rx="8"
-                      fill="#083344"
-                      stroke="#06b6d4"
+                      width="190"
+                      height="40"
+                      rx="0"
+                      fill="#181e3a"
+                      stroke="#627EEA"
                       strokeWidth="2"
-                      filter="url(#glow-cyan)"
+                      filter="url(#glow-purple)"
                     />
-                    <text y="-7" textAnchor="middle" fill="#67e8f9" fontSize="10" fontWeight="bold">
-                      ⚖️ SEC 91 CrPC NOTICE
+                    <text y="-7" textAnchor="middle" fill="#627EEA" fontSize="9.5" fontWeight="bold" fontFamily="monospace">
+                      ⚖️ ACCOUNT FREEZE ORDER
                     </text>
-                    <text y="7" textAnchor="middle" fill="#e0f2fe" fontSize="9">
-                      Account Freeze Order
+                    <text y="7" textAnchor="middle" fill="#e0f2fe" fontSize="8.5">
+                      Statutory Requisition (IPC)
                     </text>
                   </g>
                 )}
@@ -419,8 +415,8 @@ export default function InteractiveHeistVisualizer() {
             </div>
 
             {/* Bottom Insight Pill */}
-            <div className="bg-slate-100 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 p-3 rounded-xl flex items-center justify-between text-xs">
-              <span className="text-slate-500 dark:text-zinc-400 font-mono">
+            <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#18181b] dark:border-[#262626] p-3 flex items-center justify-between text-xs font-mono">
+              <span className="text-[#71717a] dark:text-[#888888]">
                 Attribution Status:
               </span>
               <span
@@ -431,7 +427,7 @@ export default function InteractiveHeistVisualizer() {
                     ? 'text-amber-600 dark:text-amber-400'
                     : currentStage === 3
                     ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-cyan-600 dark:text-cyan-400'
+                    : 'text-[#627EEA]'
                 }`}
               >
                 {currentStage === 1 && '🚨 Unhosted Wallet Identified (Zero KYC)'}
@@ -442,58 +438,58 @@ export default function InteractiveHeistVisualizer() {
             </div>
           </div>
 
-          {/* Right Column: Detailed Narrative & Dilemma Breakdown (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col justify-between bg-white dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80 rounded-2xl p-6 space-y-6 shadow-sm dark:shadow-none">
+          {/* Right Column: Detailed Narrative Breakdown (5 cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-between bg-[#ffffff] dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] p-6 space-y-6 shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000]">
             <div className="stage-info-content space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-cyan-700 dark:text-cyan-400 font-semibold uppercase">
+                <span className="text-xs font-mono px-2.5 py-1 bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#627EEA] border border-[#627EEA]/40 font-semibold uppercase">
                   {active.tag}
                 </span>
-                <span className="text-xs text-slate-400 dark:text-zinc-500 font-mono">
+                <span className="text-xs text-[#71717a] dark:text-[#888888] font-mono">
                   {currentStage} of 4
                 </span>
               </div>
 
-              <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-100 leading-snug">
+              <h3 className="text-xl font-bold text-[#09090b] dark:text-[#f5f5f5] leading-snug">
                 {active.title}
               </h3>
 
               <div className="space-y-1">
-                <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-500 block">
+                <span className="text-[11px] font-mono text-[#71717a] dark:text-[#888888] block">
                   Observed Address:
                 </span>
-                <p className="font-mono text-xs text-slate-800 dark:text-zinc-300 bg-slate-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 break-all select-all">
+                <p className="font-mono text-xs text-[#09090b] dark:text-[#f5f5f5] bg-[#f4f4f5] dark:bg-[#0a0a0a] p-2.5 border border-[#18181b] dark:border-[#262626] break-all select-all">
                   {active.address}
                 </p>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
                 {active.desc}
               </p>
 
-              <div className="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800/90 rounded-xl p-3.5 space-y-1.5">
-                <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                  <HelpCircle className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#18181b] dark:border-[#262626] p-3.5 space-y-1.5">
+                <span className="text-xs font-semibold text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
+                  <HelpCircle className="w-3.5 h-3.5 text-[#627EEA]" />
                   Investigative Significance
                 </span>
-                <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                <p className="text-xs text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
                   {active.lawEnforcementDilemma}
                 </p>
               </div>
             </div>
 
             {/* Action Bar */}
-            <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-zinc-800">
+            <div className="space-y-3 pt-4 border-t border-[#18181b] dark:border-[#262626]">
               <button
                 onClick={handleNext}
-                className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-100 font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-xl border border-slate-300 dark:border-zinc-700 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-[#ffffff] dark:bg-[#1a1a1a] hover:bg-[#f4f4f5] dark:hover:bg-[#262626] text-[#09090b] dark:text-[#f5f5f5] font-semibold text-xs sm:text-sm py-2.5 px-4 border border-[#18181b] dark:border-[#262626] hover:border-[#627EEA] transition-colors cursor-pointer brutal-press"
               >
                 <span>{active.actionLabel}</span>
               </button>
 
               <button
                 onClick={handleLaunchCaseStudy}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-950/30 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-[#18181b] dark:bg-[#627EEA] hover:bg-[#627EEA] dark:hover:bg-[#748ef5] text-white font-semibold text-xs py-2.5 px-4 transition-all cursor-pointer brutal-press shadow-[3px_3px_0px_#000]"
               >
                 <span>Launch Live Forensic Trace of this Case</span>
                 <ArrowRight className="w-3.5 h-3.5" />

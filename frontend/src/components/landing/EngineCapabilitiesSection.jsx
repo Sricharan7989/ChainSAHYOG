@@ -21,7 +21,7 @@ const CAPABILITIES = [
     tag: 'Traversal Engine',
     desc: 'Traces funds across Ethereum, Polygon, BNB Chain, and Arbitrum One up to 6 hops deep.',
     reasoning:
-      'Criminals jump across EVM chains to break single-network traces. The engine queries Etherscan V2 with 250ms serial throttling to follow cross-chain hops without hitting API rate limits.',
+      'Perpetrators jump across EVM chains to break single-network traces. The engine queries public nodes with serial throttling to follow cross-chain hops without hitting rate limits.',
     bullets: [
       '4 EVM chains supported',
       'Configurable depth (1 to 6 hops)',
@@ -34,23 +34,23 @@ const CAPABILITIES = [
     tag: 'Asset Security',
     desc: 'Strictly follows allowlisted stablecoins and wrapped assets (USDT, USDC, DAI, WETH, WBTC).',
     reasoning:
-      'Scammers mint fake tokens with spoofed names or malicious transfer hooks. Pinning to verified smart contract addresses and per-chain decimals prevents fake balances from contaminating the trace.',
+      'Fraudsters mint fake tokens with spoofed names or malicious transfer hooks. Pinning to verified smart contract addresses and per-chain decimals prevents fake balances from contaminating the trace.',
     bullets: [
       'Verified contract allowlist',
-      'Per-chain decimal scaling (6 vs 18)',
+      'Per-chain decimal scaling',
       'Scam airdrop rejection',
     ],
   },
   {
     icon: Scale,
     title: 'FIFO Taint Accounting',
-    tag: 'Clayton’s Case Precedent',
-    desc: 'Calculates the exact stolen satoshis and wei that reached an exchange versus pre-existing wallet funds.',
+    tag: 'Ledger Accounting Math',
+    desc: 'Calculates the exact stolen tokens that reached an exchange versus pre-existing wallet funds.',
     reasoning:
-      'When stolen crypto mixes with clean funds, we apply the First-In-First-Out rule (Clayton’s Case precedent). The earliest tokens in are treated as the earliest tokens out, delivering court-tested evidence.',
+      'When stolen crypto mixes with clean funds, we apply the First-In-First-Out rule. The earliest tokens in are treated as the earliest tokens out, delivering auditable forensic evidence for investigation.',
     bullets: [
       'First-In-First-Out chronological replay',
-      'Deterministic 5-step tie-breaking',
+      'Deterministic tie-breaking',
       'Pre-existing balance disclosure',
     ],
   },
@@ -71,11 +71,11 @@ const CAPABILITIES = [
     icon: ShieldAlert,
     title: 'Sanctions & Mixer Cross-Referencing',
     tag: 'Risk Scoring',
-    desc: 'Flags addresses listed on US Treasury OFAC SDN sanctions lists, mixers, and bridges.',
+    desc: 'Flags addresses listed on law-enforcement blacklists, high-risk mixers, and cross-chain bridges.',
     reasoning:
-      'Mixers like Tornado Cash break chronological linkability. Flagging obfuscators on the trail adjusts the confidence score and warns investigators that the trail passed through a privacy contract.',
+      'Mixers like Tornado Cash attempt to break chronological linkability. Flagging obfuscators on the trail adjusts the confidence score and alerts investigators that the trail passed through an anonymity contract.',
     bullets: [
-      'US Treasury OFAC SDN matching',
+      'Law Enforcement Blacklist Matching',
       'Tornado Cash & mixer alerts',
       'Cross-chain bridge detection',
     ],
@@ -86,10 +86,10 @@ const CAPABILITIES = [
     tag: 'Forensic Storage',
     desc: 'Stores transaction graphs in Neo4j with in-memory NetworkX fallback, generating downloadable PDF dossiers.',
     reasoning:
-      'Neo4j provides persistent graph persistence for deep queries, while NetworkX ensures zero-downtime execution without external databases. ReportLab generates court-admissible dossiers.',
+      'Neo4j provides persistent graph storage for deep queries, while NetworkX ensures zero-downtime execution. The report generator outputs court-admissible dossiers under Indian cybercrime procedure.',
     bullets: [
       'Neo4j with NetworkX fallback',
-      'Section 91 CrPC statutory drafting',
+      'Statutory Requisitions under Cyber Law & IPC',
       'Court-ready multi-page PDF export',
     ],
   },
@@ -126,17 +126,17 @@ export default function EngineCapabilitiesSection() {
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Title */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400 text-xs font-mono">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#ffffff] dark:bg-[#111111] border border-[#18181b] dark:border-[#627EEA]/40 text-[#627EEA] text-xs font-mono shadow-[2px_2px_0px_#627EEA]">
             <span>Core Architecture</span>
-            <span className="text-slate-400 dark:text-zinc-500">•</span>
+            <span className="text-[#a1a1aa] dark:text-[#555555]">•</span>
             <span>Technical Capabilities</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-zinc-100">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#09090b] dark:text-[#f5f5f5]">
             Forensic Intelligence Capabilities
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
             Engineered specifically for the Indian Cybercrime Coordination Centre (I4C) SAHYOG workflow,
-            combining graph theory, forensic accounting, and statutory compliance.
+            combining graph theory, forensic accounting, and statutory compliance under Indian law.
           </p>
         </div>
 
@@ -147,35 +147,35 @@ export default function EngineCapabilitiesSection() {
             return (
               <div
                 key={i}
-                className="capability-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col justify-between space-y-5 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 transition-all hover:shadow-xl hover:shadow-cyan-500/5 group"
+                className="capability-card bg-[#ffffff] dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] p-6 flex flex-col justify-between space-y-5 hover:border-[#627EEA] dark:hover:border-[#627EEA] transition-all group shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000] hover:shadow-[4px_4px_0px_#627EEA]"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-105 group-hover:border-cyan-500/40 transition-all">
+                    <div className="w-10 h-10 bg-[#f4f4f5] dark:bg-[#1a1a1a] border border-[#18181b] dark:border-[#262626] group-hover:border-[#627EEA] flex items-center justify-center text-[#627EEA] transition-colors">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 uppercase font-semibold">
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#71717a] dark:text-[#888888] border border-[#18181b] dark:border-[#262626] uppercase font-semibold">
                       {cap.tag}
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                    <h3 className="text-lg font-bold text-[#09090b] dark:text-[#f5f5f5] group-hover:text-[#627EEA] transition-colors">
                       {cap.title}
                     </h3>
-                    <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed font-medium">
+                    <p className="text-xs text-[#52525b] dark:text-[#a3a3a3] leading-relaxed font-medium">
                       {cap.desc}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-relaxed pt-1">
+                    <p className="text-[11px] text-[#71717a] dark:text-[#777777] leading-relaxed pt-1">
                       {cap.reasoning}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800/80">
+                <div className="space-y-2 pt-3 border-t border-[#18181b] dark:border-[#262626]">
                   {cap.bullets.map((b, bIdx) => (
-                    <div key={bIdx} className="flex items-center gap-2 text-[11px] text-slate-700 dark:text-zinc-300 font-mono">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                    <div key={bIdx} className="flex items-center gap-2 text-[11px] text-[#52525b] dark:text-[#a3a3a3] font-mono">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#627EEA] shrink-0" />
                       <span>{b}</span>
                     </div>
                   ))}

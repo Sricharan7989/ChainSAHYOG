@@ -3,16 +3,18 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeContext';
 
+import BrutalistCursor from './components/BrutalistCursor';
+
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
 function RouteLoader() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col items-center justify-center space-y-4">
-      <div className="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-500 animate-pulse">
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center space-y-4">
+      <div className="w-12 h-12 bg-[#111111] border-2 border-[#627EEA] flex items-center justify-center text-[#627EEA] animate-pulse">
         <Shield className="w-6 h-6" />
       </div>
-      <p className="text-xs font-mono text-slate-600 dark:text-zinc-400">Loading ChainSAHYOG Intelligence...</p>
+      <p className="text-xs font-mono text-[#a3a3a3] uppercase tracking-widest">Loading ChainSAHYOG Intelligence...</p>
     </div>
   );
 }
@@ -25,6 +27,7 @@ function RouteLoader() {
 export default function App() {
   return (
     <ThemeProvider>
+      <BrutalistCursor />
       <BrowserRouter>
         <Suspense fallback={<RouteLoader />}>
           <Routes>
