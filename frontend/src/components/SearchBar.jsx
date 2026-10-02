@@ -25,10 +25,10 @@ export default function SearchBar({
 
   useGSAP(() => {
     gsap.from(containerRef.current, {
-      y: 15,
+      y: 12,
       opacity: 0,
-      duration: 0.7,
-      delay: 0.1,
+      duration: 0.5,
+      delay: 0.05,
       ease: 'power3.out',
     });
   }, { scope: containerRef });
@@ -62,10 +62,10 @@ export default function SearchBar({
   return (
     <div ref={containerRef} className="w-full">
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-2">
-        {/* Main Search Bar */}
-        <div className="relative flex items-center bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/20 rounded-xl p-1.5 shadow-sm dark:shadow-xl transition-all">
-          <div className="pl-3 pr-2 text-slate-400 dark:text-zinc-400">
-            <Search className="w-5 h-5" />
+        {/* Main Search Bar: Compact, Brutalist, Theme-Aware */}
+        <div className="relative flex items-center bg-white dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] focus-within:border-[#627EEA] focus-within:shadow-[3px_3px_0px_#627EEA] p-1 sm:p-1.5 transition-all">
+          <div className="pl-2.5 pr-2 text-[#71717a] dark:text-[#71717a] flex items-center shrink-0">
+            <Search className="w-4 h-4" />
           </div>
 
           <input
@@ -76,43 +76,44 @@ export default function SearchBar({
             placeholder="Enter suspect EVM wallet address (0x...)"
             spellCheck="false"
             autoComplete="off"
-            className="w-full bg-transparent text-sm sm:text-base font-mono text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none px-1 py-1.5"
+            className="w-full bg-transparent text-xs sm:text-sm font-mono text-[#09090b] dark:text-[#f5f5f5] placeholder-[#71717a] dark:placeholder-[#666666] focus:outline-none px-1.5 py-1"
           />
 
           {/* Quick utility buttons inside input */}
-          <div className="flex items-center gap-1.5 pr-1">
+          <div className="flex items-center gap-1.5 pr-0.5 shrink-0">
             {address && (
               <button
                 type="button"
                 onClick={() => setAddress('')}
-                className="p-1.5 text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
+                className="h-8 w-8 flex items-center justify-center text-[#71717a] hover:text-[#09090b] dark:hover:text-[#f5f5f5] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] border border-[#d4d4d8] dark:border-[#262626] transition-colors cursor-pointer"
                 title="Clear input"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
 
             <button
               type="button"
               onClick={handlePaste}
-              className="p-1.5 text-slate-400 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-md transition-colors cursor-pointer"
+              className="h-8 px-2 flex items-center gap-1 text-[#71717a] hover:text-[#627EEA] hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] border border-[#d4d4d8] dark:border-[#262626] transition-colors cursor-pointer text-xs font-mono"
               title="Paste from clipboard"
             >
-              <Clipboard className="w-4 h-4" />
+              <Clipboard className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[11px]">Paste</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowOptions(!showOptions)}
-              className={`p-1.5 rounded-md border text-xs flex items-center gap-1 transition-all cursor-pointer ${
+              className={`h-8 px-2.5 border text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
                 showOptions
-                  ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/30 font-semibold'
-                  : 'bg-slate-100 dark:bg-zinc-800/80 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700'
+                  ? 'bg-[#627EEA]/15 text-[#627EEA] border-[#627EEA] font-semibold'
+                  : 'bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#52525b] dark:text-[#a3a3a3] border-[#d4d4d8] dark:border-[#262626] hover:text-[#09090b] dark:hover:text-[#f5f5f5] hover:border-[#71717a]'
               }`}
               title="Forensic Trace Parameters"
             >
-              <Sliders className="w-4 h-4" />
-              <span className="hidden sm:inline font-sans text-xs font-medium">Options</span>
+              <Sliders className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-xs">Options</span>
             </button>
 
             {/* Trace Action Button */}
@@ -120,23 +121,23 @@ export default function SearchBar({
               ref={btnRef}
               type="submit"
               disabled={loading || !address}
-              className={`px-4 sm:px-5 py-2 rounded-lg font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer ${
+              className={`h-8 px-3.5 sm:px-4 font-bold text-xs uppercase flex items-center gap-1.5 transition-all cursor-pointer border ${
                 loading
-                  ? 'bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed'
+                  ? 'bg-[#e4e4e7] dark:bg-[#1a1a1a] text-[#71717a] dark:text-[#666666] border-[#d4d4d8] dark:border-[#262626] cursor-not-allowed'
                   : valid
-                  ? 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 active:scale-95'
-                  : 'bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-300'
+                  ? 'bg-[#627EEA] hover:bg-[#5068cf] text-white border-[#18181b] dark:border-[#627EEA] shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] active:translate-x-[1px] active:translate-y-[1px]'
+                  : 'bg-[#f4f4f5] dark:bg-[#1a1a1a] hover:bg-[#e4e4e7] dark:hover:bg-[#262626] text-[#71717a] dark:text-[#666666] border-[#d4d4d8] dark:border-[#262626]'
               }`}
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-[#627EEA] border-t-transparent animate-spin" />
                   <span>Tracing…</span>
                 </>
               ) : (
                 <>
-                  <span>Trace Funds</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Trace</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
             </button>
@@ -153,12 +154,12 @@ export default function SearchBar({
 
         {/* Expandable Forensic Options */}
         {showOptions && (
-          <div className="bg-white/95 dark:bg-zinc-900/95 border border-slate-200 dark:border-zinc-800 rounded-xl p-4 shadow-xl dark:shadow-2xl backdrop-blur-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="bg-white dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in duration-150">
             {/* Hop Depth */}
             <div>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-slate-600 dark:text-zinc-400 font-medium">Max Depth (Hops)</span>
-                <span className="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{maxDepth} hops</span>
+              <div className="flex justify-between text-xs mb-1.5 font-mono">
+                <span className="text-[#52525b] dark:text-[#a3a3a3] font-medium">Max Depth (Hops)</span>
+                <span className="text-[#627EEA] font-bold">{maxDepth} hops</span>
               </div>
               <input
                 type="range"
@@ -167,47 +168,64 @@ export default function SearchBar({
                 step="1"
                 value={maxDepth}
                 onChange={(e) => setMaxDepth(Number(e.target.value))}
-                className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-lg"
+                className="w-full accent-[#627EEA] cursor-pointer h-1.5 bg-[#e4e4e7] dark:bg-[#2a2a2a]"
               />
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">Depth 4 is the investigative standard</span>
+              <span className="text-[11px] text-[#71717a] dark:text-[#666666] font-mono">Standard: 4 hops</span>
             </div>
 
             {/* Dust Floor */}
             <div>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-slate-600 dark:text-zinc-400 font-medium">Dust Floor (Native)</span>
-                <span className="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{dustThreshold} ETH</span>
+              <div className="flex justify-between text-xs mb-1.5 font-mono">
+                <span className="text-[#52525b] dark:text-[#a3a3a3] font-medium">Dust Floor (Native)</span>
+                <span className="text-[#627EEA] font-bold">{dustThreshold} ETH</span>
               </div>
               <input
                 type="number"
                 min="0.0001"
                 max="1.0"
-                step="0.001"
+                step="0.005"
                 value={dustThreshold}
                 onChange={(e) => setDustThreshold(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2.5 py-1 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] px-2.5 py-1 text-xs font-mono text-[#09090b] dark:text-[#f5f5f5] focus:outline-none focus:border-[#627EEA]"
               />
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">Filters out micro-transactions</span>
+              {/* Quick preset buttons */}
+              <div className="flex items-center gap-1 mt-1.5">
+                {[0.005, 0.01, 0.05, 0.1].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setDustThreshold(val)}
+                    className={`text-[10px] font-mono px-1.5 py-0.5 border cursor-pointer transition-colors ${
+                      dustThreshold === val
+                        ? 'bg-[#627EEA] text-white border-[#627EEA] font-bold'
+                        : 'bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#52525b] dark:text-[#a3a3a3] border-[#d4d4d8] dark:border-[#262626] hover:border-[#627EEA]'
+                    }`}
+                  >
+                    {val === 0.01 ? '0.01 (Std)' : val}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] text-[#71717a] dark:text-[#666666] font-mono mt-0.5 block">Standard: 0.01 ETH (~₹2,500)</span>
             </div>
 
             {/* Execution Mode */}
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1.5">Trace Mode</label>
+              <label className="block text-xs font-medium text-[#52525b] dark:text-[#a3a3a3] mb-1.5 font-mono">Trace Mode</label>
               <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2.5 py-1 text-xs font-mono text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                className="w-full bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] px-2.5 py-1 text-xs font-mono text-[#09090b] dark:text-[#f5f5f5] focus:outline-none focus:border-[#627EEA] cursor-pointer"
               >
-                <option value="auto">Auto (Replay Cache if exists, else Live)</option>
-                <option value="live">Live (Force fresh blockchain query)</option>
-                <option value="cache">Cache Only (Fail-safe offline mode)</option>
+                <option value="auto">Auto (Cache if available, else Live)</option>
+                <option value="live">Live (Force fresh query)</option>
+                <option value="cache">Cache Only (Offline demo)</option>
               </select>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">Auto provides instant demo playback</span>
+              <span className="text-[11px] text-[#71717a] dark:text-[#666666] font-mono">Instant replay on demo cases</span>
             </div>
 
             {/* Save to Replay Toggle */}
             <div className="flex flex-col justify-between">
-              <label className="text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">Save to Demo Cache</label>
+              <label className="text-xs font-medium text-[#52525b] dark:text-[#a3a3a3] mb-1 font-mono">Save to Demo Cache</label>
               <label className="inline-flex items-center cursor-pointer mt-1">
                 <input
                   type="checkbox"
@@ -215,10 +233,10 @@ export default function SearchBar({
                   onChange={(e) => setSaveDemo(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="relative w-9 h-5 bg-slate-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-slate-300 dark:after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
-                <span className="ms-2 text-xs text-slate-700 dark:text-zinc-300">Record trace</span>
+                <div className="relative w-8 h-4 bg-[#d4d4d8] dark:bg-[#2a2a2a] peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white dark:after:bg-[#111] after:border after:border-[#a1a1aa] dark:after:border-[#404040] after:h-3 after:w-3 after:transition-all peer-checked:bg-[#627EEA]"></div>
+                <span className="ms-2 text-xs font-mono text-[#52525b] dark:text-[#a3a3a3]">Record trace snapshot</span>
               </label>
-              <span className="text-[11px] text-slate-500 dark:text-zinc-500">Stores snapshot in data/cache</span>
+              <span className="text-[11px] text-[#71717a] dark:text-[#666666] font-mono">Saved to data/cache</span>
             </div>
           </div>
         )}

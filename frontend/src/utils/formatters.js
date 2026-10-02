@@ -51,26 +51,26 @@ export function getRiskBadgeConfig(severity) {
   switch (severity?.toLowerCase()) {
     case 'critical':
       return {
-        bg: 'bg-red-500/10 text-red-400 border-red-500/30',
+        bg: 'bg-[#0a0a0a] text-red-500 border-red-500/50',
         dot: 'bg-red-500',
         label: 'CRITICAL',
       };
     case 'high':
       return {
-        bg: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+        bg: 'bg-[#0a0a0a] text-amber-500 border-amber-500/50',
         dot: 'bg-amber-500',
         label: 'HIGH RISK',
       };
     case 'medium':
       return {
-        bg: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
-        dot: 'bg-purple-500',
+        bg: 'bg-[#0a0a0a] text-[#627EEA] border-[#627EEA]',
+        dot: 'bg-[#627EEA]',
         label: 'MEDIUM RISK',
       };
     default:
       return {
-        bg: 'bg-zinc-800 text-zinc-300 border-zinc-700',
-        dot: 'bg-zinc-400',
+        bg: 'bg-[#0a0a0a] text-[#a3a3a3] border-[#2a2a2a]',
+        dot: 'bg-[#a3a3a3]',
         label: 'NOTICE',
       };
   }

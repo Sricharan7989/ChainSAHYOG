@@ -30,7 +30,7 @@ const STEPS = [
     step: '03',
     icon: Cpu,
     title: 'FIFO Taint & Typologies',
-    desc: 'Applies Clayton’s Case accounting and detects laundering patterns (peel chains, smurfing, conduits).',
+    desc: 'Applies FIFO ledger accounting and detects laundering patterns (peel chains, smurfing, conduits).',
   },
   {
     step: '04',
@@ -41,8 +41,8 @@ const STEPS = [
   {
     step: '05',
     icon: FileCheck,
-    title: 'SAHYOG Freezing Notice',
-    desc: 'Generates Section 91 CrPC / Section 94 BNSS statutory requisition and court-ready PDF dossier.',
+    title: 'Statutory Requisition',
+    desc: 'Generates statutory requisitions under Indian cybercrime law & IPC and court-ready dossiers.',
   },
 ];
 
@@ -68,19 +68,19 @@ export default function WorkflowSection() {
   }, { scope: containerRef });
 
   return (
-    <section id="workflow" ref={containerRef} className="py-16 px-4 lg:px-6 relative scroll-mt-20">
+    <section id="workflow" ref={containerRef} className="py-16 px-4 lg:px-6 relative scroll-mt-20 bg-transparent">
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Title */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-500/30 text-blue-700 dark:text-blue-400 text-xs font-mono">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#ffffff] dark:bg-[#111111] border border-[#627EEA]/40 text-[#627EEA] text-xs font-mono shadow-[2px_2px_0px_#627EEA]">
             <span>Investigative Lifecycle</span>
-            <span className="text-slate-400 dark:text-zinc-500">•</span>
+            <span className="text-[#a1a1aa] dark:text-[#555555]">•</span>
             <span>From Alert to Freezing</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-zinc-100">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#09090b] dark:text-[#f5f5f5]">
             How Law Enforcement Operates ChainSAHYOG
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#71717a] dark:text-[#a3a3a3] leading-relaxed">
             Designed for swift execution by investigating officers, transforming raw cryptographic
             transactions into actionable legal requisitions within 60 seconds.
           </p>
@@ -93,29 +93,29 @@ export default function WorkflowSection() {
             return (
               <div
                 key={idx}
-                className="workflow-step-card bg-white dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-cyan-500/40 transition-colors shadow-sm dark:shadow-none relative"
+                className="workflow-step-card bg-[#ffffff]/90 dark:bg-[#111111]/90 border border-[#d4d4d8] dark:border-[#262626] p-5 flex flex-col justify-between space-y-4 hover:border-[#627EEA] transition-all relative shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000] hover:shadow-[4px_4px_0px_#627EEA]"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                    <span className="text-xs font-mono font-bold text-[#627EEA]">
                       STEP {s.step}
                     </span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300">
+                    <div className="w-8 h-8 bg-[#f4f4f5] dark:bg-[#1a1a1a] border border-[#d4d4d8] dark:border-[#262626] flex items-center justify-center text-[#71717a] dark:text-[#888888]">
                       <Icon className="w-4 h-4" />
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-slate-900 dark:text-zinc-100 text-sm">
+                  <h3 className="font-bold text-[#09090b] dark:text-[#f5f5f5] text-sm">
                     {s.title}
                   </h3>
 
-                  <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-[#71717a] dark:text-[#a3a3a3] leading-relaxed">
                     {s.desc}
                   </p>
                 </div>
 
                 {idx < STEPS.length - 1 && (
-                  <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-slate-400 dark:text-zinc-600">
+                  <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-[#a1a1aa] dark:text-[#444444]">
                     <ArrowRight className="w-4 h-4" />
                   </div>
                 )}

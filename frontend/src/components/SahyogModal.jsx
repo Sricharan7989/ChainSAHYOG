@@ -17,12 +17,12 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
       gsap.fromTo(
         backdropRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.3 }
+        { opacity: 1, duration: 0.25 }
       );
       gsap.fromTo(
         modalRef.current,
-        { scale: 0.9, opacity: 0, y: 20 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: 'back.out(1.5)' }
+        { scale: 0.95, opacity: 0, y: 15 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'power3.out' }
       );
     }
   }, { dependencies: [isOpen] });
@@ -37,13 +37,13 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
 
   const noticeText = `GOVERNMENT OF INDIA
 MINISTRY OF HOME AFFAIRS — INDIAN CYBER CRIME COORDINATION CENTRE (I4C)
-NOTICE UNDER SECTION 91 Cr.P.C. / SECTION 94 BNSS, 2023
+NOTICE UNDER CYBERCRIME PROVISIONS & THE INDIAN PENAL CODE (IPC)
 PORTAL REFERENCE: ${caseId}
 
 TO: Compliance & Legal Enquiries Division, ${targetExchange}
 SUBJECT: URGENT PRESERVATION & DISCLOSURE OF KYC RECORDS (CYBER INCIDENT INVESTIGATION)
 
-1. During the investigation of cyber fraud/theft involving suspect wallet address [${startWallet}], forensic blockchain intelligence established that illicit funds totaling approximately [${amountStr}] were deposited into your institution at address:
+1. During the ongoing investigation of cyber fraud/theft involving suspect wallet address [${startWallet}], forensic blockchain intelligence established that illicit funds totaling approximately [${amountStr}] were deposited into your institution at address:
    Target Deposit Wallet: ${targetWallet}
    Hops Traversed: ${data.summary?.hop_distance} hops
    Attribution Confidence: ${data.summary?.confidence_score}%
@@ -83,28 +83,28 @@ National Cybercrime Reporting Portal (NCRP), I4C`;
       <div
         ref={backdropRef}
         onClick={onClose}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/80"
       />
 
       {/* Modal Dialog */}
       <div
         ref={modalRef}
-        className="relative z-10 w-full max-w-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative z-10 w-full max-w-2xl bg-[#ffffff] dark:bg-[#111111] border-2 border-[#18181b] dark:border-[#262626] border-t-4 border-t-[#627EEA] shadow-[8px_8px_0px_#000] overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Modal Header */}
-        <div className="bg-linear-to-r from-cyan-50/60 via-white to-white dark:from-cyan-950 dark:via-zinc-900 dark:to-zinc-900 border-b border-slate-200 dark:border-zinc-800 p-5 flex items-center justify-between">
+        <div className="border-b border-[#18181b] dark:border-[#262626] p-5 flex items-center justify-between bg-[#f4f4f5] dark:bg-[#141414]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 border border-cyan-500/30 dark:border-cyan-500/40 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+            <div className="w-10 h-10 bg-[#ffffff] dark:bg-[#1a1a1a] border border-[#627EEA] flex items-center justify-center text-[#627EEA]">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+              <h3 className="font-bold text-base text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-2">
                 <span>SAHYOG Lawful Notice Generator</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                <span className="text-[10px] font-mono px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 uppercase">
                   Ready to File
                 </span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
+              <p className="text-xs text-[#71717a] dark:text-[#888888] font-mono">
                 Case ID: {caseId} · Routed to {targetExchange}
               </p>
             </div>
@@ -113,7 +113,7 @@ National Cybercrime Reporting Portal (NCRP), I4C`;
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#71717a] dark:text-[#888888] hover:text-[#09090b] dark:hover:text-white hover:bg-[#f4f4f5] dark:hover:bg-[#1a1a1a] transition-colors cursor-pointer border border-[#18181b] dark:border-[#262626]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -121,30 +121,30 @@ National Cybercrime Reporting Portal (NCRP), I4C`;
 
         {/* Notice Preview Content */}
         <div className="p-5 overflow-y-auto space-y-4 flex-1">
-          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 font-mono">
-            <span>Standard: Section 91 CrPC / Section 94 BNSS</span>
+          <div className="flex items-center justify-between text-xs text-[#52525b] dark:text-[#a3a3a3] bg-[#f4f4f5] dark:bg-[#0a0a0a] px-3 py-2 border border-[#18181b] dark:border-[#262626] font-mono">
+            <span>Framework: Indian Cybercrime Law & IPC</span>
             <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
               <Lock className="w-3.5 h-3.5" />
-              <span>LEA Verified Standard</span>
+              <span>LEA Verified Notice</span>
             </span>
           </div>
 
-          <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 font-mono text-xs text-slate-800 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed select-all">
+          <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] p-4 border border-[#18181b] dark:border-[#262626] font-mono text-xs text-[#09090b] dark:text-[#d4d4d4] whitespace-pre-wrap leading-relaxed select-all">
             {noticeText}
           </div>
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="bg-slate-50 dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-800 p-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-[11px] text-slate-500 dark:text-zinc-500">
-            Simulated workflow for demonstration · No actual notice is sent outside this local instance.
+        <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border-t border-[#18181b] dark:border-[#262626] p-4 flex flex-wrap items-center justify-between gap-3 font-mono">
+          <div className="text-[11px] text-[#71717a] dark:text-[#666666]">
+            Simulated workflow for demonstration · No external notice sent.
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleCopy}
-              className="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-200 dark:border-zinc-700 transition-colors cursor-pointer"
+              className="px-3.5 py-2 bg-[#ffffff] dark:bg-[#1a1a1a] hover:bg-[#f4f4f5] dark:hover:bg-[#262626] text-[#09090b] dark:text-[#f5f5f5] text-xs font-semibold flex items-center gap-1.5 border border-[#18181b] dark:border-[#262626] hover:border-[#627EEA] transition-colors cursor-pointer brutal-press"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
               <span>{copied ? 'Copied' : 'Copy Notice'}</span>
@@ -154,7 +154,7 @@ National Cybercrime Reporting Portal (NCRP), I4C`;
               type="button"
               disabled={submitted}
               onClick={handleSimulateSubmit}
-              className="px-4 py-2 rounded-lg bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+              className="px-4 py-2 bg-[#18181b] dark:bg-[#627EEA] hover:bg-[#627EEA] dark:hover:bg-[#748ef5] text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer brutal-press shadow-[3px_3px_0px_#000]"
             >
               <Send className="w-4 h-4" />
               <span>{submitted ? 'Routing to SAHYOG…' : 'Transmit to SAHYOG'}</span>

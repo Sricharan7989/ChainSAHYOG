@@ -34,22 +34,22 @@ export default function Toast({ toast, onClose }) {
     <div className="fixed bottom-6 right-6 z-50 pointer-events-none">
       <div
         ref={toastRef}
-        className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl dark:shadow-2xl border text-xs sm:text-sm font-medium backdrop-blur-md max-w-md ${
+        className={`pointer-events-auto flex items-center gap-3 px-4 py-3 border text-xs sm:text-sm font-medium font-mono max-w-md ${
           isError
-            ? 'bg-red-50 dark:bg-red-950/90 text-red-900 dark:text-red-200 border-red-200 dark:border-red-500/40'
-            : 'bg-white/95 dark:bg-zinc-900/95 text-slate-800 dark:text-zinc-100 border-slate-200 dark:border-zinc-700/80'
+            ? 'bg-[#181111] text-red-200 border-red-500/60 shadow-[4px_4px_0px_#ef4444]'
+            : 'bg-[#111111] text-[#f5f5f5] border-[#627EEA] shadow-[4px_4px_0px_#627EEA]'
         }`}
       >
         {isError ? (
-          <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
         ) : (
-          <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
         )}
         <span className="flex-1">{toast.message || toast}</span>
         <button
           type="button"
           onClick={onClose}
-          className="text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 transition-colors p-1 cursor-pointer"
+          className="text-[#888888] hover:text-white transition-colors p-1 cursor-pointer border border-[#262626]"
         >
           <X className="w-3.5 h-3.5" />
         </button>

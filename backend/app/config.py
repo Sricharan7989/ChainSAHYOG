@@ -142,7 +142,7 @@ MAX_TRACE_DEPTH = 4
 
 # Transfers below this (in native token) are ignored. Criminals and bots spray
 # tiny "dust" amounts around; following them adds noise, not signal.
-DUST_THRESHOLD_ETH = 0.001
+DUST_THRESHOLD_ETH = 0.01
 
 # --- Tokens -------------------------------------------------------------------
 #

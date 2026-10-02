@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [address, setAddress] = useState(initialAddress);
   const [selectedChainId, setSelectedChainId] = useState(initialChain);
   const [maxDepth, setMaxDepth] = useState(4);
-  const [dustThreshold, setDustThreshold] = useState(0.001);
+  const [dustThreshold, setDustThreshold] = useState(0.01);
   const [mode, setMode] = useState('auto');
   const [saveDemo, setSaveDemo] = useState(false);
 
@@ -40,7 +40,26 @@ export default function DashboardPage() {
   // Inspector & Modal State
   const [selectedNode, setSelectedNode] = useState(null);
   const [selectedEdge, setSelectedEdge] = useState(null);
+  const [selectedPosition, setSelectedPosition] = useState(null);
   const [isSahyogOpen, setIsSahyogOpen] = useState(false);
+
+  const handleSelectNode = useCallback((node, pos) => {
+    setSelectedNode(node);
+    setSelectedEdge(null);
+    if (pos) setSelectedPosition(pos);
+    else if (!node) setSelectedPosition(null);
+  }, []);
+
+  const handleSelectEdge = useCallback((edge, pos) => {
+    setSelectedEdge(edge);
+    setSelectedNode(null);
+    if (pos) setSelectedPosition(pos);
+    else if (!edge) setSelectedPosition(null);
+  }, []);
+
+  const handlePositionChange = useCallback((pos) => {
+    setSelectedPosition(pos);
+  }, []);
 
   // Animation Refs
   const workspaceRef = useRef(null);
@@ -141,7 +160,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div ref={workspaceRef} className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200">
+    <div ref={workspaceRef} className="min-h-screen flex flex-col bg-[#f4f4f5] dark:bg-[#0a0a0a] text-[#09090b] dark:text-[#f5f5f5] selection:bg-[#627EEA]/30 selection:text-white transition-colors duration-200">
       {/* Top Navbar & System Status */}
       <Navbar
         health={health}
@@ -152,9 +171,9 @@ export default function DashboardPage() {
       />
 
       {/* Main Forensic Investigation Canvas (100% Screen Width) */}
-      <main className="flex-1 w-full max-w-[1920px] mx-auto p-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-5">
-        {/* Search Controls & Demo Picker Header */}
-        <section className="flex flex-col gap-2.5">
+      <main className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-1 sm:pt-2 pb-6 flex flex-col gap-6">
+        {/* Search Controls & Demo Picker Header (Centered & Compact) */}
+        <section className="w-full max-w-5xl mx-auto flex flex-col gap-2.5">
           <SearchBar
             address={address}
             setAddress={setAddress}
@@ -189,53 +208,50 @@ export default function DashboardPage() {
 
           {/* STATE 2: ERROR STATE */}
           {!loading && error && (
-            <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-500/40 rounded-2xl p-8 text-center space-y-3 max-w-xl mx-auto my-auto shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
+            <div className="bg-[#ffffff] dark:bg-[#111111] border border-red-500/50 border-l-4 border-l-red-500 p-8 text-center space-y-3 max-w-xl mx-auto my-auto shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000]">
+              <div className="w-12 h-12 bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/30 flex items-center justify-center mx-auto">
                 <Shield className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-lg text-red-900 dark:text-red-200">Investigation Trace Halted</h3>
-              <p className="text-xs sm:text-sm text-slate-800 dark:text-zinc-300 font-mono bg-white dark:bg-zinc-950 p-3 rounded-lg border border-red-200 dark:border-red-500/20 break-all">
+              <h3 className="font-bold text-lg text-red-600 dark:text-red-200">Investigation Trace Halted</h3>
+              <p className="text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5] font-mono bg-[#f4f4f5] dark:bg-[#0a0a0a] p-3 border border-red-500/20 break-all">
                 {error}
               </p>
-              <p className="text-xs text-slate-600 dark:text-zinc-400">
+              <p className="text-xs text-[#71717a] dark:text-[#a3a3a3]">
                 Please verify the wallet address, check your Etherscan key, or test using one of the pre-recorded demo traces.
               </p>
             </div>
           )}
 
-          {/* STATE 3: RESULTS LOADED (Graph + Findings Dashboard) */}
+          {/* STATE 3: RESULTS LOADED (Graph + Findings Dashboard - Exact 50-50 Split) */}
           {!loading && !error && data && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-[640px]">
-              {/* Left Column: Cytoscape Money-Flow Visualizer (8 cols on xl) */}
-              <div className="lg:col-span-7 xl:col-span-8 flex flex-col relative h-[620px] lg:h-auto min-h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 min-h-[660px]">
+              {/* Left Column: Cytoscape Money-Flow Visualizer (50%) */}
+              <div className="flex flex-col relative h-[660px] lg:h-auto min-h-[640px]">
                 <TraceGraph
                   data={data}
-                  onSelectNode={(node) => {
-                    setSelectedNode(node);
-                    setSelectedEdge(null);
-                  }}
-                  onSelectEdge={(edge) => {
-                    setSelectedEdge(edge);
-                    setSelectedNode(null);
-                  }}
+                  onSelectNode={handleSelectNode}
+                  onSelectEdge={handleSelectEdge}
+                  onPositionChange={handlePositionChange}
                   selectedNodeId={selectedNode?.id}
                   selectedEdgeId={selectedEdge?.id}
                 />
 
-                {/* Slide-in Node & Edge Forensics Drawer */}
+                {/* Minimal Contextual Node & Edge Forensics Popover */}
                 <NodeDrawer
                   selectedNode={selectedNode}
                   selectedEdge={selectedEdge}
+                  position={selectedPosition}
                   onClose={() => {
                     setSelectedNode(null);
                     setSelectedEdge(null);
+                    setSelectedPosition(null);
                   }}
                   explorerBase={data.params?.explorer}
                 />
               </div>
 
-              {/* Right Column: Forensic Findings Panel (4 cols on xl) */}
-              <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-[620px] lg:h-auto">
+              {/* Right Column: Forensic Findings Panel (50%) */}
+              <div className="flex flex-col h-[660px] lg:h-auto">
                 <FindingPanel
                   data={data}
                   onOpenSahyog={() => setIsSahyogOpen(true)}
@@ -248,49 +264,49 @@ export default function DashboardPage() {
 
           {/* STATE 4: IDLE / WELCOME STATE */}
           {!loading && !error && !data && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 sm:p-12 border border-slate-200 dark:border-zinc-800/80 rounded-2xl bg-white dark:bg-zinc-950/40 backdrop-blur-sm space-y-6 my-auto shadow-sm dark:shadow-none">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-xl shadow-cyan-500/10">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 sm:p-12 border border-[#d4d4d8] dark:border-[#262626] bg-[#ffffff] dark:bg-[#111111] space-y-6 my-auto shadow-[4px_4px_0px_#18181b] dark:shadow-[4px_4px_0px_#000000]">
+              <div className="w-16 h-16 border-2 border-[#627EEA] bg-[#f4f4f5] dark:bg-[#0a0a0a] flex items-center justify-center text-[#627EEA]">
                 <Shield className="w-8 h-8" />
               </div>
 
               <div className="max-w-md space-y-2">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100">
+                <h2 className="text-xl font-bold text-[#09090b] dark:text-[#f5f5f5]">
                   Ready for Blockchain Attribution
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#71717a] dark:text-[#a3a3a3] leading-relaxed">
                   Enter an unhosted suspect wallet address or pick a pre-recorded demo above to trace funds forward to regulated exchange chokepoints.
                 </p>
               </div>
 
               {/* Capability highlights */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl text-left pt-4">
-                <div className="bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80 p-3.5 rounded-xl space-y-1">
-                  <span className="font-semibold text-xs text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                    <Database className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] hover:border-[#627EEA] hover:shadow-[3px_3px_0px_#627EEA] p-3.5 space-y-1 transition-all">
+                  <span className="font-semibold text-xs text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
+                    <Database className="w-3.5 h-3.5 text-[#627EEA]" />
                     Multi-Chain EVM
                   </span>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400">
+                  <p className="text-[11px] text-[#71717a] dark:text-[#888888]">
                     Follow funds across Ethereum, Polygon, BNB Chain, and Arbitrum One.
                   </p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80 p-3.5 rounded-xl space-y-1">
-                  <span className="font-semibold text-xs text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] hover:border-[#627EEA] hover:shadow-[3px_3px_0px_#627EEA] p-3.5 space-y-1 transition-all">
+                  <span className="font-semibold text-xs text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
+                    <Activity className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                     FIFO Taint Math
                   </span>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400">
+                  <p className="text-[11px] text-[#71717a] dark:text-[#888888]">
                     Calculates exact stolen balances landing at exchanges via chronological replay.
                   </p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80 p-3.5 rounded-xl space-y-1">
-                  <span className="font-semibold text-xs text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] hover:border-[#627EEA] hover:shadow-[3px_3px_0px_#627EEA] p-3.5 space-y-1 transition-all">
+                  <span className="font-semibold text-xs text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
+                    <FileText className="w-3.5 h-3.5 text-[#627EEA]" />
                     SAHYOG / I4C
                   </span>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400">
-                    Generates statutory Section 91 notices and court-ready PDF forensic dossiers.
+                  <p className="text-[11px] text-[#71717a] dark:text-[#888888]">
+                    Generates statutory requisitions under Indian cybercrime law & IPC and court-ready dossiers.
                   </p>
                 </div>
               </div>

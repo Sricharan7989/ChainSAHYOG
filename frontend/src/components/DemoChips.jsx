@@ -1,82 +1,68 @@
-import { useRef } from 'react';
 import { PlayCircle, ShieldCheck, AlertOctagon } from 'lucide-react';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
 import { shortAddress } from '../utils/formatters';
 
-gsap.registerPlugin(useGSAP);
-
 export default function DemoChips({ demos, onSelectDemo, selectedAddress, loading }) {
-  const containerRef = useRef(null);
-
-  useGSAP(() => {
-    if (demos && demos.length > 0) {
-      gsap.from('.demo-chip', {
-        scale: 0.9,
-        opacity: 0,
-        y: 10,
-        stagger: 0.08,
-        duration: 0.5,
-        ease: 'back.out(1.5)',
-      });
-    }
-  }, { dependencies: [demos], scope: containerRef });
-
   if (!demos || demos.length === 0) return null;
 
   return (
-    <div ref={containerRef} className="flex flex-wrap items-center gap-2 pt-1 pb-2">
-      <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 flex items-center gap-1.5 mr-1">
-        <PlayCircle className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-        <span>Pre-recorded Demos:</span>
+    <div className="flex flex-wrap items-center gap-2.5 pt-0.5 pb-1">
+      <span className="text-[11px] font-mono text-[#71717a] dark:text-[#a3a3a3] flex items-center gap-1.5 uppercase tracking-wider font-bold shrink-0">
+        <PlayCircle className="w-3.5 h-3.5 text-[#627EEA]" />
+        <span>Demo Presets:</span>
       </span>
 
-      {demos.map((demo) => {
-        const isSelected = selectedAddress?.toLowerCase() === demo.address?.toLowerCase();
-        const hasExchange = demo.summary?.found && demo.summary?.exchange;
-        const isSanctioned = demo.summary?.risk_flags?.some(
-          (f) => f.severity === 'critical' || f.risk_type === 'sanctioned'
-        );
+      <div className="flex flex-wrap items-center gap-2">
+        {demos.map((demo) => {
+          const isSelected = selectedAddress?.toLowerCase() === demo.address?.toLowerCase();
+          const exchangeName = demo.exchange || demo.summary?.exchange;
+          const hopCount = demo.hop_distance ?? demo.summary?.hop_distance;
+          const isSanctioned =
+            demo.headline?.toLowerCase().includes('sanction') ||
+            demo.summary?.risk_flags?.some(
+              (f) => f.severity === 'critical' || f.risk_type === 'sanctioned'
+            );
 
-        return (
-          <button
-            key={demo.address}
-            type="button"
-            disabled={loading}
-            onClick={() => onSelectDemo(demo)}
-            className={`demo-chip text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-2 shadow-xs cursor-pointer ${
-              isSelected
-                ? 'bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-400 ring-1 ring-cyan-400/50 font-semibold'
-                : 'bg-white dark:bg-zinc-900/80 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600'
-            }`}
-          >
-            {hasExchange ? (
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{demo.summary.exchange}</span>
-              </span>
-            ) : isSanctioned ? (
-              <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-semibold">
-                <AlertOctagon className="w-3.5 h-3.5" />
-                <span>Sanctioned Entity</span>
-              </span>
-            ) : (
-              <span className="text-slate-700 dark:text-zinc-300 font-medium">Trace Demo</span>
-            )}
+          return (
+            <button
+              key={demo.address}
+              type="button"
+              disabled={loading}
+              onClick={() => onSelectDemo(demo)}
+              className={`text-xs px-3 py-1.5 border transition-all flex items-center gap-2 cursor-pointer brutal-press shrink-0 ${
+                isSelected
+                  ? 'bg-[#627EEA]/20 text-[#627EEA] border-[#627EEA] shadow-[2px_2px_0px_#627EEA] font-bold'
+                  : 'bg-white dark:bg-[#1c1c22] hover:bg-[#f4f4f5] dark:hover:bg-[#272730] text-[#09090b] dark:text-[#f5f5f5] border-[#18181b] dark:border-[#383842] shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] hover:border-[#627EEA]'
+              }`}
+            >
+              {exchangeName ? (
+                <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-500/15 px-1.5 py-0.5 border border-emerald-500/40 text-[11px]">
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>{exchangeName}</span>
+                </span>
+              ) : isSanctioned ? (
+                <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-bold bg-red-500/15 px-1.5 py-0.5 border border-red-500/40 text-[11px]">
+                  <AlertOctagon className="w-3 h-3" />
+                  <span>Sanctioned Entity</span>
+                </span>
+              ) : (
+                <span className="text-[#09090b] dark:text-[#f5f5f5] font-semibold text-[11px]">
+                  Replay Trace
+                </span>
+              )}
 
-            <span className="text-slate-400 dark:text-zinc-600">·</span>
-            <span className="font-mono text-slate-500 dark:text-zinc-400 text-[11px]">
-              {shortAddress(demo.address, 6, 4)}
-            </span>
-
-            {demo.summary?.hop_distance !== undefined && (
-              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-zinc-800 text-[10px] font-mono text-slate-600 dark:text-zinc-400">
-                {demo.summary.hop_distance} hops
+              <span className="font-mono text-[#3f3f46] dark:text-[#d4d4d8] text-[11px] font-medium">
+                {shortAddress(demo.address, 6, 4)}
               </span>
-            )}
-          </button>
-        );
-      })}
+
+              {hopCount !== undefined && (
+                <span className="px-1.5 py-0.5 bg-[#f4f4f5] dark:bg-[#272730] text-[10px] font-mono text-[#52525b] dark:text-[#e4e4e7] border border-[#d4d4d8] dark:border-[#3f3f46] font-semibold">
+                  {hopCount} hops
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
