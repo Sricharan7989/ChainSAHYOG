@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { ShieldCheck, AlertTriangle, AlertOctagon, HelpCircle, ArrowRight, ExternalLink, Building2, Coins, Milestone, CheckCircle2 } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { shortAddress, explorerUrlForNode, splitNodeId } from '../../utils/formatters';
+import { explorerUrlForNode, splitNodeId } from '../../utils/formatters';
 
 gsap.registerPlugin(useGSAP);
 
@@ -49,6 +49,43 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
     not_computed: `A transaction path connects the suspect to ${summary.exchange} via ${routeText}. Value-level attribution was not computed for this trace, so the path does not by itself show that the suspect's funds arrived.`,
   }[taintState];
 
+  // WHAT KIND OF ENDPOINT THIS IS, and how it was recognised. A suspected
+  // collection point is not a personal wallet, a mixer is not "unhosted", and a
+  // fan-in pattern is not a "verified registry" match. Each tile below says what
+  // the backend actually established, or that there was nothing to establish.
+  const hasEndpoint = typeof summary.hop_distance === 'number';
+  const obfuscator = (summary.mixers_or_bridges_crossed || [])[0];
+  let targetName;
+  let targetKind;
+  if (isConfirmed) {
+    targetName = summary.exchange;
+    targetKind = 'Named exchange (VASP)';
+  } else if (isLead) {
+    targetName = 'Unnamed collection point';
+    targetKind = 'Suspected exchange, unconfirmed';
+  } else if (isTerminatedMixer) {
+    targetName = obfuscator || 'Mixer';
+    targetKind = 'Mixer: trail broken here';
+  } else if (isTerminatedBridge) {
+    targetName = obfuscator || 'Bridge';
+    targetKind = 'Bridge: funds left this chain';
+  } else {
+    targetName = 'None identified';
+    targetKind = 'No recognised endpoint';
+  }
+  const METHOD_LABEL = {
+    known_label: 'Published label match',
+    consolidation: 'Fan-in pattern only (max 67%)',
+  };
+  const hasScore = typeof summary.confidence_score === 'number';
+  const scoreBasis = hasScore
+    ? METHOD_LABEL[summary.method] || `Method: ${summary.method || 'unknown'}`
+    : 'No attribution made';
+  // The backend's stop reason, in its own words. "Reached the maximum depth"
+  // was printed for every outcome, including a mixer and a wallet that never
+  // sent anything, which told the investigator the wrong next step.
+  const stopDetail = summary.termination?.detail || summary.termination?.label;
+
   return (
     <div
       ref={cardRef}
@@ -90,7 +127,7 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
           ) : (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#52525b] dark:text-[#a3a3a3] border border-[#d4d4d8] dark:border-[#262626] text-xs font-mono font-bold uppercase tracking-wider">
               <HelpCircle className="w-4 h-4 text-[#71717a]" />
-              <span>Funds in Unhosted Wallets</span>
+              <span>No Exchange Reached</span>
             </span>
           )}
         </div>
@@ -110,7 +147,7 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         <p className="text-xs sm:text-sm text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
           {isConfirmed
             ? `${confirmedDetail} Centralized exchanges hold KYC records, which makes this the actionable point for a lawful request.`
-            : 'Tracing completed across public blockchain transactions to the maximum depth threshold.'}
+            : stopDetail || ''}
         </p>
         {/* The qualification travels with the claim, not in a footnote. */}
         {summary.caveat && (
@@ -128,10 +165,16 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             Target
           </span>
           <p className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5] truncate">
-            {summary.exchange || 'Unhosted'}
+            {targetName}
           </p>
-          <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
-            {isConfirmed ? 'Regulated VASP' : 'Personal Wallet'}
+          <span
+            className={`text-[10px] font-mono font-semibold ${
+              isConfirmed
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-[#71717a] dark:text-[#888888]'
+            }`}
+          >
+            {targetKind}
           </span>
         </div>
 
@@ -141,18 +184,22 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             Stolen Funds
           </span>
           <p className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5] truncate">
-            {taintState === 'attributed'
-              ? summary.tainted_value_display
-              : taintState === 'none_attributed'
-                ? 'None attributed'
-                : 'Not calculated'}
+            {!hasEndpoint
+              ? '—'
+              : taintState === 'attributed'
+                ? summary.tainted_value_display
+                : taintState === 'none_attributed'
+                  ? 'None attributed'
+                  : 'Not calculated'}
           </p>
           <span className="text-[10px] font-mono text-[#71717a] dark:text-[#888888]">
-            {taintState === 'attributed'
-              ? 'FIFO-attributable amount'
-              : taintState === 'none_attributed'
-                ? 'FIFO found none arriving'
-                : 'Taint replay did not run'}
+            {!hasEndpoint
+              ? 'No endpoint to measure'
+              : taintState === 'attributed'
+                ? 'FIFO-attributable amount'
+                : taintState === 'none_attributed'
+                  ? 'FIFO found none arriving'
+                  : 'Taint replay did not run'}
           </span>
         </div>
 
@@ -162,10 +209,12 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             Distance
           </span>
           <p className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">
-            {summary.hop_distance || 0} Hops
+            {hasEndpoint
+              ? `${summary.hop_distance} ${summary.hop_distance === 1 ? 'Hop' : 'Hops'}`
+              : '—'}
           </p>
           <span className="text-[10px] font-mono text-[#71717a] dark:text-[#888888]">
-            Shortest path
+            {hasEndpoint ? 'Shortest path' : 'No endpoint reached'}
           </span>
         </div>
 
@@ -174,11 +223,17 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             <CheckCircle2 className="w-3 h-3 text-emerald-500" />
             Reliability
           </span>
-          <p className="font-bold text-xs sm:text-sm text-emerald-700 dark:text-emerald-400">
-            {summary.confidence_score || 0}%
+          <p
+            className={`font-bold text-xs sm:text-sm ${
+              summary.method === 'known_label'
+                ? 'text-emerald-700 dark:text-emerald-400'
+                : 'text-amber-700 dark:text-amber-400'
+            }`}
+          >
+            {hasScore ? `${summary.confidence_score}%` : '—'}
           </p>
           <span className="text-[10px] font-mono text-[#71717a] dark:text-[#888888]">
-            Verified registry
+            {scoreBasis}
           </span>
         </div>
       </div>
@@ -213,9 +268,9 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             Recommended Lawful Action:
           </span>
           <p className="text-xs text-[#09090b] dark:text-[#d4d4d4] font-medium leading-relaxed">
-            {isConfirmed
-              ? `Serve a statutory requisition to ${summary.exchange} via SAHYOG to freeze deposits on address ${shortAddress(summary.address, 6, 4)} and requisition full KYC records.`
-              : summary.recommended_action}
+            {/* The backend's wording, which differs by outcome: a named exchange,
+                an unconfirmed lead that must NOT be served yet, or no endpoint. */}
+            {summary.recommended_action}
           </p>
         </div>
 

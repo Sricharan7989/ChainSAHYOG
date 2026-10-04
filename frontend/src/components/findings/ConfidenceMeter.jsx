@@ -5,13 +5,24 @@ import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(useGSAP);
 
-export default function ConfidenceMeter({ score, breakdown, components }) {
+export default function ConfidenceMeter({ score, breakdown, components, method }) {
   const [expanded, setExpanded] = useState(false);
   const [displayScore, setDisplayScore] = useState(0);
   const containerRef = useRef(null);
   const circleRef = useRef(null);
 
-  const targetScore = typeof score === 'number' ? score : 0;
+  const hasScore = typeof score === 'number';
+  const targetScore = hasScore ? score : 0;
+  // What the number rests on. A fan-in pattern is a behavioural resemblance,
+  // not a match against published exchange infrastructure, and a trace that
+  // recognised nothing has no score at all - not a score of zero.
+  const basis = !hasScore
+    ? 'No endpoint was attributed, so there is no confidence score.'
+    : method === 'known_label'
+      ? 'Exact match against published exchange labels, adjusted for hop distance and path.'
+      : method === 'consolidation'
+        ? 'Fan-in (consolidation) pattern only; no published label. Capped at 67%.'
+        : `Identified by ${method || 'an unrecorded method'}, adjusted for hop distance and path.`;
 
   useGSAP(() => {
     const counterObj = { val: 0 };
@@ -79,7 +90,7 @@ export default function ConfidenceMeter({ score, breakdown, components }) {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="font-mono text-base sm:text-lg font-extrabold tracking-tight text-[#09090b] dark:text-[#f5f5f5]">
-                {displayScore}%
+                {hasScore ? `${displayScore}%` : '—'}
               </span>
             </div>
           </div>
@@ -88,11 +99,11 @@ export default function ConfidenceMeter({ score, breakdown, components }) {
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">Attribution Certainty</h3>
               <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#f4f4f5] dark:bg-[#1a1a1a] text-emerald-700 dark:text-emerald-400 border border-[#d4d4d8] dark:border-[#262626] font-semibold uppercase">
-                {targetScore >= 80 ? 'High' : targetScore >= 60 ? 'Moderate' : 'Tentative'}
+                {!hasScore ? 'None' : targetScore >= 80 ? 'High' : targetScore >= 60 ? 'Moderate' : 'Tentative'}
               </span>
             </div>
             <p className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] mt-0.5 leading-snug">
-              Verified against public exchange infrastructure & hop attenuation
+              {basis}
             </p>
           </div>
         </div>
@@ -112,7 +123,7 @@ export default function ConfidenceMeter({ score, breakdown, components }) {
       {expanded && (
         <div className="mt-3 pt-3 border-t border-[#d4d4d8] dark:border-[#262626] space-y-2.5 animate-in fade-in duration-150">
           <div className="text-xs text-[#52525b] dark:text-[#a3a3a3] font-mono bg-[#f4f4f5] dark:bg-[#0a0a0a] p-2.5 border border-[#d4d4d8] dark:border-[#262626]">
-            {breakdown || 'Score calculated from verified address match and hop attenuation.'}
+            {breakdown || (hasScore ? 'No score breakdown was supplied with this result.' : 'Nothing was scored.')}
           </div>
 
           {components && components.length > 0 && (
