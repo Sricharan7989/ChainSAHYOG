@@ -2,16 +2,68 @@ import { ExternalLink, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import {
   getTxUrl,
+  formatNumber,
   splitNodeId,
   bareAddress,
   explorerUrlForNode,
   explorerForChain,
 } from '../../utils/formatters';
 
+/**
+ * What the final step of the route actually is, in the same terms the headline's
+ * Target tile uses. The last node used to be labelled "EXCHANGE (DESTINATION)"
+ * whatever it was - an unconfirmed collection point and a mixer included.
+ */
+function endpointLabel(summary) {
+  const reason = summary?.termination?.reason;
+  if (summary?.found) return `${summary.exchange || 'Named exchange'} (named exchange)`;
+  if (summary?.lead) return 'Unnamed collection point (unconfirmed)';
+  if (reason === 'terminated_at_mixer') return 'Mixer (trail broken here)';
+  if (reason === 'terminated_at_bridge') return 'Bridge (funds left this chain)';
+  return 'Endpoint';
+}
+
+/**
+ * The money on one edge: the suspect-attributable share under FIFO where the
+ * replay computed one, otherwise the gross amount, labelled as such. A route
+ * reads as "this much of the suspect's money moved here", not as every
+ * transfer that happened to share the edge.
+ */
+function edgeMoney(edge) {
+  const assets = Array.isArray(edge.assets) && edge.assets.length > 0
+    ? edge.assets
+    : [{ asset: edge.asset || '', value: edge.value }];
+  const computed = assets.some((a) => typeof a.tainted_value === 'number');
+  return {
+    computed,
+    rows: assets.map((a) => ({
+      asset: a.asset,
+      gross: Number(a.value) || 0,
+      tainted: typeof a.tainted_value === 'number' ? a.tainted_value : null,
+    })),
+  };
+}
+
 export default function PathTimeline({ pathEdges, startAddress, summary, explorerBase, onSelectAddress }) {
   const [copiedAddr, setCopiedAddr] = useState(null);
 
-  if (!pathEdges || pathEdges.length === 0) return null;
+  // No route to draw. Said, not left as a blank tab: either nothing was
+  // recognised, or the endpoint is the suspect wallet itself.
+  if (!pathEdges || pathEdges.length === 0) {
+    const hasEndpoint = typeof summary?.hop_distance === 'number';
+    return (
+      <div className="bg-white dark:bg-[#111111] border border-[#d4d4d8] dark:border-[#262626] p-4 sm:p-5 shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#000000] space-y-1.5">
+        <h3 className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">
+          Money Trail
+        </h3>
+        <p className="text-xs text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
+          {hasEndpoint
+            ? 'The endpoint could not be connected to the suspect wallet by a route in the graph, so no hop-by-hop trail is shown.'
+            : 'There is no route to show: the trace did not reach an exchange, collection point, mixer or bridge. The Case Summary tab says why the trace stopped.'}
+        </p>
+      </div>
+    );
+  }
 
   const handleCopy = (addr) => {
     navigator.clipboard.writeText(addr);
@@ -129,7 +181,7 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
                   >
                     Hop {hopNumber} ·{' '}
                     {isFinal
-                      ? `${summary?.exchange || 'EXCHANGE'} (DESTINATION)`
+                      ? endpointLabel(summary).toUpperCase()
                       : isCrossing
                         ? `CROSSED TO ${(crossedTo || '').toUpperCase()}`
                         : 'INTERMEDIARY CONDUIT'}
@@ -207,17 +259,43 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
                   </div>
                 )}
 
-                {/* Transfer Value Info */}
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#52525b] dark:text-[#a3a3a3] pt-1 border-t border-[#d4d4d8] dark:border-[#262626]">
-                  <span>
-                    Forwarded: <strong className="text-[#09090b] dark:text-[#f5f5f5]">{edge.value} {edge.asset || 'ETH'}</strong>
-                  </span>
-                  {edge.tx_count && edge.tx_count > 1 && (
-                    <span className="text-[#71717a] dark:text-[#666666]">
-                      ({edge.tx_count} transfers aggregated)
-                    </span>
-                  )}
-                </div>
+                {/* Value on this leg: the suspect's share under FIFO, with the gross
+                    amount beside it for context. Gross only, and labelled so,
+                    where no FIFO figure exists for this edge. */}
+                {(() => {
+                  const money = edgeMoney(edge);
+                  return (
+                    <div className="flex flex-col gap-0.5 text-[11px] text-[#52525b] dark:text-[#a3a3a3] pt-1 border-t border-[#d4d4d8] dark:border-[#262626]">
+                      {money.rows.map((row) => (
+                        <span key={row.asset}>
+                          {money.computed ? (
+                            <>
+                              Suspect funds (FIFO):{' '}
+                              <strong className="text-[#09090b] dark:text-[#f5f5f5]">
+                                {formatNumber(row.tainted ?? 0, 4)} {row.asset}
+                              </strong>{' '}
+                              <span className="text-[#71717a] dark:text-[#666666]">
+                                of {formatNumber(row.gross, 4)} {row.asset} moved on this leg
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              Moved on this leg (gross, not attributed):{' '}
+                              <strong className="text-[#09090b] dark:text-[#f5f5f5]">
+                                {formatNumber(row.gross, 4)} {row.asset}
+                              </strong>
+                            </>
+                          )}
+                        </span>
+                      ))}
+                      {edge.tx_count && edge.tx_count > 1 && (
+                        <span className="text-[#71717a] dark:text-[#666666]">
+                          ({edge.tx_count} transfers aggregated)
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           );
