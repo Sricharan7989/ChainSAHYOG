@@ -625,6 +625,8 @@ def actionable_tests():
     print("\n--- 21c. the fallback VASP's figures are its OWN, never the barred exchange's ---")
     rec = summary.get("recommended_vasp") or {}
     check("it is marked as a fallback", rec.get("is_fallback"), True)
+    check("the action says the fallback is a different branch with its own figures",
+          "different branch" in action and "its own" in action, True)
     check("its attributed value is Binance's 4 ETH, not FTX's 5 ETH",
           rec.get("tainted_value_received"), {"ETH": 4.0})
     check("its hop count is its own (2), not FTX's (1)", rec.get("hop_distance"), 2)

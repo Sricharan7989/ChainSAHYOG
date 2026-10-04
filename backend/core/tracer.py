@@ -2355,7 +2355,9 @@ def summarize(result: TraceResult) -> dict:
         if recommended is not None:
             action += (
                 f"The nearest actionable VASP this trace reached is {recommended.entity} "
-                f"({recommended.hop_distance} hops). "
+                f"({recommended.hop_distance} hops), on a different branch of the trace: the "
+                f"funds that reached it are not those that reached {nearest.entity}, and every "
+                "figure for it is its own. "
                 + vasp_status.request_route(recommended.entity, recommended.jurisdiction, recommended.address)
             )
         else:

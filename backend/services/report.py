@@ -136,6 +136,25 @@ def _bare(node_id: str) -> str:
     return node_id.split(":", 1)[1] if ":" in node_id else node_id
 
 
+def _branch_text(barred: str | None, rec: dict) -> str:
+    """Where a fallback VASP's route leaves the barred exchange's: different money."""
+    branch = rec.get("branch") or {}
+    if branch.get("diverges_at_suspect"):
+        split = "the two routes separate at the suspect wallet itself"
+    elif branch.get("diverges_at"):
+        n = branch.get("diverges_after_hops", 0)
+        split = (
+            f"the two routes share their first {'hop' if n == 1 else f'{n} hops'} and "
+            f"separate at {branch['diverges_at']}"
+        )
+    else:
+        split = "the two routes are separate branches of the trace"
+    return (
+        f"Different branch from {barred or 'the nearest exchange'}: {split}. These funds are "
+        "not the funds that reached it; every figure for this VASP is its own."
+    )
+
+
 def _kv_table(rows: list[tuple[str, str]], styles: dict) -> Table:
     data = [[Paragraph(k, styles["small"]), Paragraph(v, styles["body"])] for k, v in rows]
     table = Table(data, colWidths=[38 * mm, 128 * mm])
@@ -1007,6 +1026,15 @@ def build_report(payload: dict) -> bytes:
                  "Yes - no bar recorded" if summary.get("actionable") is not False
                  else f'No - {summary.get("actionable_reason", "")}'),
                 ("Request goes to", rec.get("entity") or "No actionable VASP reached"),
+                # A fallback's figures are its own, never the barred exchange's,
+                # and its funds are a different branch of the trace - said here
+                # so the PDF cannot be read as carrying one figure across.
+                *([
+                    ("Value at that VASP",
+                     rec.get("tainted_value_display")
+                     or "No value attributable to the suspect established under FIFO"),
+                    ("Relation to nearest", _branch_text(summary.get("exchange"), rec)),
+                ] if rec.get("is_fallback") else []),
                 ("Jurisdiction", {
                     "india": "Indian VASP - BNSS 94 notice for production of customer records",
                     "foreign": "Foreign VASP - its law-enforcement request channel; MLAT for evidence relied on in court",

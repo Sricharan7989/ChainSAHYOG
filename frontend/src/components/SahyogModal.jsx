@@ -140,9 +140,20 @@ A5. Limits
    - Exchange attributions come from published address labels, which can be incomplete or wrong; the records sought in the request are what confirm or refute it.
    - The trace stops at the first exchange on each branch; it does not follow funds inside an exchange.`;
 
+  // A FALLBACK IS DIFFERENT MONEY. An exchange ends a branch of the trace, so a
+  // VASP reached past a barred one sits on another branch: the funds that reached
+  // it are not the funds that reached the barred exchange. The request says so,
+  // and every figure in it is the fallback's own (built server-side from that
+  // VASP's attribution alone).
+  const branch = rec?.branch || null;
+  const splitText = !branch
+    ? 'the routes to the two exchanges are separate branches of the trace'
+    : branch.diverges_at_suspect
+      ? 'the routes to the two exchanges separate at the suspect wallet itself'
+      : (branch.diverges_after_hops === 1 ? "the routes to the two exchanges share their first hop" : `the routes to the two exchanges share their first ${branch.diverges_after_hops} hops`) + ` and separate at wallet ${branch.diverges_at}`;
   const nonActionableNote =
     summary.actionable === false && !sameAsNearest
-      ? `\n   (The nearest exchange on the trail, ${summary.exchange}, is not actionable: ${summary.actionable_reason}. It is recorded as evidence; this request goes to ${targetExchange}.)`
+      ? `\n   (The nearest exchange on the trail, ${summary.exchange}, is not actionable (${summary.actionable_reason}). It is recorded as evidence and is not the subject of this request. The funds described here are a different part of the traced money from those that reached ${summary.exchange}: ${splitText}. Every amount, deposit and hop count in this request is ${targetExchange}'s own.)`
       : '';
 
   // THE INSTRUMENT AND THE CHANNEL, by jurisdiction. Named, not drafted: the
