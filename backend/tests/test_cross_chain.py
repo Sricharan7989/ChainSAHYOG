@@ -465,6 +465,45 @@ def route_uncertainty_tests():
     return fail
 
 
+def real_registry_tests():
+    print("\n--- 17. end to end through the REAL Polygon route ---")
+    # No test registry here: the production entry, fed the amounts and timing of
+    # a pair verified on both chains (10 ETH deposited, 10 WETH minted from the
+    # zero address 1,249 seconds later). The trace must cross, rename the asset,
+    # and carry the taint as WETH.
+    poly_bridge = "0xa0c68c638235ee32657e8f720a23cec1bfc77c77"
+    zero = "0x0000000000000000000000000000000000000000"
+    weth = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
+
+    def weth_tx(frm, to, val, h, ts):
+        return Transfer(hash=h, from_addr=frm, to_addr=to, value=val, timestamp=ts,
+                        block=1, asset="WETH", contract=weth, decimals=18)
+
+    books = {
+        ETH: {SUSPECT: [tx(SUSPECT, poly_bridge, 10.0, "0xrealdeposit", ts=1791005915)]},
+        137: {
+            zero: [weth_tx(zero, SUSPECT, 10.0, "0xrealmint", 1791005915 + 1249)],
+            SUSPECT: [weth_tx(SUSPECT, NEXT, 10.0, "0xpolynext", 1791008000)],
+        },
+    }
+    client = ChainClient(books)
+    result = asyncio.run(tracer.trace(SUSPECT, max_depth=4, client=client))
+    match = result.cross_chain_handoffs[0] if result.cross_chain_handoffs else None
+    check("the real route matched", match.status if match else None, "matched")
+    check("on the mint", match.chosen.tx_hash if match and match.chosen else None, "0xrealmint")
+    check("from the recognised payout path (the zero address)",
+          match.chosen.from_known_credit_source if match and match.chosen else None, True)
+    crossing = next((h for h in result.hops if h.edge_type == "cross_chain"), None)
+    check("the crossing lands on Polygon", crossing.chain if crossing else None, "polygon")
+    check("as WETH, not POL", crossing.asset if crossing else None, "WETH")
+    poly = result.taint_chains.get("polygon")
+    check("the full deposit's taint arrives as WETH",
+          poly.bridged_in.get("WETH", 0.0) if poly else None, 10.0, 1e-9)
+    check("and follows the onward transfer",
+          poly.tainted_into(NEXT).get("WETH", 0.0) if poly else None, 10.0, 1e-9)
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -510,6 +549,20 @@ def cap_tests():
           sum(1 for h in result.hops if h.edge_type == "cross_chain"),
           config.MAX_CROSS_CHAIN_HOPS)
 
+    print("\n--- 13b. a DOUBLE crossing keeps the graph honest ---")
+    nodes = {n for n, _ in result.graph.nodes(data=True)}
+    crossing_edges = [
+        (u, v) for u, v, d in result.graph.edges(data=True) if d.get("edge_type") == "cross_chain"
+    ]
+    check("the return crossing leaves from the bridge's node on the far chain",
+          (f"arbitrum:{L2_GATEWAY}", SUSPECT) in crossing_edges, True)
+    check("and no phantom starting-chain node exists for that far-chain bridge",
+          L2_GATEWAY in nodes, False)
+    check("the outward crossing leaves from the starting-chain bridge",
+          (BRIDGE, f"arbitrum:{SUSPECT}") in crossing_edges, True)
+    check("every crossing edge joins two real nodes",
+          all(u in nodes and v in nodes for u, v in crossing_edges), True)
+
     print("\n--- 14. a bridge we hold no route for is reported as a gap, not a dead end ---")
     unlisted = "0x" + "e" * 40
     with test_world({("ethereum", unlisted): {"entity": "Some Bridge", "type": "bridge"}}):
@@ -539,6 +592,7 @@ def run_all():
     cap_tests()
     second_deposit_tests()
     route_uncertainty_tests()
+    real_registry_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 

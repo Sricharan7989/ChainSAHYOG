@@ -999,7 +999,10 @@ async def _follow_bridges(
                 child_node, depth=crossing_depth, is_start=False, chain=dest_slug
             )
         ctx.store.add_transfer(
-            hop.to_addr,
+            # The bridge's NODE on the chain the deposit left. Off the starting
+            # chain that is "<chain>:<address>"; passing the bare address here
+            # created a phantom starting-chain node for a second crossing's bridge.
+            ctx.node(hop.to_addr, slug),
             child_node,
             assets={
                 credit.asset: {
