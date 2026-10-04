@@ -66,7 +66,7 @@ import httpx
 import yaml
 
 from app import config
-from core import label_names
+from core import addresses, label_names
 
 GITHUB_API = (
     "https://api.github.com/repos/graphsense/graphsense-tagpacks/contents/packs/"
@@ -236,8 +236,10 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
         if chain_slug is None or chain_slug not in config.CHAIN_BY_SLUG:
             rejected["not_supported_chain"] += 1
             continue
-        if not ADDRESS_RE.match(address):
-            # Non-Ethereum address shapes (BTC, bech32, TRON T...) land here.
+        canonical = addresses.try_normalize(address, chain_slug)
+        if canonical is None:
+            # Not a valid address for the chain the pack files it under - an
+            # Ethereum-shaped string on a Tron row, a bad checksum, and so on.
             rejected["bad_address"] += 1
             continue
 
@@ -253,7 +255,8 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
         entity_type = CATEGORY_MAP.get(category, default_type)
 
         row = {
-            "address": address.lower(),
+            # The chain's own canonical form - never lowercased where case matters.
+            "address": canonical,
             "entity": clean_entity(label, actor),
             "type": entity_type,
             "chain": chain_slug,
@@ -387,7 +390,7 @@ def merge(rows: list[dict], dry_run: bool) -> dict:
     the other.
     """
     raw = json.loads(config.LABELS_PATH.read_text(encoding="utf-8"))
-    existing_keys = {k.lower() for k in raw if not k.startswith("_")}
+    existing_keys = {k for k in raw if not k.startswith("_")}
 
     # (chain, address) of what the file already holds, so an import can
     # add the same wallet on a new chain without duplicating or clashing.

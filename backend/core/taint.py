@@ -84,6 +84,8 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field
 
+from core import addresses
+
 # How the numbers below were produced, in one line, for the payload and the PDF.
 # Shipped as data rather than prose in a template so the API, the panel and the
 # report cannot drift from each other or from the code.
@@ -385,8 +387,13 @@ def compute_taint(
     pass taint_source="" and let `seeds` be the only thing that can create taint
     there, which keeps every downstream figure bounded by what actually crossed.
     """
-    start = (start_address or "").lower()
-    source = (taint_source if taint_source is not None else start).lower()
+    # Keyed by the chain's own rule: lowercasing a Tron or legacy Bitcoin address
+    # would make it miss every transfer it appears in.
+    def _key(address: str | None) -> str:
+        return addresses.try_normalize(address, chain or None) or (address or "").strip()
+
+    start = _key(start_address)
+    source = _key(taint_source) if taint_source is not None else start
     result = TaintResult(observed=set(fetched), chain=chain or "")
     events = build_events(fetched)
     result.events_replayed = len(events)
@@ -410,7 +417,7 @@ def compute_taint(
     event_hashes = {e.tx_hash for e in events}
     credit_taint: dict[tuple[str, str, str], float] = {}
     for seed in seeds or ():
-        address = (seed.address or "").lower()
+        address = _key(seed.address)
         asset = seed.asset
         if not address or seed.value <= 0:
             continue
@@ -581,5 +588,6 @@ def summarise(result: TaintResult, start_address: str) -> dict:
             "An upper bound on what the convention could have affected, not an "
             "error estimate: in most such ties the outcome is the same either way."
         ),
-        "start_address": (start_address or "").lower(),
+        "start_address": addresses.try_normalize(start_address, result.chain or None)
+        or (start_address or "").strip(),
     }

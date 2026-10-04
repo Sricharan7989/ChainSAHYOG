@@ -57,6 +57,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from app import config
+from core import addresses
 
 # How the candidate values compare, in points. These three weights sum to 100
 # before the cap, and are the whole scoring model - kept here, in one place, so a
@@ -285,7 +286,9 @@ def _min_amount_for(spec: dict) -> float:
 
 
 def _credit_sources(spec: dict) -> set:
-    return {(s or "").strip().lower() for s in spec.get("credit_sources", ())}
+    """Contracts that pay out on the destination chain, keyed by that chain's rule."""
+    chain = spec.get("to_chain")
+    return {addresses.try_normalize(s, chain) or (s or "").strip() for s in spec.get("credit_sources", ())}
 
 
 def dest_asset_for(spec: dict, asset: str) -> str:
@@ -322,7 +325,9 @@ def score_candidate(deposit: Deposit, credit, spec: dict) -> Candidate:
     delta = abs(float(credit.value) - float(deposit.value))
     ratio = (delta / float(deposit.value)) if deposit.value > 0 else 1.0
     lag = int(credit.timestamp) - int(deposit.timestamp)
-    from_known = (credit.from_addr or "").strip().lower() in _credit_sources(spec)
+    from_known = (
+        addresses.try_normalize(credit.from_addr, spec.get("to_chain")) or ""
+    ) in _credit_sources(spec)
 
     # Value: full marks for an exact amount, tapering to zero at the fee
     # tolerance. A candidate outside tolerance is never scored at all.
@@ -381,12 +386,13 @@ def match_candidates(deposit: Deposit, transfers: list, spec: dict) -> list:
     if deposit.value < min_amount:
         return []
 
-    wallet = (deposit.wallet or "").strip().lower()
+    dest_chain = spec.get("to_chain")
+    wallet = addresses.try_normalize(deposit.wallet, dest_chain)
     want_asset = (dest_asset_for(spec, deposit.asset) or "").strip().lower()
 
     out = []
     for credit in transfers:
-        if (credit.to_addr or "").strip().lower() != wallet:
+        if wallet is None or addresses.try_normalize(credit.to_addr, dest_chain) != wallet:
             continue
         if want_asset and (credit.asset or "").strip().lower() != want_asset:
             continue

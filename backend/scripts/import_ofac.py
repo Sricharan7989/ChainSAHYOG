@@ -38,6 +38,7 @@ import sys
 import urllib.request
 
 from app import config
+from core import addresses
 
 SOURCE_URL = (
     "https://raw.githubusercontent.com/ultrasoundmoney/ofac-ethereum-addresses/main/data.csv"
@@ -85,11 +86,12 @@ def merge(rows: list[dict], dry_run: bool) -> dict:
         address = (row.get("address") or "").strip()
         name = (row.get("name") or "").strip()
 
-        if not ADDRESS_RE.match(address) or not name:
+        # This feed is Ethereum-only; the key is the EVM canonical form.
+        key = addresses.try_normalize(address, "ethereum")
+        if key is None or not name:
             stats["invalid"] += 1
             continue
 
-        key = address.lower()
         if key in existing:
             stats["already_labelled"] += 1
             continue

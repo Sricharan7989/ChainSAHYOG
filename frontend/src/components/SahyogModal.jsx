@@ -42,7 +42,8 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
   const confidence = rec?.confidence_score ?? summary.confidence_score;
   const jurisdiction = rec?.jurisdiction || summary.jurisdiction || 'unknown';
   const startWallet = data.start_address;
-  const caseId = `CS-${startWallet.slice(2, 8).toUpperCase()}`;
+  // Six characters of the wallet, after any 0x prefix - not every chain has one.
+  const caseId = `CS-${startWallet.replace(/^0x/i, '').slice(0, 6).toUpperCase()}`;
 
   // WHAT THE REQUEST MAY CLAIM ABOUT THE MONEY. Only what the trace established:
   // the FIFO-attributed amount where there is one, never the gross value.

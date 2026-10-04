@@ -14,6 +14,7 @@ import SourceBadge from '../components/SourceBadge';
 import SahyogModal from '../components/SahyogModal';
 import Toast from '../components/Toast';
 import { fetchHealth, fetchDemos, runTrace, getReportUrl } from '../api/client';
+import { addrKey } from '../utils/address';
 
 gsap.registerPlugin(useGSAP);
 
@@ -156,7 +157,7 @@ export default function DashboardPage() {
   // 6. Select address from timeline / list
   const handleSelectAddress = (addr) => {
     if (!data?.nodes) return;
-    const node = data.nodes.find((n) => n.id.toLowerCase() === addr.toLowerCase());
+    const node = data.nodes.find((n) => addrKey(n.id) === addrKey(addr));
     if (node) {
       setSelectedNode(node);
       setSelectedEdge(null);
@@ -191,6 +192,7 @@ export default function DashboardPage() {
             setMode={setMode}
             saveDemo={saveDemo}
             setSaveDemo={setSaveDemo}
+            chainId={selectedChainId}
           />
 
           <DemoChips

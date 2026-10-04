@@ -87,6 +87,7 @@ import networkx as nx
 
 from app import config
 from core import (
+    addresses,
     bridges,
     clustering,
     identify,
@@ -96,7 +97,7 @@ from core import (
     vasp_status,
 )
 from services import graph_store
-from services.etherscan import EtherscanClient, Transfer, get_client, normalize_address
+from services.etherscan import EtherscanClient, Transfer, get_client
 
 
 @dataclass
@@ -1272,9 +1273,9 @@ async def trace(
     # and so every downstream fetch and label lookup uses the same chain.
     chain = config.chain(chain_id)
 
-    start = normalize_address(start_address)
-    if len(start) != 42 or not start.startswith("0x"):
-        raise ValueError(f"Not a valid Ethereum address: {start_address!r}")
+    # Per-chain: validated and keyed by the chain's own rule. InvalidAddress is a
+    # ValueError, so callers that turned a bad address into a 400 still do.
+    start = addresses.normalize(start_address, chain["slug"])
 
     ctx = _WalkContext(
         store=graph_store.get_store(),
@@ -2501,8 +2502,10 @@ def _crossing_handoff(result: TraceResult, src: str, dst: str) -> dict | None:
     for hop in result.hops:
         if (
             hop.edge_type == "cross_chain"
-            and hop.from_addr.lower() == src_bare
-            and hop.to_addr.lower() == dst_bare
+            # Exact: both sides are canonical keys already, and lowercasing would
+            # break the comparison on a case-sensitive chain.
+            and hop.from_addr == src_bare
+            and hop.to_addr == dst_bare
         ):
             return hop.handoff.to_payload() if hop.handoff is not None else None
     return None

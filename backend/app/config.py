@@ -714,9 +714,17 @@ BRIDGE_UNSUPPORTED: dict[tuple[str, str], str] = {
 }
 
 
+def _chain_key(chain_slug: str, address: str) -> tuple[str, str]:
+    """(slug, address) keyed by that chain's own address rule; see core/addresses.py."""
+    from core import addresses
+
+    slug = (chain_slug or "").strip().lower()
+    return slug, addresses.try_normalize(address, slug) or (address or "").strip()
+
+
 def bridge_unsupported_reason(chain_slug: str, address: str) -> str | None:
     """Why we recognise this bridge but do not follow it, or None."""
-    key = ((chain_slug or "").strip().lower(), (address or "").strip().lower())
+    key = _chain_key(chain_slug, address)
     return BRIDGE_UNSUPPORTED.get(key)
 
 
@@ -729,7 +737,7 @@ def bridge_lookup(chain_slug: str, address: str) -> dict | None:
     flag the bridge and stop honestly there, and say that it has no route
     recorded rather than pretending the bridge does not exist.
     """
-    key = ((chain_slug or "").strip().lower(), (address or "").strip().lower())
+    key = _chain_key(chain_slug, address)
     return BRIDGE_REGISTRY.get(key)
 
 

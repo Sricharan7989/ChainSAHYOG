@@ -14,7 +14,8 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response
 from app import config
 from core import tracer
 from services import graph_store, replay, report
-from services.etherscan import EtherscanError, is_valid_address
+from core import addresses
+from services.etherscan import EtherscanError
 
 router = APIRouter()
 
@@ -127,20 +128,23 @@ async def _run_or_replay(
     recent result of each address in memory, so generating the PDF straight
     after a trace costs nothing rather than re-walking the chain.
     """
-    if not is_valid_address(address):
-        raise HTTPException(
-            status_code=400,
-            detail=f"'{address}' is not a valid EVM address (expected 0x + 40 hex chars).",
-        )
-
     # 422 for an unsupported chain: it is an unprocessable parameter value, the
-    # same class of error FastAPI raises for a bad max_depth.
+    # same class of error FastAPI raises for a bad max_depth. Resolved FIRST,
+    # because what counts as a valid address depends on the chain.
     try:
         chain = config.chain(chain_id)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    key = address.strip().lower()
+    key = addresses.try_normalize(address, chain["slug"])
+    if key is None:
+        other = addresses.families_for(address)
+        hint = f" It parses as a {', '.join(sorted(other))} address." if other else ""
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{address}' is not a valid {addresses.describe(chain['slug'])} address "
+            f"for {chain['name']}.{hint}",
+        )
     # The in-process map is keyed by chain too: the same address on another
     # network is a different trace and must not be served from the wrong one.
     # (The on-disk cache does the same, inside replay._path_for.)

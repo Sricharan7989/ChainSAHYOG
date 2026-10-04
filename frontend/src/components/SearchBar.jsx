@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Search, Sliders, X, Clipboard, ArrowRight, ShieldAlert } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { looksLikeAddress, describeAddressFormat } from '../utils/address';
 
 gsap.registerPlugin(useGSAP);
 
@@ -18,6 +19,7 @@ export default function SearchBar({
   setMode,
   saveDemo,
   setSaveDemo,
+  chainId,
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const containerRef = useRef(null);
@@ -33,7 +35,8 @@ export default function SearchBar({
     });
   }, { scope: containerRef });
 
-  const isValidAddress = (addr) => /^0x[a-fA-F0-9]{40}$/.test(addr.trim());
+  // Per chain family: never assume 0x. The backend verifies the checksum.
+  const isValidAddress = (addr) => looksLikeAddress(addr, chainId);
 
   const handlePaste = async () => {
     try {
@@ -148,7 +151,7 @@ export default function SearchBar({
         {address && !valid && (
           <div className="flex items-center gap-1.5 px-3 text-xs text-amber-600 dark:text-amber-400 font-sans">
             <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-            <span>Expected a 42-character hexadecimal EVM address beginning with 0x.</span>
+            <span>Expected {describeAddressFormat(chainId)}.</span>
           </div>
         )}
 

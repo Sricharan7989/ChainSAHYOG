@@ -70,20 +70,24 @@ class Transfer:
 
 
 def normalize_address(address: str) -> str:
-    """Lowercase + strip. The single source of truth for how an address is keyed."""
-    return address.strip().lower()
+    """
+    The EVM key for an address: lowercase hex. THIS CLIENT ONLY SPEAKS EVM.
+
+    Lowercasing is right here and wrong on Tron and Bitcoin, where case is part
+    of the address; per-chain keying lives in core/addresses.py, and this
+    delegates to its EVM rule. An invalid address is returned stripped and
+    lowercased as before, so a caller's own validation still sees it.
+    """
+    from core import addresses
+
+    return addresses.try_normalize(address, "ethereum") or address.strip().lower()
 
 
 def is_valid_address(address: str) -> bool:
-    """Shape check only — does not verify the address exists on chain."""
-    a = address.strip()
-    if len(a) != ADDRESS_LENGTH or not a.startswith("0x"):
-        return False
-    try:
-        int(a[2:], 16)
-    except ValueError:
-        return False
-    return True
+    """EVM shape check only - does not verify the address exists on chain."""
+    from core import addresses
+
+    return addresses.is_valid(address, "ethereum")
 
 
 class EtherscanClient:

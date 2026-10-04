@@ -12,6 +12,7 @@ import {
 import { CYTOSCAPE_STYLES, LAYOUT_CONFIG } from '../utils/graphStyle';
 import { findPath, extractPathNodes } from '../utils/pathfinder';
 import { shortAddress, splitNodeId } from '../utils/formatters';
+import { addrKey } from '../utils/address';
 
 /**
  * Interactive Background Matrix: Subtle forensic grid dots that gently displace
@@ -241,18 +242,18 @@ export default function TraceGraph({
       };
     }
 
-    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => n.toLowerCase()));
+    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => addrKey(n)));
 
     // 1. Gather all primary path edges
     const highSignalEdges = [...primaryPathEdges];
     const addedEdgeKeys = new Set(
-      primaryPathEdges.map((e) => `${e.source.toLowerCase()}->${e.target.toLowerCase()}`)
+      primaryPathEdges.map((e) => `${addrKey(e.source)}->${addrKey(e.target)}`)
     );
 
     // 2. Gather branch edges that directly connect to a primary path node
     data.edges.forEach((e) => {
-      const src = e.source.toLowerCase();
-      const dst = e.target.toLowerCase();
+      const src = addrKey(e.source);
+      const dst = addrKey(e.target);
       const key = `${src}->${dst}`;
       if (addedEdgeKeys.has(key)) return;
 
@@ -265,12 +266,12 @@ export default function TraceGraph({
     // 3. Keep ONLY nodes that have at least one connected edge (No orphan/floating nodes!)
     const connectedNodeIds = new Set();
     highSignalEdges.forEach((e) => {
-      connectedNodeIds.add(e.source.toLowerCase());
-      connectedNodeIds.add(e.target.toLowerCase());
+      connectedNodeIds.add(addrKey(e.source));
+      connectedNodeIds.add(addrKey(e.target));
     });
-    if (startAddress) connectedNodeIds.add(startAddress.toLowerCase());
+    if (startAddress) connectedNodeIds.add(addrKey(startAddress));
 
-    const activeNodes = data.nodes.filter((n) => connectedNodeIds.has(n.id.toLowerCase()));
+    const activeNodes = data.nodes.filter((n) => connectedNodeIds.has(addrKey(n.id)));
     const hiddenCount = data.nodes.length - activeNodes.length;
 
     return {
@@ -296,9 +297,9 @@ export default function TraceGraph({
     const SPINE_X = 260;
 
     const primaryEdgeKeys = new Set(
-      primaryPathEdges.map((e) => `${e.source.toLowerCase()}->${e.target.toLowerCase()}`)
+      primaryPathEdges.map((e) => `${addrKey(e.source)}->${addrKey(e.target)}`)
     );
-    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => n.toLowerCase()));
+    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => addrKey(n)));
 
     // 1. Build the Vertical Spine
     let effectiveSpine = [];
@@ -309,7 +310,7 @@ export default function TraceGraph({
       const middle = primaryPathNodes.slice(2, -2);
       const tail = primaryPathNodes.slice(-2);
 
-      middle.forEach((addr) => foldedMiddleIds.add(addr.toLowerCase()));
+      middle.forEach((addr) => foldedMiddleIds.add(addrKey(addr)));
 
       effectiveSpine = [
         ...head.map((addr) => ({ type: 'wallet', address: addr })),
@@ -334,7 +335,7 @@ export default function TraceGraph({
         spinePositions.set(item.id, { x: SPINE_X, y });
         spineRowMap.set(item.id, idx);
       } else {
-        const addrLower = item.address.toLowerCase();
+        const addrLower = addrKey(item.address);
         spinePositions.set(addrLower, { x: SPINE_X, y });
         spineRowMap.set(addrLower, idx);
       }
@@ -346,10 +347,10 @@ export default function TraceGraph({
     const rowBranchCounters = new Map();
 
     displayNodes.forEach((n) => {
-      const idLower = n.id.toLowerCase();
+      const idLower = addrKey(n.id);
       if (foldedMiddleIds.has(idLower)) return;
 
-      const isStart = n.is_start || idLower === startAddress?.toLowerCase();
+      const isStart = n.is_start || idLower === addrKey(startAddress);
       const onPath = primaryNodeKeys.has(idLower);
       const isVasp = Boolean(n.is_vasp || n.entity_type === 'exchange');
       const isObfuscator = Boolean(
@@ -463,7 +464,7 @@ export default function TraceGraph({
       // Edge 0: Head 0 -> Head 1
       if (primaryPathEdges[0]) {
         const pe = primaryPathEdges[0];
-        const key = `${pe.source.toLowerCase()}->${pe.target.toLowerCase()}`;
+        const key = `${addrKey(pe.source)}->${addrKey(pe.target)}`;
         edgeElements.push({
           group: 'edges',
           data: {
@@ -509,7 +510,7 @@ export default function TraceGraph({
       // Edge Tail 0 -> Tail 1
       const tailEdge = primaryPathEdges[primaryPathEdges.length - 1];
       if (tailEdge) {
-        const key = `${tailEdge.source.toLowerCase()}->${tailEdge.target.toLowerCase()}`;
+        const key = `${addrKey(tailEdge.source)}->${addrKey(tailEdge.target)}`;
         edgeElements.push({
           group: 'edges',
           data: {
@@ -526,7 +527,7 @@ export default function TraceGraph({
     } else {
       // All primary path edges intact
       primaryPathEdges.forEach((pe, idx) => {
-        const key = `${pe.source.toLowerCase()}->${pe.target.toLowerCase()}`;
+        const key = `${addrKey(pe.source)}->${addrKey(pe.target)}`;
         edgeElements.push({
           group: 'edges',
           data: {
@@ -553,8 +554,8 @@ export default function TraceGraph({
 
     // Add remaining display edges (side-branches)
     displayEdges.forEach((e, idx) => {
-      const srcLower = e.source.toLowerCase();
-      const dstLower = e.target.toLowerCase();
+      const srcLower = addrKey(e.source);
+      const dstLower = addrKey(e.target);
       const key = `${srcLower}->${dstLower}`;
 
       if (addedEdgeKeys.has(key)) return;

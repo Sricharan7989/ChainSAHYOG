@@ -36,6 +36,7 @@ from dataclasses import dataclass
 import networkx as nx
 
 from app import config
+from core import addresses
 from services import graph_store
 
 # --- Tunables -----------------------------------------------------------------
@@ -149,6 +150,7 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
         raise RuntimeError(f"data/labels.json is not valid JSON: {exc}") from exc
 
     index: dict[tuple[str, str], dict] = {}
+    rejected: list[str] = []
     for key, meta in raw.items():
         key = str(key).strip()
         if key.startswith("_") or not isinstance(meta, dict):
@@ -159,10 +161,25 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
         # rewriting every key.
         chain_from_key, _, address = key.rpartition(":")
         chain_name = str(meta.get("chain") or chain_from_key or DEFAULT_CHAIN).strip().lower()
-        index[(chain_name, address.strip().lower())] = meta
+        # FORMAT GUARD. Keyed by the chain's own rule (core/addresses.py): never
+        # lowercased where case carries meaning, and a row whose address does not
+        # parse for its chain is refused here rather than indexed - so an
+        # Ethereum-shaped address filed under Tron, or the reverse, can never
+        # match anything.
+        canonical = addresses.try_normalize(address, chain_name)
+        if canonical is None:
+            rejected.append(key)
+            continue
+        index[(chain_name, canonical)] = meta
 
+    global rejected_label_keys
+    rejected_label_keys = rejected
     _labels = index
     return _labels
+
+
+# Label rows refused by the format guard on the last load, for diagnostics.
+rejected_label_keys: list[str] = []
 
 
 def label_count(chain: str | None = None) -> int:
@@ -214,7 +231,12 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
     since most wallets in a trace are the criminal's own anonymous ones.
     """
     chain_name = (chain or DEFAULT_CHAIN).strip().lower()
-    meta = load_labels().get((chain_name, address.strip().lower()))
+    # An address that does not parse for this chain cannot match a label on it -
+    # the format guard on the lookup side.
+    key = addresses.try_normalize(address, chain_name)
+    if key is None:
+        return None
+    meta = load_labels().get((chain_name, key))
     if meta is None:
         return None
 
@@ -225,7 +247,7 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
         origin = meta.get("inferred_from") or {}
         evidence = meta.get("evidence") or {}
         return Identification(
-            address=address.strip().lower(),
+            address=key,
             entity=entity,
             entity_type=entity_type,
             method="inferred_label",
@@ -242,7 +264,7 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
 
     role = meta.get("role")
     return Identification(
-        address=address.strip().lower(),
+        address=key,
         entity=entity,
         entity_type=entity_type,
         method="known_label",
@@ -393,7 +415,9 @@ def consolidation_identify(
     confidence = CONSOLIDATION_MAX_CONFIDENCE * max(score, 0.5)
 
     return Identification(
-        address=address.strip().lower(),
+        # Already the canonical graph key; lowercasing it would corrupt a Tron
+        # or legacy Bitcoin address.
+        address=address.strip(),
         entity="Unknown exchange (consolidation pattern)",
         # NOT "exchange" - we have not named anyone. This is a behavioural
         # suspicion, and the label keeps that distinction visible downstream.
