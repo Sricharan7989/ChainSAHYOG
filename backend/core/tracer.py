@@ -208,6 +208,10 @@ class Attribution:
     # Which entity cluster this wallet belongs to. Filled in after the walk by
     # core.clustering, so one Binance wallet points at the one Binance cluster.
     cluster_id: str | None = None
+    # Scores of the inferred bridge crossings on this attribution's route, one per
+    # crossing. Empty for a route observed end to end. Read by scoring to scale the
+    # crossing penalty and to cap the headline at the weakest crossing.
+    handoff_scores: list = field(default_factory=list)
     # Which chain this endpoint is on, and which graph node it is stored under.
     # A cross-chain trace reaches the same address on two chains, where they are
     # two DIFFERENT wallets, so the node id is chain-qualified for anything off
@@ -252,6 +256,8 @@ class Attribution:
             "path": self.path,
             "crossed": sorted(self.path_risk_types),
             "cluster_id": self.cluster_id,
+            "handoff_scores": list(self.handoff_scores),
+            "cross_chain_inferred": bool(self.handoff_scores),
             "chain": self.chain,
         }
 
@@ -1249,9 +1255,24 @@ async def trace(
     # Reconstruct each attribution's route and score it. This has to happen
     # after the walk: a path is only knowable once the graph is complete, and
     # the score depends on what that path crossed.
+    # Each followed crossing, keyed by the graph edge it became: bridge node on
+    # the source chain -> the wallet on the destination chain.
+    crossing_scores: dict[tuple[str, str], int] = {}
+    for handoff in ctx.handoffs:
+        if handoff.matched and handoff.deposit is not None and handoff.chosen is not None:
+            dep = handoff.deposit
+            crossing_scores[
+                (ctx.node(dep.bridge, dep.chain), ctx.node(dep.wallet, dep.to_chain))
+            ] = handoff.chosen.score
+
     for attribution in attributions.values():
         attribution.path = store.shortest_path(start, attribution.node_id or attribution.address)
         attribution.path_risk_types = _risk_types_on_path(store, attribution.path)
+        attribution.handoff_scores = [
+            crossing_scores[leg]
+            for leg in zip(attribution.path, attribution.path[1:])
+            if leg in crossing_scores
+        ]
 
         scored = scoring.compute_confidence(attribution)
         attribution.confidence_score = scored.score
@@ -1929,6 +1950,8 @@ def summarize(result: TraceResult) -> dict:
             "confidence_breakdown": lead.confidence_breakdown,
             "confidence_components": lead.confidence_components,
             "method": lead.method,
+            "cross_chain_inferred": bool(lead.handoff_scores),
+            "handoff_scores": list(lead.handoff_scores),
             "value_received": {k: round(v, 8) for k, v in lead.value_received.items()},
             "value_received_display": format_assets(lead.value_received),
             "value_received_eth": round(lead.value_received_eth, 6),
@@ -1979,6 +2002,11 @@ def summarize(result: TraceResult) -> dict:
         "confidence_breakdown": nearest.confidence_breakdown,
         "confidence_components": nearest.confidence_components,
         "method": nearest.method,
+        # True when the route to this exchange crosses a bridge by INFERENCE. The
+        # panel and the PDF badge the finding with it; the score is already held
+        # at the weakest crossing's own score.
+        "cross_chain_inferred": bool(nearest.handoff_scores),
+        "handoff_scores": list(nearest.handoff_scores),
         "value_received": {k: round(v, 8) for k, v in nearest.value_received.items()},
         "value_received_display": format_assets(nearest.value_received),
         "value_received_eth": round(nearest.value_received_eth, 6),
@@ -2021,6 +2049,10 @@ def _headline(result: TraceResult, nearest: Attribution) -> str:
     """
     hops = f"{nearest.hop_distance} hop{'s' if nearest.hop_distance != 1 else ''}"
     confidence = f"{nearest.confidence_score}% confidence"
+    if nearest.handoff_scores:
+        # Said in the sentence itself, so the headline can never be quoted without
+        # it: part of this route is an inferred bridge crossing, not a transfer.
+        hops += " via an inferred bridge crossing"
 
     if result.taint is None:
         return f"Transaction path connects to {nearest.entity}, {hops}, {confidence}"

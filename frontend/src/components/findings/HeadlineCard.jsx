@@ -149,6 +149,22 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             ? `${confirmedDetail} Centralized exchanges hold KYC records, which makes this the actionable point for a lawful request.`
             : stopDetail || ''}
         </p>
+        {/* An INFERRED route is badged where the claim is made. Part of the money's
+            path is a bridge crossing matched by amount and timing, not an observed
+            transfer, and the score is already held at or below that match. */}
+        {summary.cross_chain_inferred && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border border-cyan-500/60 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
+              Inferred cross-chain route
+            </span>
+            <span className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] leading-snug">
+              Part of this route is a bridge crossing matched at{' '}
+              {(summary.handoff_scores || []).map((s) => `${s}/100`).join(', ')} on
+              amount and timing, an inference rather than an observed transfer. The
+              confidence above is held at or below that match.
+            </span>
+          </div>
+        )}
         {/* The qualification travels with the claim, not in a footnote. */}
         {summary.caveat && (
           <p className="text-[11px] text-[#71717a] dark:text-[#888888] leading-snug italic">

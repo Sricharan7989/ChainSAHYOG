@@ -211,6 +211,10 @@ def matched_tests():
         check("named", a.entity, "Binance (Arbitrum)")
         check("on the right chain", a.chain, "arbitrum")
         check("hop distance counts the crossing", a.hop_distance, 4)
+        check("its route records the inferred crossing's score", a.handoff_scores, [85])
+        check("its confidence never exceeds that crossing's score", a.confidence_score <= 85, True)
+        check("and the crossing is charged by its strength, not a flat penalty",
+              "inferred bridge crossing matched at 85/100" in a.confidence_breakdown, True)
         check("and the path crosses the bridge",
               f"arbitrum:{SUSPECT}" in a.path, True)
         check("the path crosses labels it should",
@@ -266,6 +270,10 @@ def matched_tests():
     # `summary.address` is the bare wallet address, but the node holding it is
     # chain-qualified. A consumer walking `edges` has to be told which one to
     # match on, or the money trail silently resolves to nothing past a crossing.
+    check("the summary flags the finding as reached by inference",
+          payload["summary"].get("cross_chain_inferred"), True)
+    check("and the headline itself says so",
+          "inferred bridge crossing" in payload["summary"]["headline"], True)
     check("the summary names the chain-qualified node",
           payload["summary"]["node_id"], f"arbitrum:{BINANCE_ARB}")
     check("while the summary address stays bare, for the requisition",

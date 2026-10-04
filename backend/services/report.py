@@ -762,6 +762,18 @@ def build_report(payload: dict) -> bytes:
         # that a reader cannot take the headline without this qualification.
         if summary.get("caveat"):
             story.append(Paragraph(f'<b>{summary["caveat"]}</b>', styles["small"]))
+        # An inferred route is qualified directly under the claim as well. Part of
+        # the path is a bridge crossing matched by amount and timing; the evidence
+        # is in the Cross-chain movement section.
+        if summary.get("cross_chain_inferred"):
+            scores = ", ".join(f"{s}/100" for s in summary.get("handoff_scores") or [])
+            story.append(Paragraph(
+                "<b>Inferred cross-chain route:</b> part of this route is a bridge "
+                f"crossing matched at {scores} on amount and timing. That step is an "
+                "inference, not an observed transfer, and the confidence figure is held "
+                "at or below it. See Cross-chain movement for the evidence.",
+                styles["small"],
+            ))
         story.append(Spacer(1, 3))
 
         rows = [
