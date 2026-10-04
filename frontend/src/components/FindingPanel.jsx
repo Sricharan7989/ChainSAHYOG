@@ -48,6 +48,30 @@ export default function FindingPanel({
   const startAddress = data.start_address;
   const pathEdges = findPath(data.edges, startAddress, targetAddress);
 
+  const strong = (t) => <strong className="text-[#09090b] dark:text-[#f5f5f5]">{t}</strong>;
+  const checklist = [];
+  if (data.summary?.found) {
+    checklist.push(
+      <>Click {strong('Route to SAHYOG')} to draft the request to {data.summary.exchange} for its records on the deposit wallet.</>
+    );
+  } else if (data.summary?.lead) {
+    checklist.push(
+      <>The endpoint is an {strong('unconfirmed collection point')}, so no request is offered. Verify it independently (explorer labels, outgoing volume) before any lawful request.</>
+    );
+  } else {
+    checklist.push(
+      <>No exchange was reached, so no request is offered. See {strong('How this trace ended')} above for why, and whether a deeper trace or lower dust threshold could help.</>
+    );
+  }
+  checklist.push(
+    <>Download the {strong('PDF')} to attach the finding, its evidence and its limitations to the case file.</>
+  );
+  if (pathEdges.length > 0) {
+    checklist.push(
+      <>Open the {strong('Money Trail')} tab for the transaction hashes on each leg of the route.</>
+    );
+  }
+
   return (
     <div
       ref={panelRef}
@@ -124,16 +148,13 @@ export default function FindingPanel({
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Investigator Action Checklist
             </h4>
+            {/* The checklist describes what is ON SCREEN. It used to tell the
+                investigator to click the request button even when there was no
+                named exchange and the button was not rendered. */}
             <ol className="text-xs text-[#52525b] dark:text-[#a3a3a3] space-y-1.5 list-decimal pl-4 leading-relaxed font-sans">
-              <li>
-                Click <strong className="text-[#09090b] dark:text-[#f5f5f5]">Route to SAHYOG</strong> to generate an official freeze notice under Indian cybercrime laws.
-              </li>
-              <li>
-                Export and print the <strong className="text-[#09090b] dark:text-[#f5f5f5]">PDF Dossier</strong> to attach with the formal FIR / Case Diary.
-              </li>
-              <li>
-                Inspect the <strong className="text-[#09090b] dark:text-[#f5f5f5]">Money Trail</strong> tab if you need individual transaction hashes for court submission.
-              </li>
+              {checklist.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
             </ol>
           </div>
         </div>
