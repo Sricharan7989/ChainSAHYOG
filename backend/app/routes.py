@@ -110,9 +110,17 @@ async def _run_or_replay(
     dust_threshold: float,
     mode: str,
     chain_id: int = config.DEFAULT_CHAIN_ID,
+    prefer_recent: bool = False,
 ) -> dict:
     """
     Produce a trace payload, from the recording if there is one, else live.
+
+    `prefer_recent` is for /report. The PDF must describe the trace the
+    investigator was looking at, so the in-memory result of that exact trace
+    (same address, chain, depth and dust threshold) wins in EVERY mode. It used
+    to be consulted only in auto mode, so a report requested after a live trace
+    re-walked the chain - taking minutes, and able to print figures that differ
+    from the screen.
 
     Shared by /trace and /report so a report can never disagree with the trace
     the investigator was looking at when they asked for it. Also keeps the most
@@ -138,6 +146,17 @@ async def _run_or_replay(
     # (The on-disk cache does the same, inside replay._path_for.)
     recent_key = (chain["slug"], key)
 
+    # The exact trace that was on screen, if this process produced it. Matched on
+    # depth AND dust threshold, since either changes the result.
+    recent = _RECENT.get(recent_key)
+    same_params = (
+        recent is not None
+        and recent["params"]["max_depth"] == max_depth
+        and recent["params"].get("dust_threshold_eth") == dust_threshold
+    )
+    if prefer_recent and same_params:
+        return recent
+
     if mode in ("auto", "cache"):
         cached = replay.load_trace(key, chain=chain["slug"])
         if cached is not None:
@@ -151,11 +170,9 @@ async def _run_or_replay(
                 ),
             )
 
-    # In-memory result from earlier in this process - what /report normally hits.
-    if mode == "auto":
-        recent = _RECENT.get(recent_key)
-        if recent is not None and recent["params"]["max_depth"] == max_depth:
-            return recent
+    # In-memory result from earlier in this process.
+    if mode == "auto" and same_params:
+        return recent
 
     if not config.has_etherscan_key():
         raise HTTPException(
@@ -204,6 +221,7 @@ async def trace_report(
         dust_threshold=dust_threshold,
         mode=mode,
         chain_id=chain_id,
+        prefer_recent=True,
     )
 
     pdf = report.build_report(payload)

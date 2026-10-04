@@ -143,8 +143,11 @@ export default function DashboardPage() {
       address: data.start_address,
       chainId: data.params?.chain_id || selectedChainId,
       maxDepth: data.params?.max_depth || maxDepth,
-      dustThreshold: data.params?.dust_threshold_eth || dustThreshold,
-      mode,
+      dustThreshold: data.params?.dust_threshold_eth ?? dustThreshold,
+      // Describe the result on screen, not whatever the mode toggle says now: a
+      // replayed result is reported from the same recording, and a live result
+      // is served from the backend's in-memory copy of that exact trace.
+      mode: data.source === 'cache' ? 'cache' : 'live',
     });
     window.open(url, '_blank');
     setToast({ type: 'success', message: 'Generating forensic PDF report…' });
