@@ -957,6 +957,23 @@ async def _follow_bridges(
 
         candidates = bridges.match_candidates(deposit, dest_transfers, spec)
         match = bridges.resolve(candidates, deposit, spec)
+        if not candidates:
+            # An empty result only means "no match" if the fetched history reaches
+            # back to the deposit. The credit arrives as a token (e.g. a WETH mint)
+            # or as a native transfer, and each comes from its own capped fetch.
+            reach_all = getattr(ctx.client, "history_reach", {}).get(
+                (dest_chain["chain_id"], hop.from_addr), {}
+            )
+            kind = "native" if deposit.dest_asset == dest_chain.get("native") else "token"
+            reach = reach_all.get(kind) or {}
+            if (
+                reach.get("truncated")
+                and reach.get("oldest") is not None
+                and reach["oldest"] > deposit.timestamp
+            ):
+                match = bridges.history_not_reached(
+                    deposit, reach["oldest"], reach.get("rows", 0), spec
+                )
         ctx.handoffs.append(match)
 
         if not match.matched:
@@ -1470,6 +1487,7 @@ def _classify_termination(
             "not_registered": "we hold no verified route for this bridge",
             "hop_cap_reached": "the trace had already used its cross-chain crossings",
             "destination_unavailable": "the destination chain cannot be read with the configured API key",
+            "history_not_reached": "the destination-chain history we could fetch does not reach back to the deposit, so no match was looked for",
         }
         counts: dict[str, int] = {}
         for h in stopped:

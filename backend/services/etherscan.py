@@ -122,6 +122,15 @@ class EtherscanClient:
         # Wallets already counted into this trace, so revisiting one cannot
         # double its contribution.
         self._tallied: set[tuple[int, str]] = set()
+        # (chain_id, address) -> how far back each fetch actually reached:
+        # {"native": {"rows": n, "truncated": bool, "oldest": ts}, "token": {...}}.
+        #
+        # WHY. Each fetch returns only the most recent MAX_TXNS_PER_ADDRESS rows.
+        # For a busy wallet that window can end long AFTER an event we need to
+        # look for - a bridge credit months old, say - and "we found nothing" over
+        # a window that never covered the event is a false negative. Recording
+        # the reach lets a caller say "we could not look that far back" instead.
+        self.history_reach: dict[tuple[int, str], dict[str, dict]] = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -302,6 +311,16 @@ class EtherscanClient:
                     wallet_tally = self._skipped_by_wallet.setdefault(key, {})
                     wallet_tally[skipped_symbol] = wallet_tally.get(skipped_symbol, 0) + 1
 
+        def _reach(rows) -> dict:
+            rows = rows if isinstance(rows, list) else []
+            stamps = [int(r.get("timeStamp", 0) or 0) for r in rows if isinstance(r, dict)]
+            return {
+                "rows": len(rows),
+                "truncated": len(rows) >= config.MAX_TXNS_PER_ADDRESS,
+                "oldest": min(stamps) if stamps else None,
+            }
+
+        self.history_reach[key] = {"native": _reach(raw), "token": _reach(token_raw)}
         self._cache[key] = transfers
         self._count_skipped(key)
         return transfers

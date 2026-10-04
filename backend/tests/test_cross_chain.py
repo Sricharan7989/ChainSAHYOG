@@ -507,6 +507,41 @@ def real_registry_tests():
     return fail
 
 
+def history_reach_tests():
+    print("\n--- 18. a credit older than the fetched history is NOT reported as no match ---")
+    # The real case: a busy wallet's newest 1,000 Polygon transfers all post-date a
+    # deposit months old, so its WETH mint was never in the data. "No match" there
+    # was a false negative presented as a finding.
+    books = {ETH: {SUSPECT: [tx(SUSPECT, BRIDGE, 10.0, "0xolddeposit", ts=1700000000)]}}
+    books.update({ARB: {SUSPECT: [tx(SUSPECT, NEXT, 1.0, "0xrecent", ts=1709000000)]}})
+    client = ChainClient(books)
+    client.history_reach = {
+        (ARB, SUSPECT): {
+            "native": {"rows": config.MAX_TXNS_PER_ADDRESS, "truncated": True, "oldest": 1708000000},
+            "token": {"rows": 3, "truncated": False, "oldest": 1708500000},
+        }
+    }
+    with world_with_test_registry():
+        result = asyncio.run(tracer.trace(SUSPECT, max_depth=4, client=client))
+    match = result.cross_chain_handoffs[0]
+    check("it is reported as not checked", match.status, "history_not_reached")
+    check("saying why", "could not be looked for" in match.reason, True)
+    check("and that this is not a finding of absence", "not a finding that none exists" in match.reason, True)
+    check("the stop reason carries it",
+          "does not reach back to the deposit" in result.termination.get("detail", ""), True)
+
+    print("\n--- 18b. an untruncated history still yields an honest no_match ---")
+    client = ChainClient(books)
+    client.history_reach = {
+        (ARB, SUSPECT): {"native": {"rows": 2, "truncated": False, "oldest": 1600000000}}
+    }
+    with world_with_test_registry():
+        result = asyncio.run(tracer.trace(SUSPECT, max_depth=4, client=client))
+    check("a complete history that lacks the credit is a no_match",
+          result.cross_chain_handoffs[0].status, "no_match")
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -596,6 +631,7 @@ def run_all():
     second_deposit_tests()
     route_uncertainty_tests()
     real_registry_tests()
+    history_reach_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 

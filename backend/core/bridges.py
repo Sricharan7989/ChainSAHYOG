@@ -30,6 +30,9 @@ score and the evidence behind it, plus an explicit status:
     no_match    - nothing on the destination chain looks like this deposit.
                   This is a real, reportable finding: the trace stops honestly
                   rather than inventing a continuation.
+    history_not_reached
+                - the destination-chain history we could fetch does not reach back
+                  to the deposit, so a match was never looked for. Not a no_match.
     unsupported - a bridge we recognise but deliberately do not follow, with the
                   reason (see config.BRIDGE_UNSUPPORTED).
     not_registered / hop_cap_reached / destination_unavailable
@@ -51,6 +54,7 @@ rule that will be wrong.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 from app import config
 
@@ -488,6 +492,32 @@ def unmatched(chain_slug: str, address: str, entity: str = "") -> BridgeMatch:
             "the funds did not move."
         ),
         spec=None,
+    )
+
+
+def history_not_reached(deposit: Deposit, oldest: int | None, rows: int, spec: dict | None = None) -> BridgeMatch:
+    """
+    The fetch window on the destination chain ends after the deposit was made.
+
+    A busy wallet's most recent transfers can all post-date a deposit that is
+    weeks old, and the matching credit then sits outside what we fetched. Saying
+    "no match" here would be a false negative presented as a finding; the honest
+    statement is that we could not look that far back.
+    """
+    when = (
+        datetime.fromtimestamp(oldest, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        if oldest
+        else "an unknown date"
+    )
+    return BridgeMatch(
+        status="history_not_reached",
+        reason=(
+            f"The {deposit.to_chain} history fetched for this wallet covers only its most recent "
+            f"{rows} transfers, reaching back to {when}; the deposit was made before that, so a "
+            "matching withdrawal could not be looked for. This is not a finding that none exists."
+        ),
+        deposit=deposit,
+        spec=spec,
     )
 
 

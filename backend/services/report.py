@@ -378,6 +378,7 @@ def _cross_chain_section(payload: dict, styles: dict) -> list:
         "ambiguous": "Ambiguous — not followed",
         "no_match": "No match — not followed",
         "hop_cap_reached": "Stopped at the crossing limit",
+        "history_not_reached": "Not checked - fetched history does not reach the deposit",
         "unsupported": "Recognised bridge, deliberately not followed",
         "not_registered": "Bridge not in our registry",
         "destination_unavailable": "Destination chain unreadable",
