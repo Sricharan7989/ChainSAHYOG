@@ -708,7 +708,7 @@ def build_report(payload: dict) -> bytes:
     story.append(Paragraph("Cryptocurrency Attribution Report", styles["title"]))
     story.append(Paragraph(
         f"Wallet-to-VASP tracing on {params.get('chain_name') or 'Ethereum'} · "
-        f"prepared for lawful request via SAHYOG / I4C",
+        f"prepared to support a lawful request to a VASP",
         styles["subtitle"],
     ))
     story.append(_rule())
@@ -1012,6 +1012,13 @@ def build_report(payload: dict) -> bytes:
                     "foreign": "Foreign VASP - its law-enforcement request channel; MLAT for evidence relied on in court",
                 }.get(jurisdiction, "Not established - confirm before choosing BNSS 94 or the foreign route")),
             ], styles))
+        # The channel caveat, stated where the action is: what Sahyog is
+        # documented to carry, and what is only reported.
+        block.append(Spacer(1, 4))
+        block.append(Paragraph(
+            "Sahyog's documented scope is notices to intermediaries under Section 79(3)(b) of the Information Technology Act, 2000; industry reports that it also carries BNSS 94 data requests are not confirmed by I4C.",
+            styles["small"],
+        ))
         story.append(KeepTogether(block))
 
     # --- Disclaimer -----------------------------------------------------

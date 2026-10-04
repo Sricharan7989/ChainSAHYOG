@@ -7,7 +7,7 @@ An exchange does not have "an address". Binance has thousands: hot wallets,
 reserve wallets, and one deposit address per customer. Until now the tool matched
 each address on its own, so a trace touching five Binance wallets produced five
 separate findings that happened to share a name. That is not how an investigator
-thinks, and it is not what gets served: a SAHYOG request goes to **Binance**, once,
+thinks, and it is not what gets served: a VASP request goes to **Binance**, once,
 citing every address involved. This module produces that single object.
 
 TWO KINDS OF CLUSTER

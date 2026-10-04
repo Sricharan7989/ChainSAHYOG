@@ -62,7 +62,7 @@ const STAGES = [
     tag: 'Step 04 • Actionable Output',
     icon: FileCheck2,
     color: 'cyan',
-    badge: 'SAHYOG Dossier',
+    badge: 'Case Dossier',
     address: 'Exchange Compliance Desk • Request #I4C-CYBER-8842',
     desc: 'ChainSAHYOG generates a court-ready forensic PDF and statutory notice. Police serve the notice to the exchange compliance desk to freeze accounts and obtain verified KYC (PAN, Aadhaar, bank accounts, IP logs) as a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000.',
     lawEnforcementDilemma:

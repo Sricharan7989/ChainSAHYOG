@@ -346,7 +346,7 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
               onClick={onOpenSahyog}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase brutal-press shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000] border border-emerald-400 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Route to SAHYOG</span>
+              <span>Prepare VASP Request</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}

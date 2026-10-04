@@ -52,7 +52,9 @@ export default function FindingPanel({
   const checklist = [];
   if (data.summary?.found) {
     checklist.push(
-      <>Click {strong('Route to SAHYOG')} to draft the request to {data.summary.exchange} for its records on the deposit wallet.</>
+      data.summary.recommended_vasp || data.summary.actionable === undefined
+        ? <>Click {strong('Prepare VASP Request')} to draft the request to {data.summary.recommended_vasp?.entity || data.summary.exchange} for its customer records on the deposit wallet.</>
+        : <>The nearest exchange is {strong('not actionable')} and no other actionable VASP was reached, so no request is offered.</>
     );
   } else if (data.summary?.lead) {
     checklist.push(

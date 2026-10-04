@@ -312,7 +312,7 @@ export default function DashboardPage() {
                 <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] hover:border-[#627EEA] hover:shadow-[3px_3px_0px_#627EEA] p-3.5 space-y-1 transition-all">
                   <span className="font-semibold text-xs text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
                     <FileText className="w-3.5 h-3.5 text-[#627EEA]" />
-                    SAHYOG / I4C
+                    VASP Request Draft
                   </span>
                   <p className="text-[11px] text-[#71717a] dark:text-[#888888]">
                     Drafts a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000, with a court-ready dossier.
