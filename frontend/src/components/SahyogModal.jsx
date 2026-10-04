@@ -59,6 +59,52 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
   } else {
     fundsSentence = `a transaction path connects that wallet to ${targetExchange} at the address below. The amount attributable to the suspect was not calculated for this trace.`;
   }
+  // WHAT LETS A COMPLIANCE TEAM FIND THE ACCOUNT. An address alone does not: an
+  // exchange reuses one address on several chains, and the account is located from
+  // the deposit transaction. So each deposit is named by hash, time (UTC and IST),
+  // chain with its id, asset with its contract, and amount as transferred.
+  const deposits = (rec ? rec.deposits : summary.deposits) || [];
+  const depositsTotal = (rec ? rec.deposits_total : summary.deposits_total) || deposits.length;
+  const chainName = rec?.chain_name || deposits[0]?.chain_name || data.chain?.name || 'Ethereum';
+  const chainId = rec?.chain_id ?? deposits[0]?.chain_id ?? data.chain?.chain_id;
+  const fmtAmt = (n) => Number(n).toLocaleString('en-US', { maximumFractionDigits: 8 });
+  const assetLine = (d) =>
+    d.contract
+      ? `${d.asset}, ${d.token_standard} token, contract ${d.contract}`
+      : `${d.asset}, the native coin of ${d.chain_name}`;
+  const depositLines = deposits
+    .map((d, i) => {
+      const lines = [
+        `   (${i + 1}) Transaction hash: ${d.tx_hash}`,
+        `       Date and time: ${d.time_utc} (${d.time_ist})`,
+        `       Chain: ${d.chain_name} (chain ID ${d.chain_id})`,
+        `       Asset: ${assetLine(d)}`,
+        `       Amount transferred: ${fmtAmt(d.amount)} ${d.asset}`,
+      ];
+      if (d.via === 'bridge_credit') {
+        lines.push(`       Credited by a bridge contract (${d.from}), not by a direct transfer`);
+      }
+      if (d.suspect_amount !== null && d.suspect_amount !== undefined) {
+        lines.push(`       Of which attributable to the suspect under FIFO accounting: ${fmtAmt(d.suspect_amount)} ${d.asset}`);
+      }
+      return lines.join('\n');
+    })
+    .join('\n');
+  const unlisted = depositsTotal - deposits.length;
+  const depositBlock = deposits.length
+    ? `   Deposits into that address identified by the trace (${deposits.length}):\n${depositLines}` +
+      (unlisted > 0
+        ? `\n   (${unlisted} further deposit${unlisted === 1 ? '' : 's'} into this address on the traced route ${unlisted === 1 ? 'is' : 'are'} not listed: ${deposits.some((d) => d.suspect_amount > 0) ? 'they carried no value attributable to the suspect, or fall outside the 25 largest' : 'the 25 largest are listed'}.)`
+        : '')
+    : '   (The individual deposit transactions were not recorded for this trace; re-run the trace to list them.)';
+
+  // PRESERVATION PERIOD. A preservation request with no duration is unenforceable.
+  // 180 days follows the preservation period Indian rules already set for
+  // intermediaries (IT Intermediary Rules 2021, rule 3(1)(g)); extendable, and in
+  // any case running until the records are produced.
+  const PRESERVATION =
+    'for 180 days from receipt of this request, extendable on further written request, and in any event until the records at (b) have been produced';
+
   const nonActionableNote =
     summary.actionable === false && !sameAsNearest
       ? `\n   (The nearest exchange on the trail, ${summary.exchange}, is not actionable: ${summary.actionable_reason}. It is recorded as evidence; this request goes to ${targetExchange}.)`
@@ -81,13 +127,14 @@ TO: Compliance & Law Enforcement Response, ${targetExchange}
 SUBJECT: PRESERVATION AND PRODUCTION OF CUSTOMER (KYC) RECORDS - CYBER FRAUD INVESTIGATION
 
 1. During the investigation of cyber fraud/theft involving suspect wallet address [${startWallet}], analysis of public blockchain transaction records indicates that ${fundsSentence}${nonActionableNote}
-   Deposit wallet: ${targetWallet}
+   Deposit address: ${targetWallet} (on ${chainName}${chainId ? `, chain ID ${chainId}` : ''})
+${depositBlock}
    Hops from the suspect wallet: ${hops}
    Attribution confidence: ${confidence}%
 
 2. You are requested to:
-   a. Preserve all account records, activity logs and balances linked to wallet address [${targetWallet}].
-   b. Produce the customer records for that wallet:
+   a. Preserve, ${PRESERVATION}, all account records, activity logs and balances of the account or accounts credited with the deposits listed in paragraph 1.
+   b. Produce the customer records for that account or those accounts:
       - Full legal name and verified identity proof
       - Registered email address, telephone number and residential address
       - Linked bank accounts and fiat withdrawal records
