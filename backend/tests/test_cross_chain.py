@@ -80,7 +80,10 @@ def world_with_test_registry(extra_labels=None, bare=False):
     """Inject the test registry, plus labels for the synthetic bridges."""
     real_registry = config.BRIDGE_REGISTRY
     real_load = identify.load_labels
-    labels = dict(real_load())
+    # The far chain belongs to the fixtures: real labels for it (e.g. the
+    # same-address inferences for Arbitrum) are dropped, so each test controls
+    # exactly what that chain can recognise.
+    labels = {k: v for k, v in real_load().items() if k[0] != "arbitrum"}
     labels[("ethereum", BRIDGE)] = {"entity": "Test Bridge", "type": "bridge"}
     if not bare:
         labels[("arbitrum", BINANCE_ARB)] = {"entity": "Binance (Arbitrum)", "type": "exchange"}

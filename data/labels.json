@@ -3163,5 +3163,753 @@
     "type": "exchange",
     "chain": "polygon",
     "source": "graphsense-tagpacks"
+  },
+  "polygon:0x03e3ff995863828554282e80870b489cc31dc8bc": {
+    "entity": "OMGFIN Exchange",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x03e3ff995863828554282e80870b489cc31dc8bc",
+      "entity": "OMGFIN Exchange",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 606,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x0d0707963952f2fba59dd06f2b425ace40b492fe": {
+    "entity": "Gate.io",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x0d0707963952f2fba59dd06f2b425ace40b492fe",
+      "entity": "Gate.io",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 1988503,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x18709e89bd403f470088abdacebe86cc60dda12e": {
+    "entity": "huobi reserve wallets ETH",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x18709e89bd403f470088abdacebe86cc60dda12e",
+      "entity": "huobi reserve wallets ETH",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 34,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x2b49ce21ad2004cfb3d0b51b2e8ec0406d632513": {
+    "entity": "Bitbee",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x2b49ce21ad2004cfb3d0b51b2e8ec0406d632513",
+      "entity": "Bitbee",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 47,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x345d8e3a1f62ee6b1d483890976fd66168e390f2": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x345d8e3a1f62ee6b1d483890976fd66168e390f2",
+      "entity": "Binance",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 687,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x390de26d772d2e2005c6d1d24afc902bae37a4bb": {
+    "entity": "Upbit",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x390de26d772d2e2005c6d1d24afc902bae37a4bb",
+      "entity": "Upbit",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 737159,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x477b8d5ef7c2c42db84deb555419cd817c336b6f": {
+    "entity": "MaiCoin",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x477b8d5ef7c2c42db84deb555419cd817c336b6f",
+      "entity": "MaiCoin",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 316057,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x4b1a99467a284cc690e3237bc69105956816f762": {
+    "entity": "AscendEX",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x4b1a99467a284cc690e3237bc69105956816f762",
+      "entity": "AscendEX",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 36,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x51836a753e344257b361519e948ffcaf5fb8d521": {
+    "entity": "Indodax",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x51836a753e344257b361519e948ffcaf5fb8d521",
+      "entity": "Indodax",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 166018,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x5770815b0c2a09a43c9e5aecb7e2f3886075b605",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 1021,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x5a52e96bacdabb82fd05763e25335261b270efcb": {
+    "entity": "binance reserve wallets ETH",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x5a52e96bacdabb82fd05763e25335261b270efcb",
+      "entity": "binance reserve wallets ETH",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 162,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x6cf9aa65ebad7028536e353393630e2340ca6049": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x6cf9aa65ebad7028536e353393630e2340ca6049",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 2103,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x6dcd15a0dbefd0700063a4445382d3506391a41a": {
+    "entity": "BitBase",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x6dcd15a0dbefd0700063a4445382d3506391a41a",
+      "entity": "BitBase",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 785,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x7153d2ef9f14a6b1bb2ed822745f65e58d836c3f": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x7153d2ef9f14a6b1bb2ed822745f65e58d836c3f",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 92,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x72a53cdbbcc1b9efa39c834a540550e23463aacb": {
+    "entity": "crypto.com ERC20 reserves",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x72a53cdbbcc1b9efa39c834a540550e23463aacb",
+      "entity": "crypto.com ERC20 reserves",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 1303,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x7a56f645dcb513d0326cbaa048e9106ff6d4cd5f": {
+    "entity": "Catex Exchange",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x7a56f645dcb513d0326cbaa048e9106ff6d4cd5f",
+      "entity": "Catex Exchange",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 132,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 33213,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe",
+      "entity": "Binance",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 58,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 209,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x94fe3ad91dacba8ec4b82f56ff7c122181f1535d": {
+    "entity": "Faa.st",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x94fe3ad91dacba8ec4b82f56ff7c122181f1535d",
+      "entity": "Faa.st",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 37,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0x986a2fca9eda0e06fbf7839b89bfc006ee2a23dd": {
+    "entity": "AscendEX",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x986a2fca9eda0e06fbf7839b89bfc006ee2a23dd",
+      "entity": "AscendEX",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 98819,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0xb3f923eabaf178fc1bd8e13902fc5c61d3ddef5b": {
+    "entity": "Wintermute: Binance Deposit",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xb3f923eabaf178fc1bd8e13902fc5c61d3ddef5b",
+      "entity": "Wintermute: Binance Deposit",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 807,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0xcde4c1b984f3f02f997ecff9980b06316de2577d": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xcde4c1b984f3f02f997ecff9980b06316de2577d",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 176,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0xd24400ae8bfebb18ca49be86258a3c749cf46853": {
+    "entity": "Gemini",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xd24400ae8bfebb18ca49be86258a3c749cf46853",
+      "entity": "Gemini",
+      "source": ""
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 685,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0xd6216fc19db775df9774a6e33526131da7d19a2c": {
+    "entity": "KuCoin",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xd6216fc19db775df9774a6e33526131da7d19a2c",
+      "entity": "KuCoin",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 463,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0xf977814e90da44bfa03b6295a0616a897441acec": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xf977814e90da44bfa03b6295a0616a897441acec",
+      "entity": "Binance",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 813,
+      "checked": "2026-10-04"
+    }
+  },
+  "polygon:0xfb8131c260749c7835a08ccbdb64728de432858e": {
+    "entity": "BitMEX",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xfb8131c260749c7835a08ccbdb64728de432858e",
+      "entity": "BitMEX",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 387,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x0d0707963952f2fba59dd06f2b425ace40b492fe": {
+    "entity": "Gate.io",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x0d0707963952f2fba59dd06f2b425ace40b492fe",
+      "entity": "Gate.io",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 1693489,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x18709e89bd403f470088abdacebe86cc60dda12e": {
+    "entity": "huobi reserve wallets ETH",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x18709e89bd403f470088abdacebe86cc60dda12e",
+      "entity": "huobi reserve wallets ETH",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 28,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x2b49ce21ad2004cfb3d0b51b2e8ec0406d632513": {
+    "entity": "Bitbee",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x2b49ce21ad2004cfb3d0b51b2e8ec0406d632513",
+      "entity": "Bitbee",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 67,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x345d8e3a1f62ee6b1d483890976fd66168e390f2": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x345d8e3a1f62ee6b1d483890976fd66168e390f2",
+      "entity": "Binance",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 32,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x477b8d5ef7c2c42db84deb555419cd817c336b6f": {
+    "entity": "MaiCoin",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x477b8d5ef7c2c42db84deb555419cd817c336b6f",
+      "entity": "MaiCoin",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 289501,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x51836a753e344257b361519e948ffcaf5fb8d521": {
+    "entity": "Indodax",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x51836a753e344257b361519e948ffcaf5fb8d521",
+      "entity": "Indodax",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 15148,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x5770815b0c2a09a43c9e5aecb7e2f3886075b605",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 906,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x5a52e96bacdabb82fd05763e25335261b270efcb": {
+    "entity": "binance reserve wallets ETH",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x5a52e96bacdabb82fd05763e25335261b270efcb",
+      "entity": "binance reserve wallets ETH",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 246,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
+    "entity": "bitfinex ETH/ERC20 hot wallet",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec",
+      "entity": "bitfinex ETH/ERC20 hot wallet",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 8212,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 5778,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe",
+      "entity": "Binance",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 29,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
+    "entity": "swisborg reserve wallets",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa",
+      "entity": "swisborg reserve wallets",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 95,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0xb3f923eabaf178fc1bd8e13902fc5c61d3ddef5b": {
+    "entity": "Wintermute: Binance Deposit",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xb3f923eabaf178fc1bd8e13902fc5c61d3ddef5b",
+      "entity": "Wintermute: Binance Deposit",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 875,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0xd24400ae8bfebb18ca49be86258a3c749cf46853": {
+    "entity": "Gemini",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xd24400ae8bfebb18ca49be86258a3c749cf46853",
+      "entity": "Gemini",
+      "source": ""
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 9330,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0xd6216fc19db775df9774a6e33526131da7d19a2c": {
+    "entity": "KuCoin",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xd6216fc19db775df9774a6e33526131da7d19a2c",
+      "entity": "KuCoin",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 635,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0xf977814e90da44bfa03b6295a0616a897441acec": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xf977814e90da44bfa03b6295a0616a897441acec",
+      "entity": "Binance",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 710,
+      "checked": "2026-10-04"
+    }
+  },
+  "arbitrum:0xfb8131c260749c7835a08ccbdb64728de432858e": {
+    "entity": "BitMEX",
+    "type": "exchange",
+    "chain": "arbitrum",
+    "source": "inferred_cross_chain_same_address",
+    "inferred_from": {
+      "chain": "ethereum",
+      "address": "0xfb8131c260749c7835a08ccbdb64728de432858e",
+      "entity": "BitMEX",
+      "source": "graphsense-tagpacks"
+    },
+    "evidence": {
+      "is_contract": false,
+      "nonce": 15018,
+      "checked": "2026-10-04"
+    }
   }
 }

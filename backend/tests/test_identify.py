@@ -242,6 +242,11 @@ async def main():
     eth_addr = "0x28c6c06298d514db089934071355e5743bf21d60"  # Binance 14 on Ethereum
     real_load = identify.load_labels
     labels = dict(real_load())
+    baseline_inferred = sum(
+        1 for (c, _), m in labels.items()
+        if c == "polygon" and m.get("source") == identify.INFERRED_LABEL_SOURCE
+        and _ != eth_addr
+    )
     labels[("polygon", eth_addr)] = {
         "entity": "Binance", "type": "exchange", "chain": "polygon",
         "source": identify.INFERRED_LABEL_SOURCE,
@@ -258,7 +263,8 @@ async def main():
               identify.known_label_lookup(eth_addr, chain="ethereum").method, "known_label")
         check("and an Ethereum label never matches on a chain with no entry for it",
               identify.known_label_lookup(eth_addr, chain="arbitrum"), None)
-        check("inferred labels are counted separately", identify.inferred_label_count("polygon"), 1)
+        check("inferred labels are counted separately",
+              identify.inferred_label_count("polygon"), baseline_inferred + 1)
     finally:
         identify.load_labels = real_load
 
