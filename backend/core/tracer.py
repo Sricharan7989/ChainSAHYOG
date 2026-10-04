@@ -1270,6 +1270,8 @@ async def trace(
         dust_threshold=dust_threshold,
         start_had_no_transfers=start_had_no_transfers,
         start_had_only_dust=start_had_only_dust,
+        handoffs=ctx.handoffs,
+        chain=chain,
     )
 
     # What we deliberately did not follow, reported so the gap is visible.
@@ -1344,6 +1346,8 @@ def _classify_termination(
     dust_threshold: float,
     start_had_no_transfers: bool,
     start_had_only_dust: bool,
+    handoffs: list | None = None,
+    chain: dict | None = None,
 ) -> dict:
     """
     Say WHY the walk stopped, in terms an investigator can act on.
@@ -1355,7 +1359,19 @@ def _classify_termination(
 
     Ordered by what actually ended the search, most decisive first: a start
     wallet that never sent anything outranks a depth cap that was never reached.
+
+    BRIDGES. A bridge used to end the trail with "outside what this tool covers".
+    Since Phase 9 the tool tries to follow it, so the reason has to say what that
+    attempt found: a crossing that was followed did not end the trail at all, and
+    one that was ambiguous, unmatched or unsupported ended it for a specific,
+    different reason. `handoffs` carries those outcomes; `chain` names the chain
+    the trail left, which is not always Ethereum.
     """
+    chain_name = (chain or {}).get("name") or "this chain"
+    native = (chain or {}).get("native") or "ETH"
+    handoffs = handoffs or []
+    # Crossings that did NOT carry the trail onward. Only these can end it.
+    stopped = [h for h in handoffs if getattr(h, "status", "") != "matched"]
     if start_had_no_transfers:
         return {
             "reason": "no_outgoing_transfers",
@@ -1369,10 +1385,10 @@ def _classify_termination(
     if start_had_only_dust:
         return {
             "reason": "dust_only",
-            "label": f"All outgoing transfers are below {dust_threshold} ETH",
+            "label": f"All outgoing transfers are below {dust_threshold} {native}",
             "detail": (
                 "Everything leaving this wallet is smaller than the dust "
-                f"threshold of {dust_threshold} ETH, so nothing was followed. "
+                f"threshold of {dust_threshold} {native}, so nothing was followed. "
                 "Lower the threshold and re-run to include them."
             ),
         }
@@ -1393,15 +1409,45 @@ def _classify_termination(
                 "This is a hard stop, not a gap in our data."
             ),
         }
-    if stopped_at.get("bridge"):
-        n = stopped_at["bridge"]
+    # A bridge ends the trail only where its crossing was NOT followed. If every
+    # bridge reached was crossed, the trail continued on the other side and the
+    # reason it finally stopped is whatever stopped that leg (below).
+    followed_all = bool(handoffs) and not stopped
+    if stopped_at.get("bridge") and not followed_all:
+        n = max(len(stopped), 1) if stopped else stopped_at["bridge"]
+        phrases = {
+            "ambiguous": "several withdrawals on the destination chain matched equally, so none was followed",
+            "no_match": "no matching withdrawal was found on the destination chain within the bridge's time window",
+            "unsupported": "it is a recognised bridge this tool deliberately does not follow",
+            "not_registered": "we hold no verified route for this bridge",
+            "hop_cap_reached": "the trace had already used its cross-chain crossings",
+            "destination_unavailable": "the destination chain cannot be read with the configured API key",
+        }
+        counts: dict[str, int] = {}
+        for h in stopped:
+            counts[h.status] = counts.get(h.status, 0) + 1
+        parts = [
+            f"{count} because {phrases.get(status, status)}"
+            if count > 1 or len(counts) > 1
+            else phrases.get(status, status)
+            for status, count in counts.items()
+        ]
+        detail = (
+            "The funds were sent to a bridge, and the crossing was not followed: "
+            + "; ".join(parts)
+            + ". The money may continue on another chain; this trace makes no claim "
+            "about where. See the cross-chain section for each attempt and its evidence."
+            if parts
+            else "The funds were sent to a bridge, and no crossing was attempted. The money "
+            "may continue on another chain; this trace makes no claim about where."
+        )
         return {
             "reason": "terminated_at_bridge",
-            "label": f"The trail leaves Ethereum via a bridge ({n} branch{'es' if n > 1 else ''})",
-            "detail": (
-                "The funds moved to another blockchain. The trail continues "
-                "there, outside what this tool covers."
+            "label": (
+                f"The trail leaves {chain_name} via a bridge and was not followed past it "
+                f"({n} branch{'es' if n > 1 else ''})"
             ),
+            "detail": detail,
         }
     if truncated:
         return {

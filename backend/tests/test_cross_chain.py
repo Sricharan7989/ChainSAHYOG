@@ -365,8 +365,14 @@ def nomatch_tests():
     result, _ = traced(books)
     check("and it is refused", result.cross_chain_handoffs[0].status, "no_match")
 
-    print("\n--- 12. the existing honest termination is preserved ---")
+    print("\n--- 12. the stop reason says what the crossing attempt found ---")
     check("the trace still reports how it stopped", bool(result.termination), True)
+    check("it stopped at the bridge", result.termination.get("reason"), "terminated_at_bridge")
+    check("naming the chain it left", "leaves Ethereum" in result.termination.get("label", ""), True)
+    check("and saying the crossing was looked for and not found",
+          "no matching withdrawal" in result.termination.get("detail", ""), True)
+    check("no longer claiming the bridge is outside the tool's reach",
+          "outside what this tool covers" in result.termination.get("detail", ""), False)
     check("and the bridge remains a flagged risk", 
           any(f.risk_type == "bridge" for f in result.risk_flags), True)
 
@@ -432,6 +438,9 @@ def cap_tests():
 
     statuses = [h.status for h in result.cross_chain_handoffs]
     check("the outward crossing was matched", statuses[0], "matched")
+    check("a followed crossing does not count as the trail ending at a bridge",
+          result.termination.get("reason") != "terminated_at_bridge"
+          or "crossings" in result.termination.get("detail", ""), True)
     check("the return crossing was matched", statuses[1], "matched")
     check("two crossings are in the graph",
           sum(1 for h in result.hops if h.edge_type == "cross_chain"), 2)
