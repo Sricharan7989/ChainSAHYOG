@@ -622,6 +622,47 @@ def actionable_tests():
     check("and routes Binance as a foreign VASP: LE channel and MLAT",
           "foreign VASP" in action and "MLAT" in action, True)
 
+    print("\n--- 21c. the fallback VASP's figures are its OWN, never the barred exchange's ---")
+    rec = summary.get("recommended_vasp") or {}
+    check("it is marked as a fallback", rec.get("is_fallback"), True)
+    check("its attributed value is Binance's 4 ETH, not FTX's 5 ETH",
+          rec.get("tainted_value_received"), {"ETH": 4.0})
+    check("its hop count is its own (2), not FTX's (1)", rec.get("hop_distance"), 2)
+    deps = rec.get("deposits") or []
+    check("it lists exactly Binance's deposit", [d["tx_hash"] for d in deps], ["0xtobinance"])
+    check("each deposit names its chain, asset and time",
+          (deps[0]["chain_name"], deps[0]["chain_id"], deps[0]["asset"], deps[0]["time_utc"]),
+          ("Ethereum", 1, "ETH", "2023-11-14 22:16:40 UTC"))
+    check("with the FIFO-attributed part of that deposit", deps[0]["suspect_amount"], 4.0)
+    check("no FTX transaction appears in it", any(d["tx_hash"] == "0xtoftx" for d in deps), False)
+    check("the branch relation is stated: split at the suspect wallet",
+          ((rec.get("branch") or {}).get("same_branch"), (rec.get("branch") or {}).get("diverges_at_suspect")),
+          (False, True))
+
+    print("\n--- 21d. a fallback that shares part of the route names where the routes split ---")
+    hub = "0x" + "c" * 40
+    books = {ETH: {
+        SUSPECT: [tx(SUSPECT, hub, 9.0, "0xtohub", ts=1700000050)],
+        hub: [tx(SUSPECT, hub, 9.0, "0xtohub", ts=1700000050),
+              tx(hub, ftx, 5.0, "0xhubftx", ts=1700000100), tx(hub, NEXT, 4.0, "0xhubnext", ts=1700000100)],
+        NEXT: [tx(hub, NEXT, 4.0, "0xhubnext", ts=1700000100), tx(NEXT, binance, 4.0, "0xtobinance", ts=1700000200)],
+    }}
+    result, _ = traced(books)
+    rec = tracer.to_json(result)["summary"].get("recommended_vasp") or {}
+    branch = rec.get("branch") or {}
+    check("the routes split at the shared hub wallet", branch.get("diverges_at"), hub)
+    check("after one shared hop", branch.get("diverges_after_hops"), 1)
+    check("and the value quoted is still Binance's own 4 ETH", rec.get("tainted_value_received"), {"ETH": 4.0})
+
+    print("\n--- 21e. when the nearest exchange IS actionable, the request is not a fallback ---")
+    books = {ETH: {SUSPECT: [tx(SUSPECT, binance, 3.0, "0xdirect", ts=1700000100)]}}
+    result, _ = traced(books)
+    summary = tracer.to_json(result)["summary"]
+    rec = summary.get("recommended_vasp") or {}
+    check("not a fallback, no branch relation", (rec.get("is_fallback"), rec.get("branch")), (False, None))
+    check("the headline exchange's deposits are on the summary too",
+          [d["tx_hash"] for d in summary.get("deposits") or []], ["0xdirect"])
+
     print("\n--- 21b. with no actionable VASP reached, it says so instead of recommending FTX ---")
     books = {ETH: {SUSPECT: [tx(SUSPECT, ftx, 5.0, "0xtoftx", ts=1700000100)]}}
     result, _ = traced(books)

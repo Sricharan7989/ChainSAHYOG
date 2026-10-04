@@ -226,6 +226,12 @@ class Attribution:
     actionable_reason: str = ""
     jurisdiction: str = ""
     role: str = ""
+    # The individual deposits into this wallet along traced edges - hash, time,
+    # chain, asset and amount, plus the FIFO-attributed part of each. A request
+    # naming only an address cannot be actioned: a compliance team locates the
+    # account from the transaction. Filled for exchanges after the taint pass.
+    deposits: list = field(default_factory=list)
+    deposits_total: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -270,6 +276,8 @@ class Attribution:
             "actionable": self.actionable,
             "actionable_reason": self.actionable_reason or None,
             "jurisdiction": self.jurisdiction or None,
+            "deposits": list(self.deposits),
+            "deposits_total": self.deposits_total,
         }
 
 
@@ -1362,6 +1370,13 @@ async def trace(
         hop.tainted_value = min(flow.tainted, hop.value)
         hop.assumed_pre_existing = min(flow.assumed_pre_existing, hop.value)
 
+    # The individual deposits behind each exchange finding, for the request.
+    for attribution in attributions.values():
+        if attribution.entity_type == "exchange":
+            attribution.deposits, attribution.deposits_total = _deposits_into(
+                ctx, attribution, hops
+            )
+
     # Reconstruct each attribution's route and score it. This has to happen
     # after the walk: a path is only knowable once the graph is complete, and
     # the score depends on what that path crossed.
@@ -1962,6 +1977,175 @@ NO_TAINT_CAVEAT = (
 )
 
 
+MAX_DEPOSITS_LISTED = 25
+
+# Which token standard a contract on each chain follows, for naming the asset in
+# a request. A compliance team searches by contract; "USDT" alone is ambiguous
+# across chains and across the several USDT contracts on one chain.
+TOKEN_STANDARD = {"bnb": "BEP-20"}
+
+
+def _utc_ist(ts: int) -> tuple[str, str]:
+    """A unix time as UTC and as IST, the two zones a request to a VASP needs."""
+    from datetime import datetime, timedelta, timezone
+
+    utc = datetime.fromtimestamp(int(ts), tz=timezone.utc)
+    ist = utc.astimezone(timezone(timedelta(hours=5, minutes=30)))
+    return utc.strftime("%Y-%m-%d %H:%M:%S UTC"), ist.strftime("%Y-%m-%d %H:%M:%S IST")
+
+
+def _deposits_into(ctx: "_WalkContext", attribution: Attribution, hops: list) -> tuple[list, int]:
+    """
+    The individual transactions into one endpoint along the TRACED edges.
+
+    WHY. A request that names only an address cannot be actioned: an exchange
+    reuses one address across several chains, and its compliance team finds the
+    customer from the deposit transaction, not from the address. So each deposit
+    carries its hash, time, chain (by name and id), asset with its contract, the
+    amount as transferred, and the part attributable to the suspect under FIFO.
+
+    Only edges the trace walked are read - a deposit from a wallet the trace never
+    reached is not evidence of anything about this suspect. Dust is filtered by
+    the same rule the walk used. Where some deposits carry attributed value and
+    others do not, only the attributed ones are listed and the rest are counted.
+    A bridge credit into the endpoint is listed from the crossing's own evidence.
+    """
+    slug = attribution.chain
+    meta = config.chain_by_slug(slug) or {}
+    leg_taint = ctx.taint.get(slug)
+    senders = {
+        h.from_addr
+        for h in hops
+        if h.to_addr == attribution.address and h.chain == slug and h.edge_type == "transfer"
+    }
+    history = ctx.fetched_by_chain.get(slug) or {}
+    seen, rows = set(), []
+
+    def row(tx_hash, ts, sender, asset, contract, amount, suspect, via):
+        utc, ist = _utc_ist(ts) if ts else ("", "")
+        return {
+            "tx_hash": tx_hash,
+            "timestamp": int(ts or 0),
+            "time_utc": utc,
+            "time_ist": ist,
+            "chain": slug,
+            "chain_name": meta.get("name", slug),
+            "chain_id": meta.get("chain_id"),
+            "from": sender,
+            "to": attribution.address,
+            "asset": asset,
+            "contract": contract,
+            "token_standard": None if contract is None else TOKEN_STANDARD.get(slug, "ERC-20"),
+            "amount": round(float(amount), 8),
+            "suspect_amount": None if suspect is None else round(float(suspect), 8),
+            "via": via,
+        }
+
+    for sender in senders:
+        for t in history.get(sender) or []:
+            if t.from_addr != sender or t.to_addr != attribution.address:
+                continue
+            if t.value < config.dust_threshold_for(t.asset, ctx.dust_threshold):
+                continue
+            key = (t.hash, t.from_addr, t.to_addr, t.asset)
+            if key in seen:
+                continue
+            seen.add(key)
+            suspect = leg_taint.transfer(*key) if leg_taint is not None else None
+            if leg_taint is not None and suspect is None:
+                suspect = 0.0
+            rows.append(row(t.hash, t.timestamp, sender, t.asset, t.contract, t.value, suspect, "transfer"))
+
+    for h in hops:
+        if h.edge_type == "cross_chain" and h.to_addr == attribution.address and h.chain == slug:
+            key = (h.tx_hash, h.from_addr, h.to_addr, h.asset)
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(row(h.tx_hash, h.timestamp, h.from_addr, h.asset, h.contract,
+                            h.value, h.tainted_value if leg_taint is not None else None,
+                            "bridge_credit"))
+
+    total = len(rows)
+    attributed = [r for r in rows if (r["suspect_amount"] or 0) > 0]
+    listed = attributed or rows
+    # Largest first when capping, then back into time order for reading.
+    listed = sorted(listed, key=lambda r: (-(r["suspect_amount"] or 0), -r["amount"]))[:MAX_DEPOSITS_LISTED]
+    listed.sort(key=lambda r: (r["timestamp"], r["tx_hash"]))
+    return listed, total
+
+
+METHOD_TEXT = {
+    "known_label": "the deposit address carries a published label naming this exchange on this chain",
+    "inferred_label": (
+        "the deposit address is labelled for this exchange on Ethereum, and the same address "
+        "is taken to belong to it on this chain (an inference, stated in the annexure)"
+    ),
+    "consolidation": "the address shows a deposit-consolidation pattern; it is not named by any label",
+}
+
+
+def _branch_relation(nearest: Attribution, recommended: Attribution) -> dict:
+    """
+    Where the route to the fallback VASP leaves the route to the barred one.
+
+    An exchange ends a branch of the trace, so the fallback is never downstream of
+    the barred exchange: the money that reached it is different money, attributed
+    separately. This says so in terms a request can state - the wallet where the
+    two routes split and how many hops they share.
+    """
+    a, b = nearest.path or [], recommended.path or []
+    shared = 0
+    for x, y in zip(a, b):
+        if x != y:
+            break
+        shared += 1
+    split = a[shared - 1] if shared else None
+    return {
+        "same_branch": False,
+        "diverges_at": _bare_address(split) if split else None,
+        "diverges_at_node": split,
+        "diverges_after_hops": max(shared - 1, 0),
+        "diverges_at_suspect": shared == 1,
+    }
+
+
+def _vasp_block(result: TraceResult, a: Attribution) -> dict:
+    """
+    One VASP's OWN figures for a request: deposits, value, hops, method, score.
+
+    Built from a single attribution and nothing else, so a request addressed to a
+    fallback VASP can never quote the barred exchange's numbers.
+    """
+    taint = _taint_fields(a, result)
+    return {
+        "entity": a.entity,
+        "address": a.address,
+        "node_id": a.node_id,
+        "hop_distance": a.hop_distance,
+        "jurisdiction": a.jurisdiction or "unknown",
+        "chain": a.chain,
+        "chain_name": (config.chain_by_slug(a.chain) or {}).get("name", a.chain),
+        "chain_id": (config.chain_by_slug(a.chain) or {}).get("chain_id"),
+        "method": a.method,
+        "method_text": METHOD_TEXT.get(a.method, a.method),
+        "confidence_score": a.confidence_score,
+        "confidence_breakdown": a.confidence_breakdown,
+        "confidence_components": a.confidence_components,
+        "cross_chain_inferred": bool(a.handoff_scores),
+        "handoff_scores": list(a.handoff_scores),
+        "path": list(a.path),
+        "value_received_display": format_assets(a.value_received),
+        "taint_computed": taint.get("taint_computed", False),
+        "tainted_value_received": taint.get("tainted_value_received", {}),
+        "tainted_value_display": taint.get("tainted_value_display"),
+        "path_fully_accounted": taint.get("path_fully_accounted"),
+        "path_assumed_pre_existing_display": taint.get("path_assumed_pre_existing_display"),
+        "deposits": list(a.deposits),
+        "deposits_total": a.deposits_total,
+    }
+
+
 def _caveat_for(result: TraceResult, attribution: Attribution | None) -> str:
     """
     The honest caveat for THIS finding.
@@ -2197,24 +2381,23 @@ def summarize(result: TraceResult) -> dict:
         "jurisdiction": nearest.jurisdiction or "unknown",
         # The VASP a request should actually go to: the nearest exchange unless it
         # is not actionable, then the nearest actionable one reached, else None.
+        # Every figure in it is the recommended VASP's OWN (see _vasp_block); when
+        # it is a fallback past a barred exchange, `branch` says where its route
+        # split from the barred one's, because that is different money.
         "recommended_vasp": (
             None
             if recommended is None
             else {
-                "entity": recommended.entity,
-                "address": recommended.address,
-                "node_id": recommended.node_id,
-                "hop_distance": recommended.hop_distance,
-                "jurisdiction": recommended.jurisdiction or "unknown",
-                "chain": recommended.chain,
-                "confidence_score": recommended.confidence_score,
-                "tainted_value_display": (
-                    format_assets(recommended.tainted_value_received)
-                    if recommended.tainted_value_received
-                    else None
+                **_vasp_block(result, recommended),
+                "is_fallback": recommended is not nearest,
+                "branch": (
+                    None if recommended is nearest else _branch_relation(nearest, recommended)
                 ),
             }
         ),
+        "deposits": list(nearest.deposits),
+        "deposits_total": nearest.deposits_total,
+        "method_text": METHOD_TEXT.get(nearest.method, nearest.method),
         "termination": result.termination,
         "cluster_id": nearest.cluster_id,
         "cluster_members": next(
