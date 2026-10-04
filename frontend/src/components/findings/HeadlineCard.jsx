@@ -28,6 +28,27 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
   // badge only appears once the money has actually left the starting chain.
   const targetChain = splitNodeId(summary.node_id || summary.address).chain;
 
+  // WHAT THE TRACE ESTABLISHED ABOUT THE MONEY, in the backend's own terms.
+  // A connected path is not value arrival: the headline sentence comes from the
+  // backend, which already distinguishes "X of the suspect's funds reached Y"
+  // from "a path connects to Y, but no attributable value arrived" and from
+  // "taint was not computed". Writing our own "stolen funds deposited" over the
+  // top of that would erase exactly the distinction the backend exists to make.
+  const tainted = summary.tainted_value_received;
+  const hasTaint = Boolean(tainted) && Object.values(tainted).some((v) => v > 0);
+  const taintState = summary.taint_computed !== true
+    ? 'not_computed'
+    : hasTaint
+      ? 'attributed'
+      : 'none_attributed';
+  const intermediaries = Math.max(0, (summary.hop_distance || 1) - 1);
+  const routeText = `${intermediaries} intermediate step${intermediaries === 1 ? '' : 's'}`;
+  const confirmedDetail = {
+    attributed: `Under FIFO accounting, ${summary.tainted_value_display || 'value'} of the suspect's funds arrived at ${summary.exchange} via ${routeText}.`,
+    none_attributed: `A transaction path connects the suspect to ${summary.exchange} via ${routeText}, but under FIFO accounting none of the value arriving there traces back to the suspect's funds. The connection may still justify a records request.`,
+    not_computed: `A transaction path connects the suspect to ${summary.exchange} via ${routeText}. Value-level attribution was not computed for this trace, so the path does not by itself show that the suspect's funds arrived.`,
+  }[taintState];
+
   return (
     <div
       ref={cardRef}
@@ -84,15 +105,19 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
       {/* Main Plain-English Verdict */}
       <div className="space-y-1">
         <h2 className="text-lg sm:text-xl font-extrabold text-[#09090b] dark:text-[#f5f5f5] leading-snug">
-          {isConfirmed
-            ? `Stolen funds deposited into ${summary.exchange || 'Centralized Exchange'}`
-            : summary.headline}
+          {summary.headline}
         </h2>
         <p className="text-xs sm:text-sm text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
           {isConfirmed
-            ? `The suspect moved funds through ${Math.max(0, (summary.hop_distance || 1) - 1)} intermediary wallet(s) before depositing into ${summary.exchange}. Centralized exchanges maintain mandatory KYC records, making this the primary actionable chokepoint to freeze funds and identify the person.`
+            ? `${confirmedDetail} Centralized exchanges hold KYC records, which makes this the actionable point for a lawful request.`
             : 'Tracing completed across public blockchain transactions to the maximum depth threshold.'}
         </p>
+        {/* The qualification travels with the claim, not in a footnote. */}
+        {summary.caveat && (
+          <p className="text-[11px] text-[#71717a] dark:text-[#888888] leading-snug italic">
+            {summary.caveat}
+          </p>
+        )}
       </div>
 
       {/* 4 Instant Key Metric Tiles */}
@@ -116,14 +141,18 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             Stolen Funds
           </span>
           <p className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5] truncate">
-            {summary.taint_computed === false
-              ? 'Not calculated'
-              : summary.tainted_value_display || 'Observed Value'}
+            {taintState === 'attributed'
+              ? summary.tainted_value_display
+              : taintState === 'none_attributed'
+                ? 'None attributed'
+                : 'Not calculated'}
           </p>
           <span className="text-[10px] font-mono text-[#71717a] dark:text-[#888888]">
-            {summary.taint_computed === false
-              ? 'Taint replay did not run'
-              : 'Attributable amount'}
+            {taintState === 'attributed'
+              ? 'FIFO-attributable amount'
+              : taintState === 'none_attributed'
+                ? 'FIFO found none arriving'
+                : 'Taint replay did not run'}
           </span>
         </div>
 
