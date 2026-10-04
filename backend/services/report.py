@@ -824,9 +824,14 @@ def build_report(payload: dict) -> bytes:
         ))
         rows.append((
             "Identification method",
-            "Direct match against known exchange wallets"
-            if summary.get("method") == "known_label"
-            else "Deposit-consolidation pattern (unconfirmed)",
+            {
+                "known_label": "Direct match against known exchange wallets",
+                "inferred_label": (
+                    "INFERRED: the same address is a labelled exchange wallet on "
+                    "Ethereum and an active ordinary account on this chain; no label "
+                    "on this chain names it"
+                ),
+            }.get(summary.get("method"), "Deposit-consolidation pattern (unconfirmed)"),
         ))
         story.append(_kv_table(rows, styles))
     elif summary.get("lead"):

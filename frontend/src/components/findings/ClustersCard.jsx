@@ -109,7 +109,11 @@ export default function ClustersCard({ clusters }) {
                         {cluster.entity}
                       </span>
                       <span className="text-[11px] font-mono text-[#52525b] dark:text-[#a3a3a3]">
-                        {cluster.named ? 'Verified Entity Label' : 'Consolidation Hub Cluster'}
+                        {!cluster.named
+                          ? 'Consolidation Hub Cluster'
+                          : cluster.method === 'inferred_label'
+                            ? 'Label inferred from same address on Ethereum'
+                            : 'Published Entity Label'}
                       </span>
                     </div>
 

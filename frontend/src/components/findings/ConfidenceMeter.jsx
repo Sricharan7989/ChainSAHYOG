@@ -20,7 +20,9 @@ export default function ConfidenceMeter({ score, breakdown, components, method }
     ? 'No endpoint was attributed, so there is no confidence score.'
     : method === 'known_label'
       ? 'Exact match against published exchange labels, adjusted for hop distance and path.'
-      : method === 'consolidation'
+      : method === 'inferred_label'
+        ? 'Name inferred from the same address on Ethereum; no label on this chain. Capped at 80%.'
+        : method === 'consolidation'
         ? 'Fan-in (consolidation) pattern only; no published label. Capped at 67%.'
         : `Identified by ${method || 'an unrecorded method'}, adjusted for hop distance and path.`;
 

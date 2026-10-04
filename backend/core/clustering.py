@@ -187,11 +187,15 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
                 cluster_id=cluster_id,
                 entity=attribution.entity,
                 entity_type=attribution.entity_type,
-                method="known_label",
+                # Carried from the attribution: a cluster named only by
+                # inferred labels must not present as a direct label match.
+                method=attribution.method,
                 named=True,
                 confidence_score=attribution.confidence_score,
             ),
         )
+        if attribution.method == "known_label":
+            cluster.method = "known_label"  # one direct label is enough to name it directly
         if address not in cluster.members:
             cluster.members.append(address)
             cluster.member_hops[address] = depth

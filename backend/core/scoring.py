@@ -41,10 +41,15 @@ from dataclasses import dataclass, field
 # Factor 1: identification method.
 METHOD_POINTS = {
     "known_label": 50,
+    # A label carried over from the same address on Ethereum (an active EOA on
+    # this chain). Below a direct label - nothing labels it on THIS chain - and
+    # above the fan-in pattern, which names nobody. Max 35 + 30 + 15 = 80.
+    "inferred_label": 35,
     "consolidation": 22,
 }
 METHOD_LABELS = {
     "known_label": "direct label match",
+    "inferred_label": "label inferred from the same address on Ethereum",
     "consolidation": "consolidation pattern only",
 }
 

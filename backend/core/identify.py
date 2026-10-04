@@ -178,6 +178,23 @@ def label_count(chain: str | None = None) -> int:
     return sum(1 for (chain_name, _) in labels if chain_name == chain)
 
 
+def inferred_label_count(chain: str) -> int:
+    """How many of a chain's labels are same-address inferences, not direct labels."""
+    return sum(
+        1
+        for (chain_name, _), meta in load_labels().items()
+        if chain_name == chain and meta.get("source") == INFERRED_LABEL_SOURCE
+    )
+
+
+# Labels carried over from the same address on Ethereum by
+# scripts/infer_cross_chain_labels.py. They name a company on the strength of an
+# inference (same key, active EOA on this chain), so they are identified under
+# their own method and scored below a direct label match.
+INFERRED_LABEL_SOURCE = "inferred_cross_chain_same_address"
+INFERRED_LABEL_CONFIDENCE = 0.6
+
+
 # --- (a) Known-label lookup — WORKS -------------------------------------------
 
 
@@ -203,6 +220,25 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
 
     entity = str(meta.get("entity", "Unknown entity"))
     entity_type = str(meta.get("type", "unknown"))
+
+    if meta.get("source") == INFERRED_LABEL_SOURCE:
+        origin = meta.get("inferred_from") or {}
+        evidence = meta.get("evidence") or {}
+        return Identification(
+            address=address.strip().lower(),
+            entity=entity,
+            entity_type=entity_type,
+            method="inferred_label",
+            confidence=INFERRED_LABEL_CONFIDENCE,
+            evidence=(
+                f"INFERRED, not a direct label: this address is labelled {entity} on "
+                f"{origin.get('chain', 'ethereum')}, and on {chain_name} it is an ordinary "
+                f"account (not a contract) with {evidence.get('nonce', '?')} outgoing "
+                "transactions. The same key controls the same address on every EVM chain, "
+                f"so it is probably {entity} here too - but no label for {chain_name} "
+                "says so."
+            ),
+        )
 
     return Identification(
         address=address.strip().lower(),

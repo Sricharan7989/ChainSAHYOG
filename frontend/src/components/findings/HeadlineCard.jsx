@@ -75,6 +75,7 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
   }
   const METHOD_LABEL = {
     known_label: 'Published label match',
+    inferred_label: 'Label inferred from Ethereum (max 80%)',
     consolidation: 'Fan-in pattern only (max 67%)',
   };
   const hasScore = typeof summary.confidence_score === 'number';
@@ -152,6 +153,19 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         {/* An INFERRED route is badged where the claim is made. Part of the money's
             path is a bridge crossing matched by amount and timing, not an observed
             transfer, and the score is already held at or below that match. */}
+        {summary.label_inferred && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border border-amber-500/60 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+              Exchange name inferred
+            </span>
+            <span className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] leading-snug">
+              This address is labelled {summary.exchange} on Ethereum and is an active
+              ordinary account on this chain. No label on this chain names it, so the
+              name is an inference: check it on the chain&apos;s own explorer before
+              relying on it.
+            </span>
+          </div>
+        )}
         {summary.cross_chain_inferred && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border border-cyan-500/60 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">

@@ -563,12 +563,19 @@ class _WalkContext:
         floor = config.MIN_LABELS_FOR_COVERAGE
         for slug in self.chains_traced:
             count = identify.label_count(chain=slug)
+            inferred = identify.inferred_label_count(slug)
             # SPARSE IS TREATED AS NONE. A handful of labels on a chain is not
             # coverage: the chance that a trace reaches one of those exact wallets
             # is negligible, so "no exchange found" there means the same thing it
             # means with zero labels.
             covered = count >= floor
-            if covered:
+            if covered and inferred:
+                note = (
+                    f"{inferred} of the {count} labels for {slug} are inferred from the same "
+                    "address on Ethereum rather than labelled on this chain; a finding that "
+                    "rests on one is marked as an inference."
+                )
+            elif covered:
                 note = None
             elif count == 0:
                 note = (
@@ -585,6 +592,7 @@ class _WalkContext:
                 )
             out[slug] = {
                 "labels": count,
+                "inferred_labels": inferred,
                 "coverage": "adequate" if covered else ("sparse" if count else "none"),
                 "identification_possible": covered,
                 "min_labels_for_coverage": floor,
@@ -2032,6 +2040,9 @@ def summarize(result: TraceResult) -> dict:
         # at the weakest crossing's own score.
         "cross_chain_inferred": bool(nearest.handoff_scores),
         "handoff_scores": list(nearest.handoff_scores),
+        # True when the exchange is named from the same address's label on
+        # Ethereum, not from a label on the chain where it was reached.
+        "label_inferred": nearest.method == "inferred_label",
         "value_received": {k: round(v, 8) for k, v in nearest.value_received.items()},
         "value_received_display": format_assets(nearest.value_received),
         "value_received_eth": round(nearest.value_received_eth, 6),
