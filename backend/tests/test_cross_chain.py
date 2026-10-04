@@ -373,6 +373,40 @@ def nomatch_tests():
     return fail
 
 
+def second_deposit_tests():
+    print("\n--- 15. a SECOND crossing into the same chain carries its own taint ---")
+    # Two separate deposits to the same bridge, each credited separately. The
+    # destination replay used to be cached after the first crossing, so the
+    # second crossing's seed arrived too late and its taint vanished.
+    books = {
+        ETH: {
+            SUSPECT: [
+                tx(SUSPECT, BRIDGE, 10.0, "0xdep1", ts=1700000000),
+                tx(SUSPECT, BRIDGE, 6.0, "0xdep2", ts=1700005000),
+            ]
+        },
+        ARB: {
+            L2_GATEWAY: [
+                tx(L2_GATEWAY, SUSPECT, 9.98, "0xcr1", ts=1700000060),
+                tx(L2_GATEWAY, SUSPECT, 5.99, "0xcr2", ts=1700005060),
+            ],
+            SUSPECT: [tx(SUSPECT, NEXT, 15.0, "0xarbnext", ts=1700006000)],
+            NEXT: [tx(NEXT, BINANCE_ARB, 14.0, "0xarbbinance", ts=1700006100)],
+        },
+    }
+    result, _ = traced(books)
+    statuses = [h.status for h in result.cross_chain_handoffs if h.status != "hop_cap_reached"]
+    check("both deposits were matched separately", statuses, ["matched", "matched"])
+    arb = result.taint_chains["arbitrum"]
+    check("BOTH crossings' taint reached the destination replay",
+          arb.bridged_in.get("ETH", 0.0), 9.98 + 5.99, 1e-6)
+    check("both seeds are on record", len(arb.seeds_applied), 2)
+    check("and the onward wallet is credited from both",
+          arb.tainted_into(NEXT).get("ETH", 0.0) >= 15.0 - 1e-6, True)
+
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -442,6 +476,7 @@ def run_all():
     ambiguous_tests()
     nomatch_tests()
     cap_tests()
+    second_deposit_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 

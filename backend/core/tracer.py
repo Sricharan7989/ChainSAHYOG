@@ -851,7 +851,7 @@ async def _follow_bridges(
     # the count is capped - and the ones carrying the suspect's money go first.
     # Ranking by size alone would spend the budget on a large deposit that FIFO
     # says carried none of the suspect's funds, and skip the one that did.
-    leg = ctx.taint.get(slug)
+    leg = ctx.taint_for(slug)
 
     def _deposit_taint(item) -> float:
         hop, transfer = item
@@ -946,6 +946,12 @@ async def _follow_bridges(
         # arrived. Scaled by the credit/deposit ratio, so a bridge fee reduces taint
         # rather than taint being conjured out of the difference.
         if carried > 0:
+            # A new seed invalidates any replay already computed for that chain.
+            # The replay is cached per chain, and a second matched deposit into the
+            # same destination would otherwise add its seed AFTER the replay ran -
+            # silently dropping that crossing's taint and leaving the second leg's
+            # figures computed before its transfers were even fetched.
+            ctx.taint.pop(dest_slug, None)
             ctx.seeds.setdefault(dest_slug, []).append(
                 taint_engine.Seed(
                     address=hop.from_addr,
@@ -1066,7 +1072,7 @@ def _carried_taint(ctx: _WalkContext, deposit, credit) -> float:
     honest answer: we cannot say how much of that deposit was the suspect's money,
     so we credit none of it and say so rather than assuming all of it.
     """
-    leg = ctx.taint.get(deposit.chain)
+    leg = ctx.taint_for(deposit.chain)
     if leg is None or deposit.value <= 0:
         return 0.0
     # THIS deposit's tainted share, from the replay's per-transfer ledger - not the
@@ -1165,6 +1171,15 @@ async def trace(
     # number that corresponds to nothing.
     taint = ctx.taint_for(chain["slug"])
     await _follow_bridges(ctx, chain, start, depth_budget=max_depth)
+
+    # FINALISE every chain's replay now that all crossings are known. A seed that
+    # arrived late (a second deposit into a chain already replayed, or a round
+    # trip back onto the starting chain) dropped that chain's cached replay, and
+    # the figures below must come from a replay that saw every seed and every
+    # transfer - not from whichever one happened to run first.
+    for traced_slug in list(ctx.chains_traced):
+        ctx.taint_for(traced_slug)
+    taint = ctx.taint.get(chain["slug"])
 
     # The destination legs may have run out of depth or hit a cap of their own,
     # and the termination explanation below has to account for that too.
