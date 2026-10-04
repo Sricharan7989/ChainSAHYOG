@@ -162,9 +162,10 @@ def pack_citation(entries: list[dict]) -> str:
 
 def stamp(key: str, meta: dict, packs: dict, rows_by_key: dict) -> dict | None:
     """The provenance fields for one row, or None to leave it as it is."""
-    if provenance.tier_rank(meta.get("evidence_tier")) < provenance.tier_rank("government_list") \
-            and meta.get("evidence_tier") != "government_list":
+    if provenance.tier_rank(meta.get("evidence_tier")) < provenance.tier_rank("government_list"):
         return None  # already upgraded to a stronger, first-hand source
+    if meta.get("source") == "ofac_sdn":
+        return None  # owned by scripts/import_ofac, which cites the official list itself
     chain, _, address = key.rpartition(":")
     chain = meta.get("chain") or chain or "ethereum"
     source = meta.get("source")

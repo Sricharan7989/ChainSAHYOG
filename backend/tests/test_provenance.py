@@ -73,6 +73,27 @@ def file_tests():
               for v in inferred), True)
 
 
+def sdn_tests():
+    print("\n--- 5. the official OFAC SDN import ---")
+    rows = committed_rows()
+    sdn = {k: v for k, v in rows.items() if v.get("source") == "ofac_sdn"}
+    check("the old Ethereum-only mirror rows are gone", [k for k, v in rows.items() if v.get("source") == "ofac"], [])
+    chains = {v.get("chain") for v in sdn.values()}
+    check("Bitcoin, Tron and Ethereum are all imported", {"bitcoin", "tron", "ethereum"} <= chains, True)
+    check("every SDN row is a government-list tier",
+          all(v.get("evidence_tier") == "government_list" for v in sdn.values()), True)
+    check("every SDN citation names the party, programme and listing date",
+          all("programme" in v["citation"] and "listed" in v["citation"] and v["sdn"]["name"] in v["citation"]
+              for v in sdn.values()), True)
+    tron = [k for k in sdn if k.startswith("tron:")]
+    check("Tron keys keep their base58 case", all(k.split(":", 1)[1][0] == "T" and k != k.lower() for k in tron), True)
+    semenov = rows.get("0x5f48c2a71b2cc96e3f0ccae4e39318ff0dc375b2", {})
+    check("a listing under a DIFFERENT party does not upgrade our label's tier",
+          (semenov.get("entity"), semenov.get("evidence_tier")), ("Tornado Cash", "third_party_pack"))
+    check("but it is stated beside the label",
+          "does not support this label" in semenov.get("citation", ""), True)
+
+
 def loader_tests():
     print("\n--- 4. the loader merges labels.local.json; a committed row wins a clash ---")
     a, b = "0x" + "1" * 40, "0x" + "2" * 40
@@ -103,6 +124,7 @@ def loader_tests():
 
 def run_all():
     file_tests()
+    sdn_tests()
     loader_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail

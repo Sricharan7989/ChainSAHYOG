@@ -36,3 +36,6 @@ data/labels.local.json
 
 # Downloaded GraphSense TagPacks, a cache for scripts/apply_provenance.
 data/.tagpacks-cache/
+
+# Downloaded OFAC SDN_ADVANCED.XML (~130 MB), a cache for scripts/import_ofac.
+data/.ofac-cache/
