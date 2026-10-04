@@ -133,7 +133,7 @@ Data sources:
 | `frontend/src/components/TraceGraph.jsx` | Cytoscape graph, node styling, legend |
 | `frontend/src/components/FindingPanel.jsx` | Headline result, traced path, tabs |
 | `frontend/src/components/findings/TaintCard.jsx` | FIFO taint display |
-| `frontend/src/lib/trace-path.js` | Explorer URL construction |
+| `frontend/src/utils/formatters.js` | Explorer URL construction (`explorerUrlForNode`, `explorerForChain`) |
 
 ## The four identification methods
 
@@ -192,7 +192,18 @@ See Part 4.
 
 Do not start Phase 9 until these are closed. Work through them in order.
 
+> **Status (2026-10-04 audit):** this list was written before Phase 9 and is now
+> partly out of date. Each item below carries its current status. The full audit
+> and the fix batches that followed it are in the git history on `backend-feature`.
+
 ## 4.1 — BLOCKER: commit `c38d0f9` is missing from the frontend branch
+
+> **Status (2026-10-04 audit):** **WRONG — c38d0f9 is present.** It is an ancestor of
+`backend-feature`, `main` and `feature/frontend-revamp`. `PEEL_MAX_GROWTH = 1.05` is in
+`backend/app/config.py` and used in `backend/core/typologies.py`; the "strongest of each
+typology first" reporting cap is `_cap()` in `typologies.py`, with a passing test. A live
+trace of the Ronin address on 2026-10-04 reproduced 15 detections / 39 suppressed. No
+merge is needed. The text below is kept for history.
 
 Commit `c38d0f9` "Fix peel-chain growth bug, prioritise rare typologies in
 reporting cap" exists on `main` but is **absent from `feature/frontend-revamp`**.
@@ -223,6 +234,10 @@ Then re-run a trace of the Ronin address and confirm typologies reappear.
 
 ## 4.2 — Field-name mismatches rendering silently blank
 
+> **Status (2026-10-04 audit):** **FIXED** in f47899f: `TaintCard.jsx` reads `tainted_inflow_fraction` and
+`wallets_observed`. A full component audit found other mismatches (token edge labels,
+demo chain id, risk-flag chain), tracked separately.
+
 `frontend/src/components/findings/TaintCard.jsx` reads field names the backend
 does not emit, so those values render blank with no error:
 
@@ -236,6 +251,9 @@ two. A build step cannot catch this class of bug; only mounting the component
 exposes it.
 
 ## 4.3 — Typologies card makes a false claim on payloads without typologies
+
+> **Status (2026-10-04 audit):** **FIXED** for the card in f47899f, and for the PDF and the taint and
+risk-flag cards in the Batch 1 honesty fixes (D3, D4).
 
 The Laundering Typologies card prints:
 
@@ -253,6 +271,9 @@ missing its field.
 
 ## 4.4 — No live-versus-replay indicator in the current frontend
 
+> **Status (2026-10-04 audit):** **FIXED** in f47899f: `frontend/src/components/SourceBadge.jsx`, mounted
+above the results in `DashboardPage.jsx`, with the capture time.
+
 The new frontend shows no sign of whether a result is a live trace or a cached
 replay. The old panel had a "replayed from a recorded trace" badge with the
 capture timestamp. Its absence has repeatedly caused confusion about whether new
@@ -260,12 +281,23 @@ features were working. Restore it, prominently.
 
 ## 4.5 — Verify the two headline value figures read different fields
 
+> **Status (2026-10-04 audit):** **NOT A BUG.** The card reads `tainted_value_*` and `value_received_*`,
+different fields. They are equal on the Ronin trace because the FTX wallet's own history
+is not fetched, so its observed inflow is only the traced edge, which was 100% tainted.
+The gross figure is now labelled "Inflow Along Traced Edges".
+
 `SUSPECT-ATTRIBUTABLE VALUE` and `GROSS TRACED INFLOW` both displayed
 1,219.9618 ETH. They are conceptually different numbers (taint-attributed value
 versus total observed inflow) and should rarely match exactly. Confirm they read
 different backend fields rather than the same one twice.
 
 ## 4.6 — All 525 labels are Ethereum-only
+
+> **Status (2026-10-04 audit):** **PARTLY ADDRESSED.** 4 Polygon labels exist; all 78 GraphSense TagPacks
+hold only 4 Polygon and 16 BNB Chain exchange addresses. Fewer than 25 labels on a chain is
+now reported as no coverage, on every trace and in the PDF. Same-address labels inferred
+from Ethereum are available as a separate, marked source. BNB Chain cannot be read on the
+free Etherscan tier.
 
 Every entry in `data/labels.json` carries `chain: ethereum`. Multi-chain
 ingestion works, but identification cannot fire on Polygon, BNB Chain, or
@@ -276,6 +308,9 @@ where it cannot.
 
 ## 4.7 — Entity types conflated in cluster display
 
+> **Status (2026-10-04 audit):** **FIXED** in f47899f: `ClustersCard.jsx` groups clusters by type
+(exchange, suspected exchange, sanctioned, mixer, bridge) with an action line for each.
+
 "Resolved Entity Clusters" lists Tornado Cash Router (a mixer) and Optimism
 Gateway (a bridge) alongside exchanges such as Huobi and FTX. These are
 operationally very different: an exchange is a subpoena target, a mixer is
@@ -283,6 +318,9 @@ usually not, a bridge is a handoff point. Separate them visually or label the
 type on each row.
 
 ## 4.8 — Presentation issue in the skipped-assets list
+
+> **Status (2026-10-04 audit):** **FIXED** in f47899f: every skipped asset carries its reason; "ETH (5)" now
+reads "not the ETH gas asset; a token calling itself ETH".
 
 The skipped non-allowlisted assets list includes `ETH (5)`, which reads as if
 the tool is skipping Ethereum itself. It is presumably a scam token using the
@@ -300,8 +338,9 @@ HTTP call:
 curl -m 1800 "http://127.0.0.1:8000/trace?address=<ADDR>&mode=live&max_depth=3&save=true"
 ```
 
-`record_demo.py` lives at `backend/scripts/` and needs module invocation, not a
-bare `python record_demo.py` from the project root.
+`record_demo.py` lives at `backend/scripts/` and needs module invocation from
+`backend/` (`uv run python -m scripts.record_demo`), not a bare
+`python record_demo.py` from the project root.
 
 ---
 
@@ -500,13 +539,15 @@ These remain untrue and are worth stating plainly:
 # PART 8 — RUNNING THE PROJECT
 
 ```bash
-# Backend
+# Backend (dependencies are managed by uv from pyproject.toml; there is no
+# requirements.txt)
 cd backend
-python -m venv venv
-venv\Scripts\activate          # Windows
-pip install -r requirements.txt
+uv sync --group dev
 copy .env.example .env         # then add ETHERSCAN_API_KEY
-uvicorn app.main:app --reload --port 8080
+uv run uvicorn main:app --reload --port 8000
+
+# Tests
+uv run pytest
 
 # Frontend
 cd frontend
@@ -514,7 +555,11 @@ npm install
 npm run dev
 ```
 
-Port 8000 may be blocked on Windows with `[WinError 10013]`. Use `--port 8080`.
+The app object is `main:app` (backend/main.py), not `app.main:app`.
+
+Port 8000 may be blocked on Windows with `[WinError 10013]`. If you move the
+backend to another port, also change the proxy target in
+`frontend/vite.config.js`, which points at `http://127.0.0.1:8000`.
 
 Confirm the backend is alive at `/health`. It reports the active graph store
 backend, supported chains, and loaded label count.
