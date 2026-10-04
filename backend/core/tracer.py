@@ -1839,6 +1839,11 @@ def summarize(result: TraceResult) -> dict:
                 f"{result.max_depth} hops of {result.start_address[:10]}..."
             ),
             "termination": result.termination,
+            # Stated even with no endpoint, so a consumer can tell "the FIFO pass
+            # ran but there was no endpoint to attribute value to" from "the FIFO
+            # pass never ran". Without it the panel read a missing field as a
+            # computed zero and printed "0.00 stolen" over a trace with no finding.
+            "taint_computed": result.taint is not None,
             "recommended_action": (
                 "Widen the trace depth, or expand labels.json. Funds may still "
                 "be sitting in unhosted wallets or have moved via ERC-20 "
