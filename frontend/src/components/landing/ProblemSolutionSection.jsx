@@ -152,7 +152,7 @@ export default function ProblemSolutionSection() {
                 <div className="flex items-start gap-3 text-xs sm:text-sm text-[#52525b] dark:text-[#a3a3a3]">
                   <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <span>
-                    <strong className="text-[#09090b] dark:text-[#f5f5f5]">Enforceable Legal Notice:</strong> Police serve statutory requisitions under cybercrime procedure and the IPC via SAHYOG to freeze accounts before withdrawal.
+                    <strong className="text-[#09090b] dark:text-[#f5f5f5]">Enforceable Legal Notice:</strong> Police serve a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000 on the exchange to preserve the account and obtain its customer records before withdrawal.
                   </span>
                 </div>
               </div>

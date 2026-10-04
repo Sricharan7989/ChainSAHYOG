@@ -5,11 +5,13 @@ import { FileText, Route, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import HeadlineCard from './findings/HeadlineCard';
 import ConfidenceMeter from './findings/ConfidenceMeter';
 import TaintCard from './findings/TaintCard';
+import CrossChainCard from './findings/CrossChainCard';
 import TypologiesCard from './findings/TypologiesCard';
 import ClustersCard from './findings/ClustersCard';
 import RiskFlagsCard from './findings/RiskFlagsCard';
 import PathTimeline from './findings/PathTimeline';
 import TokenWarningsCard from './findings/TokenWarningsCard';
+import TraceScopeCard from './findings/TraceScopeCard';
 import { findPath } from '../utils/pathfinder';
 
 gsap.registerPlugin(useGSAP);
@@ -37,9 +39,40 @@ export default function FindingPanel({
 
   if (!data) return null;
 
-  const targetAddress = data.summary?.address;
+  // The ENDPOINT as a graph node id. Once a trace crosses a chain, the summary's
+  // `address` is the bare wallet address while the node carrying it is qualified
+  // ("arbitrum:0x..."). Matching on the bare address would find no route at all,
+  // and the money trail would silently vanish from a cross-chain trace - so prefer
+  // the node id the backend already resolved.
+  const targetAddress = data.summary?.node_id || data.summary?.address;
   const startAddress = data.start_address;
   const pathEdges = findPath(data.edges, startAddress, targetAddress);
+
+  const strong = (t) => <strong className="text-[#09090b] dark:text-[#f5f5f5]">{t}</strong>;
+  const checklist = [];
+  if (data.summary?.found) {
+    checklist.push(
+      data.summary.recommended_vasp || data.summary.actionable === undefined
+        ? <>Click {strong('Prepare VASP Request')} to draft the request to {data.summary.recommended_vasp?.entity || data.summary.exchange} for its customer records on the deposit wallet.</>
+        : <>The nearest exchange is {strong('not actionable')} and no other actionable VASP was reached, so no request is offered.</>
+    );
+  } else if (data.summary?.lead) {
+    checklist.push(
+      <>The endpoint is an {strong('unconfirmed collection point')}, so no request is offered. Verify it independently (explorer labels, outgoing volume) before any lawful request.</>
+    );
+  } else {
+    checklist.push(
+      <>No exchange was reached, so no request is offered. See {strong('How this trace ended')} above for why, and whether a deeper trace or lower dust threshold could help.</>
+    );
+  }
+  checklist.push(
+    <>Download the {strong('PDF')} to attach the finding, its evidence and its limitations to the case file.</>
+  );
+  if (pathEdges.length > 0) {
+    checklist.push(
+      <>Open the {strong('Money Trail')} tab for the transaction hashes on each leg of the route.</>
+    );
+  }
 
   return (
     <div
@@ -98,9 +131,17 @@ export default function FindingPanel({
             onDownloadReport={onDownloadReport}
           />
 
+          <TraceScopeCard
+            termination={data.termination || data.summary?.termination}
+            truncated={data.stats?.truncated}
+            notes={data.notes}
+            labelCoverage={data.cross_chain?.label_coverage}
+          />
+
           <RiskFlagsCard
             riskFlags={data.risk_flags}
             explorerBase={data.params?.explorer}
+            labelCoverage={data.cross_chain?.label_coverage}
           />
 
           {/* Quick Legal Guidance Box */}
@@ -109,16 +150,13 @@ export default function FindingPanel({
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Investigator Action Checklist
             </h4>
+            {/* The checklist describes what is ON SCREEN. It used to tell the
+                investigator to click the request button even when there was no
+                named exchange and the button was not rendered. */}
             <ol className="text-xs text-[#52525b] dark:text-[#a3a3a3] space-y-1.5 list-decimal pl-4 leading-relaxed font-sans">
-              <li>
-                Click <strong className="text-[#09090b] dark:text-[#f5f5f5]">Route to SAHYOG</strong> to generate an official freeze notice under Indian cybercrime laws.
-              </li>
-              <li>
-                Export and print the <strong className="text-[#09090b] dark:text-[#f5f5f5]">PDF Dossier</strong> to attach with the formal FIR / Case Diary.
-              </li>
-              <li>
-                Inspect the <strong className="text-[#09090b] dark:text-[#f5f5f5]">Money Trail</strong> tab if you need individual transaction hashes for court submission.
-              </li>
+              {checklist.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
             </ol>
           </div>
         </div>
@@ -154,6 +192,8 @@ export default function FindingPanel({
             typologies={data.typologies}
             summary={data.typology_summary}
           />
+
+          <CrossChainCard cross={data.cross_chain} />
 
           <ClustersCard clusters={data.clusters} />
 

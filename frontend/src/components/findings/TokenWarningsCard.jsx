@@ -41,22 +41,43 @@ export default function TokenWarningsCard({ tokenWarnings }) {
           <span className="text-[11px] font-semibold text-[#71717a] dark:text-[#666666] uppercase tracking-wider block mb-1.5 font-mono">
             Skipped Non-Allowlisted Assets:
           </span>
-          <div className="flex flex-wrap gap-1.5 font-mono text-xs">
+          {/* WHY EACH ROW CARRIES ITS REASON. A bare "ETH (5)" in this list
+              read as though the tool skipped the chain's own gas asset, which it
+              never does. These are tokens calling themselves ETH that are not
+              the real thing; the backend now says so per entry rather than
+              leaving the reader to guess which of the two it is looking at. */}
+          <div className="space-y-1.5">
             {tokenWarnings.top_skipped.map((token, i) => (
-              <span
+              <div
                 key={i}
-                className={`px-2 py-0.5 border text-[11px] flex items-center gap-1 ${
+                className={`flex flex-wrap items-baseline gap-1.5 px-2 py-1 border text-[11px] font-mono ${
                   token.impersonating
-                    ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30 font-bold'
+                    ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
                     : 'bg-[#f4f4f5] dark:bg-[#0a0a0a] text-[#52525b] dark:text-[#a3a3a3] border-[#d4d4d8] dark:border-[#262626]'
                 }`}
               >
-                <span>{token.asset}</span>
-                <span className="text-[#71717a] dark:text-[#666666]">({token.transfers})</span>
-                {token.impersonating && <span className="text-[10px] text-red-600 dark:text-red-400">⚠️ Fake</span>}
-              </span>
+                <span className="font-bold">{token.asset}</span>
+                <span className="text-[#71717a] dark:text-[#666666]">
+                  ({token.transfers})
+                </span>
+                {token.impersonating && (
+                  <span className="text-[10px] text-red-600 dark:text-red-400">
+                    ⚠ Fake
+                  </span>
+                )}
+                {token.reason && (
+                  <span className="text-[10px] opacity-75 font-sans">
+                    — {token.reason}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
+          {tokenWarnings.reason && (
+            <p className="text-[10px] text-[#71717a] dark:text-[#888888] leading-snug mt-1.5 font-sans">
+              {tokenWarnings.reason}
+            </p>
+          )}
         </div>
       )}
     </div>

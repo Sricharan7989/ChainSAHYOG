@@ -5,7 +5,7 @@ import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(useGSAP);
 
-export default function TypologiesCard({ typologies }) {
+export default function TypologiesCard({ typologies, summary }) {
   const cardRef = useRef(null);
 
   useGSAP(() => {
@@ -20,16 +20,55 @@ export default function TypologiesCard({ typologies }) {
     }
   }, { dependencies: [typologies], scope: cardRef });
 
-  if (!typologies || typologies.length === 0) {
+  const found = Array.isArray(typologies) ? typologies : [];
+
+  // DID THE DETECTORS RUN? This is the whole point of the empty state.
+  //
+  // An empty list is ambiguous: it means either "we ran five detectors and
+  // found nothing" or "this recording was made before the detectors existed".
+  // The old card could not tell them apart, so it printed "no laundering
+  // patterns were detected" over a payload where NO ANALYSIS HAD RUN - a
+  // false clean bill of health for a trail nobody examined.
+  //
+  // `summary` is the discriminator. The backend emits it whenever the
+  // detector pass executed, so its presence means the detectors ran. A payload
+  // without it predates them, and the card has to say the analysis was not
+  // performed rather than claiming the trail was clean.
+  const detectorsRan = Boolean(summary);
+
+  if (found.length === 0) {
     return (
       <div className="bg-white dark:bg-[#111111] border border-[#d4d4d8] dark:border-[#262626] p-4 sm:p-5 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
         <div className="flex items-center gap-2 mb-1.5">
           <Activity className="w-4 h-4 text-[#627EEA]" />
-          <h3 className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">Laundering Patterns (Typologies)</h3>
+          <h3 className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">
+            Laundering Patterns (Typologies)
+          </h3>
         </div>
-        <p className="text-xs text-[#52525b] dark:text-[#a3a3a3]">
-          No complex obfuscation patterns (peel chains, rapid layering, or smurfing structuring) were detected along this money trail.
-        </p>
+        {detectorsRan ? (
+          <>
+            <p className="text-xs text-[#52525b] dark:text-[#a3a3a3]">
+              The five laundering detectors ran over this trail and matched nothing above
+              threshold. That is a result, not an absence of one.
+            </p>
+            {Number(summary?.suppressed) > 0 && (
+              <p className="text-[11px] text-[#71717a] dark:text-[#888888] mt-1.5">
+                {summary.suppressed} weaker match
+                {summary.suppressed === 1 ? '' : 'es'} suppressed by the reporting
+                cap.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-xs text-[#71717a] dark:text-[#888888]">
+            <strong className="text-[#52525b] dark:text-[#a3a3a3]">
+              No typology analysis was performed on this result.
+            </strong>{' '}
+            This recording predates the laundering detectors, so nothing here says the
+            trail was clean — only that this tool has not yet looked. Re-run the trace
+            live to have the detectors applied.
+          </p>
+        )}
       </div>
     );
   }
@@ -50,7 +89,7 @@ export default function TypologiesCard({ typologies }) {
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-[#627EEA]" />
           <h3 className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5]">
-            Laundering Patterns ({typologies.length})
+            Laundering Patterns ({found.length})
           </h3>
         </div>
         <span className="text-[10px] font-mono px-2 py-0.5 bg-[#f4f4f5] dark:bg-[#1a1a1a] text-[#52525b] dark:text-[#a3a3a3] border border-[#d4d4d8] dark:border-[#262626] font-semibold">
@@ -60,7 +99,7 @@ export default function TypologiesCard({ typologies }) {
 
       {/* Typology Cards List */}
       <div className="space-y-2.5">
-        {typologies.map((t, idx) => (
+        {found.map((t, idx) => (
           <div
             key={idx}
             className="typo-card bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] p-3 space-y-2 hover:border-[#627EEA] transition-colors"

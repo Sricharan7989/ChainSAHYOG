@@ -14,7 +14,8 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response
 from app import config
 from core import tracer
 from services import graph_store, replay, report
-from services.etherscan import EtherscanError, is_valid_address
+from core import addresses
+from services.etherscan import EtherscanError
 
 router = APIRouter()
 
@@ -30,6 +31,11 @@ def health() -> dict:
 
     Reports which graph backend is live. Neo4j is optional: "memory" here is a
     healthy state, not a failure, and traces return identical results either way.
+
+    `chains.readable` is reported per chain for the same reason. A chain whose
+    explorer API the configured key does not cover cannot be traced, and the
+    UI has to be able to say "we cannot read BNB Chain with this key" rather
+    than discover it as a 502 after an investigator has started work.
     """
     return {
         "status": "ok",
@@ -37,6 +43,10 @@ def health() -> dict:
         "chains": {
             "default": config.DEFAULT_CHAIN_ID,
             "supported": config.supported_chains(),
+            "readable": {
+                chain["slug"]: config.chain_readable(chain["chain_id"])
+                for chain in config.supported_chains()
+            },
         },
     }
 
@@ -101,33 +111,55 @@ async def _run_or_replay(
     dust_threshold: float,
     mode: str,
     chain_id: int = config.DEFAULT_CHAIN_ID,
+    prefer_recent: bool = False,
 ) -> dict:
     """
     Produce a trace payload, from the recording if there is one, else live.
+
+    `prefer_recent` is for /report. The PDF must describe the trace the
+    investigator was looking at, so the in-memory result of that exact trace
+    (same address, chain, depth and dust threshold) wins in EVERY mode. It used
+    to be consulted only in auto mode, so a report requested after a live trace
+    re-walked the chain - taking minutes, and able to print figures that differ
+    from the screen.
 
     Shared by /trace and /report so a report can never disagree with the trace
     the investigator was looking at when they asked for it. Also keeps the most
     recent result of each address in memory, so generating the PDF straight
     after a trace costs nothing rather than re-walking the chain.
     """
-    if not is_valid_address(address):
-        raise HTTPException(
-            status_code=400,
-            detail=f"'{address}' is not a valid EVM address (expected 0x + 40 hex chars).",
-        )
-
     # 422 for an unsupported chain: it is an unprocessable parameter value, the
-    # same class of error FastAPI raises for a bad max_depth.
+    # same class of error FastAPI raises for a bad max_depth. Resolved FIRST,
+    # because what counts as a valid address depends on the chain.
     try:
         chain = config.chain(chain_id)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    key = address.strip().lower()
+    key = addresses.try_normalize(address, chain["slug"])
+    if key is None:
+        other = addresses.families_for(address)
+        hint = f" It parses as a {', '.join(sorted(other))} address." if other else ""
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{address}' is not a valid {addresses.describe(chain['slug'])} address "
+            f"for {chain['name']}.{hint}",
+        )
     # The in-process map is keyed by chain too: the same address on another
     # network is a different trace and must not be served from the wrong one.
     # (The on-disk cache does the same, inside replay._path_for.)
     recent_key = (chain["slug"], key)
+
+    # The exact trace that was on screen, if this process produced it. Matched on
+    # depth AND dust threshold, since either changes the result.
+    recent = _RECENT.get(recent_key)
+    same_params = (
+        recent is not None
+        and recent["params"]["max_depth"] == max_depth
+        and recent["params"].get("dust_threshold_eth") == dust_threshold
+    )
+    if prefer_recent and same_params:
+        return recent
 
     if mode in ("auto", "cache"):
         cached = replay.load_trace(key, chain=chain["slug"])
@@ -142,11 +174,9 @@ async def _run_or_replay(
                 ),
             )
 
-    # In-memory result from earlier in this process - what /report normally hits.
-    if mode == "auto":
-        recent = _RECENT.get(recent_key)
-        if recent is not None and recent["params"]["max_depth"] == max_depth:
-            return recent
+    # In-memory result from earlier in this process.
+    if mode == "auto" and same_params:
+        return recent
 
     if not config.has_etherscan_key():
         raise HTTPException(
@@ -195,6 +225,7 @@ async def trace_report(
         dust_threshold=dust_threshold,
         mode=mode,
         chain_id=chain_id,
+        prefer_recent=True,
     )
 
     pdf = report.build_report(payload)
