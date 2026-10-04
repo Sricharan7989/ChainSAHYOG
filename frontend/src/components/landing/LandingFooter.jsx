@@ -27,7 +27,7 @@ export default function LandingFooter() {
             <p className="text-xs text-[#52525b] dark:text-[#a3a3a3] leading-relaxed max-w-sm">
               Lightweight blockchain intelligence engine for the Indian Cybercrime Coordination
               Centre (I4C) SAHYOG workflow. Traces illicit EVM funds forward to regulated
-              VASPs for lawful asset freezing under Indian cybercrime provisions and the IPC.
+              VASPs, so police can serve a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000.
             </p>
 
             <div className="text-[11px] text-[#71717a] dark:text-[#666666] font-mono">

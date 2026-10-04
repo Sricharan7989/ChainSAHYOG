@@ -16,7 +16,7 @@ const TICKER_ITEMS = [
   'Forward BFS Trace',
   'FIFO Taint Accounting',
   'Exchange Attribution',
-  'Cybercrime Law & IPC',
+  'BNSS 2023 & IT Act 2000',
   'Multi-Chain EVM',
   'Peel Chain Detection',
   'Deposit Consolidation',

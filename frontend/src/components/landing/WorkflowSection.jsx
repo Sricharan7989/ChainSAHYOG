@@ -42,7 +42,7 @@ const STEPS = [
     step: '05',
     icon: FileCheck,
     title: 'Statutory Requisition',
-    desc: 'Generates statutory requisitions under Indian cybercrime law & IPC and court-ready dossiers.',
+    desc: 'Drafts a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000, with a court-ready dossier.',
   },
 ];
 

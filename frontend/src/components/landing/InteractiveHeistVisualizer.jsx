@@ -63,8 +63,8 @@ const STAGES = [
     icon: FileCheck2,
     color: 'cyan',
     badge: 'SAHYOG Dossier',
-    address: 'Exchange Compliance Desk • Requisition #I4C-CYBER-IPC-8842',
-    desc: 'ChainSAHYOG generates a court-ready forensic PDF and statutory notice. Police serve the notice to the exchange compliance desk to freeze accounts and obtain verified KYC (PAN, Aadhaar, bank accounts, IP logs) under cybercrime law and the IPC.',
+    address: 'Exchange Compliance Desk • Request #I4C-CYBER-8842',
+    desc: 'ChainSAHYOG generates a court-ready forensic PDF and statutory notice. Police serve the notice to the exchange compliance desk to freeze accounts and obtain verified KYC (PAN, Aadhaar, bank accounts, IP logs) as a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000.',
     lawEnforcementDilemma:
       'The perpetrator is unmasked through regulated KYC records using public blockchain data, without breaking cryptography.',
     actionLabel: 'Replay Simulation ↺',
@@ -407,7 +407,7 @@ export default function InteractiveHeistVisualizer() {
                       ⚖️ ACCOUNT FREEZE ORDER
                     </text>
                     <text y="7" textAnchor="middle" fill="#e0f2fe" fontSize="8.5">
-                      Statutory Requisition (IPC)
+                      Lawful Request (BNSS / IT Act)
                     </text>
                   </g>
                 )}

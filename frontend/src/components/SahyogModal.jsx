@@ -33,17 +33,33 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
   const targetWallet = data.summary?.address;
   const startWallet = data.start_address;
   const caseId = `I4C-SAHYOG-2026-${startWallet.slice(2, 8).toUpperCase()}`;
-  const amountStr = formatAssets(data.summary?.tainted_value_received || data.summary?.value_received);
+  // WHAT THE NOTICE MAY CLAIM ABOUT THE MONEY. This is a legal document, so it
+  // states only what the trace established. The gross value that reached the
+  // wallet is NOT the suspect's money - a busy route carries other people's funds
+  // too - so it is never quoted as "illicit funds". Three cases, mirroring the
+  // backend's own headline: value attributed under FIFO, FIFO ran and attributed
+  // nothing, or FIFO was not computed at all.
+  const summary = data.summary || {};
+  const tainted = summary.tainted_value_received;
+  const hasTaint = tainted && Object.values(tainted).some((v) => v > 0);
+  let fundsSentence;
+  if (summary.taint_computed && hasTaint) {
+    fundsSentence = `funds attributable to the suspect under FIFO accounting, approximately [${formatAssets(tainted)}], reached your institution at address:`;
+  } else if (summary.taint_computed) {
+    fundsSentence = `a transaction path connects that wallet to your institution at the address below. Under FIFO accounting no value attributable to the suspect was established as arriving there; this request seeks records to determine the connection:`;
+  } else {
+    fundsSentence = `a transaction path connects that wallet to your institution at the address below. The amount attributable to the suspect was not calculated for this trace:`;
+  }
 
   const noticeText = `GOVERNMENT OF INDIA
 MINISTRY OF HOME AFFAIRS — INDIAN CYBER CRIME COORDINATION CENTRE (I4C)
-NOTICE UNDER CYBERCRIME PROVISIONS & THE INDIAN PENAL CODE (IPC)
+LAWFUL REQUEST UNDER THE APPLICABLE PROVISIONS OF THE BHARATIYA NAGARIK SURAKSHA SANHITA, 2023 AND THE INFORMATION TECHNOLOGY ACT, 2000
 PORTAL REFERENCE: ${caseId}
 
 TO: Compliance & Legal Enquiries Division, ${targetExchange}
 SUBJECT: URGENT PRESERVATION & DISCLOSURE OF KYC RECORDS (CYBER INCIDENT INVESTIGATION)
 
-1. During the ongoing investigation of cyber fraud/theft involving suspect wallet address [${startWallet}], forensic blockchain intelligence established that illicit funds totaling approximately [${amountStr}] were deposited into your institution at address:
+1. During the ongoing investigation of cyber fraud/theft involving suspect wallet address [${startWallet}], forensic blockchain analysis of public transaction records indicates that ${fundsSentence}
    Target Deposit Wallet: ${targetWallet}
    Hops Traversed: ${data.summary?.hop_distance} hops
    Attribution Confidence: ${data.summary?.confidence_score}%
@@ -122,7 +138,7 @@ National Cybercrime Reporting Portal (NCRP), I4C`;
         {/* Notice Preview Content */}
         <div className="p-5 overflow-y-auto space-y-4 flex-1">
           <div className="flex items-center justify-between text-xs text-[#52525b] dark:text-[#a3a3a3] bg-[#f4f4f5] dark:bg-[#0a0a0a] px-3 py-2 border border-[#18181b] dark:border-[#262626] font-mono">
-            <span>Framework: Indian Cybercrime Law & IPC</span>
+            <span>Framework: BNSS, 2023 &amp; IT Act, 2000</span>
             <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
               <Lock className="w-3.5 h-3.5" />
               <span>LEA Verified Notice</span>

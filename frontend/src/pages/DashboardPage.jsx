@@ -312,7 +312,7 @@ export default function DashboardPage() {
                     SAHYOG / I4C
                   </span>
                   <p className="text-[11px] text-[#71717a] dark:text-[#888888]">
-                    Generates statutory requisitions under Indian cybercrime law & IPC and court-ready dossiers.
+                    Drafts a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000, with a court-ready dossier.
                   </p>
                 </div>
               </div>
