@@ -11,6 +11,7 @@ import ClustersCard from './findings/ClustersCard';
 import RiskFlagsCard from './findings/RiskFlagsCard';
 import PathTimeline from './findings/PathTimeline';
 import TokenWarningsCard from './findings/TokenWarningsCard';
+import TraceScopeCard from './findings/TraceScopeCard';
 import { findPath } from '../utils/pathfinder';
 
 gsap.registerPlugin(useGSAP);
@@ -102,6 +103,12 @@ export default function FindingPanel({
             params={data.params}
             onOpenSahyog={onOpenSahyog}
             onDownloadReport={onDownloadReport}
+          />
+
+          <TraceScopeCard
+            termination={data.termination || data.summary?.termination}
+            truncated={data.stats?.truncated}
+            notes={data.notes}
           />
 
           <RiskFlagsCard
