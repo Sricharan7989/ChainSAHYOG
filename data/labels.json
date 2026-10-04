@@ -32,7 +32,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xd551234ae421e3bcba99a0da6d736074f22192ff": {
     "entity": "Binance",
@@ -40,7 +40,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x564286362092d8e7936f0549571a803b203aaced": {
     "entity": "Binance",
@@ -48,7 +48,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x0681d8db095565fe8a346fa0277bffde9c0edbbf": {
     "entity": "Binance",
@@ -56,7 +56,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x28c6c06298d514db089934071355e5743bf21d60": {
     "entity": "Binance",
@@ -64,7 +64,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x21a31ee1afc51d94c2efccaa2092ad1028285549": {
     "entity": "Binance",
@@ -72,7 +72,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xdfd5293d8e347dfe59e90efd55b2956a1343963d": {
     "entity": "Binance",
@@ -80,7 +80,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x56eddb7aa87536c09ccc2793473599fd21a8b17f": {
     "entity": "Binance",
@@ -88,7 +88,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x9696f59e4d72e237be84ffd425dcad154bf96976": {
     "entity": "Binance",
@@ -96,7 +96,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x71660c4005ba85c37ccec55d0c4493e66fe775d3": {
     "entity": "Coinbase",
@@ -104,7 +104,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x503828976d22510aad0201ac7ec88293211d23da": {
     "entity": "Coinbase",
@@ -112,7 +112,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xddfabcdc4d8ffc6d5beaf154f18b778f892a0740": {
     "entity": "Coinbase",
@@ -120,7 +120,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x3cd751e6b0078be393132286c442345e5dc49699": {
     "entity": "Coinbase",
@@ -128,7 +128,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xa9d1e08c7793af67e9d92fe308d5697fb81d3e43": {
     "entity": "Coinbase",
@@ -136,7 +136,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x2910543af39aba0cd09dbb2d50200b3e800a63d2": {
     "entity": "Kraken",
@@ -224,7 +224,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x6262998ced04146fa42253a5c0af90ca02dfd2a3": {
     "entity": "Crypto.com",
@@ -940,7 +940,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x708396f17127c42383e3b9014072679b2f60b82f": {
     "entity": "Binance",
@@ -949,7 +949,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xe0f0cfde7ee664943906f17f7f14342e76a5cec7": {
     "entity": "Binance",
@@ -958,7 +958,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x8f22f2063d253846b53609231ed80fa571bc0c8f": {
     "entity": "Binance",
@@ -967,7 +967,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x4d9ff50ef4da947364bb9650892b2554e7be5e2b": {
     "entity": "Binance",
@@ -976,7 +976,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x4976a4a02f38326660d17bf34b431dc6e2eb2327": {
     "entity": "Binance",
@@ -985,7 +985,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x7dfe9a368b6cf0c0309b763bb8d16da326e8f46e": {
     "entity": "Binance",
@@ -994,7 +994,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x345d8e3a1f62ee6b1d483890976fd66168e390f2": {
     "entity": "Binance",
@@ -1003,7 +1003,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xc3c8e0a39769e2308869f7461364ca48155d1d9e": {
     "entity": "Binance",
@@ -1012,7 +1012,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x2e581a5ae722207aa59acd3939771e7c7052dd3d": {
     "entity": "Binance",
@@ -1021,7 +1021,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x44592b81c05b4c35efb8424eb9d62538b949ebbf": {
     "entity": "Binance",
@@ -1030,7 +1030,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe": {
     "entity": "Binance",
@@ -1039,7 +1039,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x00799bbc833d5b168f0410312d2a8fd9e0e3079c": {
     "entity": "Binance",
@@ -1048,7 +1048,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x141fef8cd8397a390afe94846c8bd6f4ab981c48": {
     "entity": "Binance",
@@ -1057,7 +1057,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xfe9e8709d3215310075d67e3ed32a380ccf451c8": {
     "entity": "Binance",
@@ -1066,7 +1066,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x4e9ce36e442e55ecd9025b9a6e0d88485d628a67": {
     "entity": "Binance",
@@ -1075,7 +1075,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xbe0eb53f46cd790cd13851d5eff43d12404d33e8": {
     "entity": "Binance",
@@ -1084,7 +1084,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xf977814e90da44bfa03b6295a0616a897441acec": {
     "entity": "Binance",
@@ -1093,7 +1093,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x001866ae5b3de6caa5a51543fd9fb64f524f5478": {
     "entity": "Binance",
@@ -1102,7 +1102,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x8b99f3660622e21f2910ecca7fbe51d654a1517d": {
     "entity": "Binance Charity",
@@ -1131,7 +1131,7 @@
     "role": "mining pool",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x61189da79177950a7272c88c6058b96d4bcd6be2": {
     "entity": "Binance US",
@@ -1151,7 +1151,7 @@
     "role": "Eth2 depositor",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x4b729cf402cfcffd057e254924b32241aedc1795": {
     "entity": "Bit-Z",
@@ -1652,7 +1652,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xeb2629a2734e272bcc07bda959863f316f4bd4cf": {
     "entity": "Coinbase",
@@ -1661,7 +1661,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xf6874c88757721a02f47592140905c4336dfbc61": {
     "entity": "Coinbase",
@@ -1672,7 +1672,7 @@
     "role": "Coinbase Commerce",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x881d4032abe4188e2237efcd27ab435e81fc6bb1": {
     "entity": "Coinbase",
@@ -1683,7 +1683,7 @@
     "role": "Coinbase Commerce",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xa090e606e30bd747d4e6245a1517ebe430f0057e": {
     "entity": "Coinbase",
@@ -1693,7 +1693,7 @@
     "source_name": "Coinbase: Miscellaneous",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x9539e0b14021a43cde41d9d45dc34969be9c7cb0": {
     "entity": "Coinbene",
@@ -2552,7 +2552,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xcad621da75a66c7a8f4ff86d30a2bf981bfc8fdd": {
     "entity": "KuCoin",
@@ -2561,7 +2561,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xa1d8d972560c2f8144af871db508f0b0b10a3fbf": {
     "entity": "KuCoin",
@@ -2570,7 +2570,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x4ad64983349c49defe8d7a4686202d24b25d0ce8": {
     "entity": "KuCoin",
@@ -2579,7 +2579,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x1692e170361cefd1eb7240ec13d048fd9af6d667": {
     "entity": "KuCoin",
@@ -2588,7 +2588,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xd6216fc19db775df9774a6e33526131da7d19a2c": {
     "entity": "KuCoin",
@@ -2597,7 +2597,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x899b5d52671830f567bf43a14684eb14e1f945fe": {
     "entity": "KuCoin",
@@ -2606,7 +2606,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xf16e9b0d03470827a95cdfd0cb8a8a3b46969b91": {
     "entity": "KuCoin",
@@ -2615,7 +2615,7 @@
     "chain": "ethereum",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xe59cd29be3be4461d79c0881d238cbe87d64595a": {
     "entity": "KuCoin",
@@ -2625,7 +2625,7 @@
     "source_name": "Kucoin",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xea81ce54a0afa10a027f65503bd52fba83d745b8": {
     "entity": "Kuna.io",
@@ -3419,7 +3419,7 @@
     "role": "ETH reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503": {
     "entity": "Binance",
@@ -3430,7 +3430,7 @@
     "role": "USDT reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
     "entity": "Bitfinex",
@@ -3452,7 +3452,7 @@
     "role": "reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x72a53cdbbcc1b9efa39c834a540550e23463aacb": {
     "entity": "Crypto.com",
@@ -3540,7 +3540,7 @@
     "role": "reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0xec30d02f10353f8efc9601371f56e808751f396f": {
     "entity": "KuCoin",
@@ -3551,7 +3551,7 @@
     "role": "USDT reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x88bd4d3e2997371bceefe8d9386c6b5b4de60346": {
     "entity": "KuCoin",
@@ -3562,7 +3562,7 @@
     "role": "USDT reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x738cf6903e6c4e699d1c2dd9ab8b67fcdb3121ea": {
     "entity": "KuCoin",
@@ -3573,7 +3573,7 @@
     "role": "USDC reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
     "entity": "SwissBorg",
@@ -4536,7 +4536,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "polygon:0x390de26d772d2e2005c6d1d24afc902bae37a4bb": {
     "entity": "Upbit",
@@ -4660,7 +4660,7 @@
     "role": "ETH reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "polygon:0x6cf9aa65ebad7028536e353393630e2340ca6049": {
     "entity": "SwissBorg",
@@ -4808,7 +4808,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "polygon:0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
     "entity": "SwissBorg",
@@ -4952,7 +4952,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "polygon:0xf977814e90da44bfa03b6295a0616a897441acec": {
     "entity": "Binance",
@@ -4972,7 +4972,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "polygon:0xfb8131c260749c7835a08ccbdb64728de432858e": {
     "entity": "BitMEX",
@@ -5074,7 +5074,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "arbitrum:0x477b8d5ef7c2c42db84deb555419cd817c336b6f": {
     "entity": "MaiCoin",
@@ -5158,7 +5158,7 @@
     "role": "ETH reserve wallet",
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "arbitrum:0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
     "entity": "Bitfinex",
@@ -5222,7 +5222,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "arbitrum:0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
     "entity": "SwissBorg",
@@ -5304,7 +5304,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "arbitrum:0xf977814e90da44bfa03b6295a0616a897441acec": {
     "entity": "Binance",
@@ -5324,7 +5324,7 @@
     },
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
-    "jurisdiction": "foreign"
+    "jurisdiction": "foreign_fiu_registered"
   },
   "arbitrum:0xfb8131c260749c7835a08ccbdb64728de432858e": {
     "entity": "BitMEX",

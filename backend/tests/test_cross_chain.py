@@ -669,6 +669,20 @@ def actionable_tests():
     check("the headline exchange's deposits are on the summary too",
           [d["tx_hash"] for d in summary.get("deposits") or []], ["0xdirect"])
 
+    print("\n--- 21f. FIU-IND registered foreign VASPs get their own route, with the source ---")
+    from core import vasp_status
+    check("Binance is foreign, FIU-IND registered", vasp_status.status_for("Binance")["jurisdiction"], "foreign_fiu_registered")
+    check("so is KuCoin", vasp_status.status_for("KuCoin")["jurisdiction"], "foreign_fiu_registered")
+    check("Huobi stays plain foreign (no registration confirmed)", vasp_status.status_for("Huobi")["jurisdiction"], "foreign")
+    check("Binance US is not assumed to share Binance's registration",
+          vasp_status.status_for("Binance US")["jurisdiction"], "unknown")
+    route = vasp_status.request_route("Binance", "foreign_fiu_registered", binance)
+    check("the route names the Principal Officer and leaves BNSS 94 vs MLAT to the IO",
+          ("Principal Officer" in route, "Section 94" in route, "MLAT" in route, "investigating officer's decision" in route),
+          (True, True, True, True))
+    reg = (summary.get("recommended_vasp") or {}).get("fiu_ind_registration") or {}
+    check("the payload carries the registration's source", "CoinDesk" in (reg.get("source") or ""), True)
+
     print("\n--- 21b. with no actionable VASP reached, it says so instead of recommending FTX ---")
     books = {ETH: {SUSPECT: [tx(SUSPECT, ftx, 5.0, "0xtoftx", ts=1700000100)]}}
     result, _ = traced(books)

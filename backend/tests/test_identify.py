@@ -161,7 +161,7 @@ async def main():
     check("summary found", s["found"], True)
     check("summary names a request route (BNSS 94, or LE channel + MLAT for a foreign VASP)",
           "Bharatiya Nagarik Suraksha Sanhita" in s["recommended_action"] or "MLAT" in s["recommended_action"], True)
-    check("and states the jurisdiction it used", s.get("jurisdiction") in ("india", "foreign", "unknown"), True)
+    check("and states the jurisdiction it used", s.get("jurisdiction") in ("india", "foreign_fiu_registered", "foreign", "unknown"), True)
     check("and names the VASP to serve", (s.get("recommended_vasp") or {}).get("entity"), s.get("exchange"))
     check("termination reason reported", s["termination"]["reason"], "exchange_reached")
 

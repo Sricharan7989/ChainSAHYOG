@@ -1037,6 +1037,13 @@ def build_report(payload: dict) -> bytes:
                 ] if rec.get("is_fallback") else []),
                 ("Jurisdiction", {
                     "india": "Indian VASP - BNSS 94 notice for production of customer records",
+                    "foreign_fiu_registered": (
+                        "Foreign VASP registered with FIU-IND (PMLA reporting entity) - request to its "
+                        "Principal Officer in India; BNSS 94 or MLAT is the investigating officer's decision"
+                        + (f' (registered {rec["fiu_ind_registration"]["registered"]}; source: '
+                           f'{rec["fiu_ind_registration"]["source"]})'
+                           if rec.get("fiu_ind_registration") else "")
+                    ),
                     "foreign": "Foreign VASP - its law-enforcement request channel; MLAT for evidence relied on in court",
                 }.get(jurisdiction, "Not established - confirm before choosing BNSS 94 or the foreign route")),
             ], styles))

@@ -2147,6 +2147,9 @@ def _vasp_block(result: TraceResult, a: Attribution) -> dict:
         "node_id": a.node_id,
         "hop_distance": a.hop_distance,
         "jurisdiction": a.jurisdiction or "unknown",
+        # The FIU-IND registration and its source, when the jurisdiction is
+        # foreign_fiu_registered; None otherwise.
+        "fiu_ind_registration": vasp_status.fiu_registration(a.entity),
         "chain": a.chain,
         "chain_name": (config.chain_by_slug(a.chain) or {}).get("name", a.chain),
         "chain_id": (config.chain_by_slug(a.chain) or {}).get("chain_id"),

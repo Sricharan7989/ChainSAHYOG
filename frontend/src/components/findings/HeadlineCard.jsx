@@ -312,11 +312,13 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-[#52525b] dark:text-[#a3a3a3]">
           <span className="uppercase text-[10px] font-bold">Jurisdiction</span>
           <span className="px-1.5 py-0.5 border border-[#d4d4d8] dark:border-[#262626] uppercase">
-            {(summary.recommended_vasp?.jurisdiction || summary.jurisdiction || 'unknown')}
+            {(summary.recommended_vasp?.jurisdiction || summary.jurisdiction || 'unknown').replace('foreign_fiu_registered', 'foreign · FIU-IND registered')}
           </span>
           <span>
             {{
               india: 'Indian VASP: BNSS 94 notice for customer records',
+              foreign_fiu_registered:
+                'Foreign VASP, FIU-IND registered: request to its Principal Officer in India; BNSS 94 or MLAT is the IO\'s call',
               foreign: 'Foreign VASP: its law-enforcement channel; MLAT for court evidence',
             }[summary.recommended_vasp?.jurisdiction || summary.jurisdiction] ||
               'Not established: confirm before choosing the route'}

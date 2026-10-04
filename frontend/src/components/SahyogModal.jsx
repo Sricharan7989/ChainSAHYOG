@@ -158,7 +158,10 @@ A5. Limits
 
   // THE INSTRUMENT AND THE CHANNEL, by jurisdiction. Named, not drafted: the
   // section-level wording is the investigating officer's, not this tool's.
+  const fiu = rec?.fiu_ind_registration || null;
   const routeParagraph = {
+    foreign_fiu_registered:
+      `3. Channel: ${targetExchange} is a foreign VASP registered with the Financial Intelligence Unit - India (FIU-IND) as a reporting entity under the Prevention of Money Laundering Act, 2002${fiu ? ` (registered ${fiu.registered})` : ''}. As a reporting entity it is obliged to maintain the customer and transaction records sought here, and has a Principal Officer responsible for its compliance in India. This request is addressed to that Principal Officer, through ${targetExchange}'s law-enforcement request channel. Whether production can be compelled by a notice under Section 94 of the Bharatiya Nagarik Suraksha Sanhita, 2023, or a formal request through the Mutual Legal Assistance Treaty (MLAT) route is needed for records held outside India, is for the investigating officer to decide; registration alone does not settle it.`,
     india:
       `3. Instrument: production of these customer records is sought by a notice under Section 94 of the Bharatiya Nagarik Suraksha Sanhita, 2023, to be issued by the investigating officer.`,
     foreign:
@@ -237,7 +240,7 @@ Investigating Officer
                 </span>
               </h3>
               <p className="text-xs text-[#71717a] dark:text-[#888888] font-mono">
-                Case reference: {caseId} · Addressed to {targetExchange} · Jurisdiction: {jurisdiction}
+                Case reference: {caseId} · Addressed to {targetExchange} · Jurisdiction: {jurisdiction === 'foreign_fiu_registered' ? 'foreign, FIU-IND registered' : jurisdiction}
               </p>
             </div>
           </div>
@@ -257,9 +260,11 @@ Investigating Officer
             <span>
               {jurisdiction === 'india'
                 ? 'Instrument: BNSS 94 notice'
-                : jurisdiction === 'foreign'
-                  ? 'Channel: VASP LE channel; MLAT for court evidence'
-                  : 'Jurisdiction not established'}
+                : jurisdiction === 'foreign_fiu_registered'
+                  ? 'Channel: Principal Officer in India; BNSS 94 or MLAT per IO'
+                  : jurisdiction === 'foreign'
+                    ? 'Channel: VASP LE channel; MLAT for court evidence'
+                    : 'Jurisdiction not established'}
             </span>
             <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400">
               <Lock className="w-3.5 h-3.5" />
