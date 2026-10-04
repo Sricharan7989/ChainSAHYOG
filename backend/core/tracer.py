@@ -2085,6 +2085,29 @@ METHOD_TEXT = {
 }
 
 
+def _label_source(a: Attribution) -> str | None:
+    """
+    Where the label behind an attribution came from, in words a reader outside
+    this codebase can check. A request annexure must not cite an internal file.
+    """
+    if a.method == "consolidation":
+        return None
+    meta = identify.load_labels().get((a.chain, a.address)) or {}
+    source = meta.get("source")
+    if source == "graphsense-tagpacks":
+        return "GraphSense public TagPacks (published address-attribution tags)"
+    if source == "ofac":
+        return "US Treasury OFAC Specially Designated Nationals list"
+    if source == "inferred_cross_chain_same_address":
+        origin = meta.get("inferred_from") or {}
+        return (
+            f"inferred: the same address is labelled {origin.get('entity', a.entity)} on "
+            f"{origin.get('chain', 'ethereum')}, and on {a.chain} it is an ordinary account "
+            "(not a contract) with outgoing activity; the label is not published for this chain"
+        )
+    return "project seed list from public explorer labels; per-address source not recorded"
+
+
 def _branch_relation(nearest: Attribution, recommended: Attribution) -> dict:
     """
     Where the route to the fallback VASP leaves the route to the barred one.
@@ -2129,6 +2152,8 @@ def _vasp_block(result: TraceResult, a: Attribution) -> dict:
         "chain_id": (config.chain_by_slug(a.chain) or {}).get("chain_id"),
         "method": a.method,
         "method_text": METHOD_TEXT.get(a.method, a.method),
+        "evidence": a.evidence,
+        "label_source": _label_source(a),
         "confidence_score": a.confidence_score,
         "confidence_breakdown": a.confidence_breakdown,
         "confidence_components": a.confidence_components,

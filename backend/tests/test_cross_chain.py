@@ -635,6 +635,10 @@ def actionable_tests():
           ("Ethereum", 1, "ETH", "2023-11-14 22:16:40 UTC"))
     check("with the FIFO-attributed part of that deposit", deps[0]["suspect_amount"], 4.0)
     check("no FTX transaction appears in it", any(d["tx_hash"] == "0xtoftx" for d in deps), False)
+    check("the label source is stated for the annexure, in words, not as an internal file",
+          bool(rec.get("label_source")) and "labels.json" not in rec.get("label_source", ""), True)
+    check("the score and its components travel to the annexure",
+          (rec.get("confidence_score", 0) > 0, bool(rec.get("confidence_components"))), (True, True))
     check("the branch relation is stated: split at the suspect wallet",
           ((rec.get("branch") or {}).get("same_branch"), (rec.get("branch") or {}).get("diverges_at_suspect")),
           (False, True))

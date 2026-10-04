@@ -105,6 +105,41 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
   const PRESERVATION =
     'for 180 days from receipt of this request, extendable on further written request, and in any event until the records at (b) have been produced';
 
+  // THE ANNEXURE. The score, how it is built, and the FIFO assumption live here,
+  // not in the request body: a bare percentage in a document that may reach a
+  // court invites "so you accept you may be wrong?", and it can only be answered
+  // with the explanation beside it. The body states the method and the hops.
+  const methodText =
+    rec?.method_text || summary.method_text || 'see the attached technical annexure';
+  const route = rec?.path || [];
+  const components = (rec ? rec.confidence_components : summary.confidence_components) || [];
+  const fullyAccounted = rec ? rec.path_fully_accounted : summary.path_fully_accounted;
+  const assumedOnRoute = rec ? rec.path_assumed_pre_existing_display : summary.path_assumed_pre_existing_display;
+  const crossChain = rec ? rec.cross_chain_inferred : summary.cross_chain_inferred;
+  const handoffScores = (rec ? rec.handoff_scores : summary.handoff_scores) || [];
+  const labelSource = rec?.label_source || null;
+  const annexureText = `ANNEXURE A - TECHNICAL BASIS OF THE ATTRIBUTION
+(Attached to draft VASP request ${caseId}. Explains how paragraph 1 was reached.)
+
+A1. How the deposit address was attributed to ${targetExchange}
+   Method: ${methodText}.${labelSource ? `\n   Source of the label: ${labelSource}.` : ''}
+
+A2. Route traced (${hops} hop${hops === 1 ? '' : 's'}, public blockchain records only)
+${route.length ? route.map((n, i) => `   ${i === 0 ? 'Suspect wallet' : `Hop ${i}`}: ${n}`).join('\n') : '   (route not recorded in this result)'}${crossChain ? `\n   Part of this route is a bridge crossing between chains that is INFERRED from matching amounts and timing, not observed as one transaction (match score${handoffScores.length === 1 ? '' : 's'}: ${handoffScores.join(', ')} out of 100).` : ''}
+
+A3. Accounting rule for the amounts in paragraph 1
+   Amounts are attributed under FIFO (first in, first out): each wallet on the route is treated as spending the oldest funds it holds first. FIFO is a convention for following value through wallets that also hold other funds; it does not identify particular coins, and a different convention (for example proportional attribution) can attribute a different amount to the same deposits.
+   ${fullyAccounted === false ? `On this route, ${assumedOnRoute} could only be accounted for by assuming the wallets held funds before the period the trace observed; that part of the figure rests on the assumption.` : fullyAccounted === true ? 'On this route every amount was accounted for from transfers the trace observed; no assumed prior balance was needed.' : 'Whether the route was fully accounted for was not computed for this result.'}
+
+A4. Analytical confidence score: ${confidence} out of 100
+   This is the tool's internal measure of how strongly the available evidence supports the attribution in A1, built from the components below. It is not a probability that the attribution is correct, and it does not measure anything about the account holder.
+${components.length ? components.map((c) => `   ${c.points >= 0 ? '+' : ''}${c.points}  ${c.label}`).join('\n') : '   (components not recorded in this result)'}
+
+A5. Limits
+   - Only public blockchain records were used. No private or exchange data was accessed.
+   - Exchange attributions come from published address labels, which can be incomplete or wrong; the records sought in the request are what confirm or refute it.
+   - The trace stops at the first exchange on each branch; it does not follow funds inside an exchange.`;
+
   const nonActionableNote =
     summary.actionable === false && !sameAsNearest
       ? `\n   (The nearest exchange on the trail, ${summary.exchange}, is not actionable: ${summary.actionable_reason}. It is recorded as evidence; this request goes to ${targetExchange}.)`
@@ -130,7 +165,7 @@ SUBJECT: PRESERVATION AND PRODUCTION OF CUSTOMER (KYC) RECORDS - CYBER FRAUD INV
    Deposit address: ${targetWallet} (on ${chainName}${chainId ? `, chain ID ${chainId}` : ''})
 ${depositBlock}
    Hops from the suspect wallet: ${hops}
-   Attribution confidence: ${confidence}%
+   Method of attribution: ${methodText}. The technical basis, including the accounting rule and the analytical score, is set out in Annexure A attached.
 
 2. You are requested to:
    a. Preserve, ${PRESERVATION}, all account records, activity logs and balances of the account or accounts credited with the deposits listed in paragraph 1.
@@ -148,7 +183,7 @@ Investigating Officer
 (name, rank and police station to be completed before issue)`;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(noticeText);
+    navigator.clipboard.writeText(`${noticeText}\n\n\n${annexureText}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     onShowToast('Draft VASP request copied to clipboard');
@@ -224,6 +259,14 @@ Investigating Officer
           <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] p-4 border border-[#18181b] dark:border-[#262626] font-mono text-xs text-[#09090b] dark:text-[#d4d4d4] whitespace-pre-wrap leading-relaxed select-all">
             {noticeText}
           </div>
+
+          {/* Annexure: attached to the request, kept out of its body. */}
+          <div className="text-[10px] font-mono font-bold uppercase text-[#71717a] dark:text-[#888888]">
+            Attached: Annexure A
+          </div>
+          <div className="bg-[#fafafa] dark:bg-[#0d0d0d] p-4 border border-dashed border-[#a1a1aa] dark:border-[#3f3f46] font-mono text-xs text-[#09090b] dark:text-[#d4d4d4] whitespace-pre-wrap leading-relaxed select-all">
+            {annexureText}
+          </div>
         </div>
 
         {/* Modal Footer Controls */}
@@ -239,7 +282,7 @@ Investigating Officer
               className="px-3.5 py-2 bg-[#ffffff] dark:bg-[#1a1a1a] hover:bg-[#f4f4f5] dark:hover:bg-[#262626] text-[#09090b] dark:text-[#f5f5f5] text-xs font-semibold flex items-center gap-1.5 border border-[#18181b] dark:border-[#262626] hover:border-[#627EEA] transition-colors cursor-pointer brutal-press"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied' : 'Copy Notice'}</span>
+              <span>{copied ? 'Copied' : 'Copy Notice + Annexure'}</span>
             </button>
 
             <button
