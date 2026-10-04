@@ -1,6 +1,12 @@
 import { ExternalLink, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
-import { getExplorerUrl, getTxUrl } from '../../utils/formatters';
+import {
+  getTxUrl,
+  splitNodeId,
+  bareAddress,
+  explorerUrlForNode,
+  explorerForChain,
+} from '../../utils/formatters';
 
 export default function PathTimeline({ pathEdges, startAddress, summary, explorerBase, onSelectAddress }) {
   const [copiedAddr, setCopiedAddr] = useState(null);
@@ -50,11 +56,11 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
                   {copiedAddr === startAddress ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                 </button>
                 <a
-                  href={getExplorerUrl(explorerBase, startAddress)}
+                  href={explorerUrlForNode(explorerBase, startAddress)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#71717a] hover:text-[#627EEA] flex items-center gap-1"
-                  title="View on Etherscan"
+                  title="View on Explorer"
                 >
                   <ExternalLink className="w-3 h-3" />
                 </a>
@@ -79,44 +85,71 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
           const hopNumber = idx + 1;
           const recipient = edge.target;
 
+          // A chain crossing is shown as its own step, styled apart from a
+          // transfer, and says out loud that it is an inference. Reading this
+          // trail as a list of transactions would be the easiest way for a
+          // reader to over-trust the route.
+          const isCrossing = edge.edge_type === 'cross_chain';
+          const handoff = edge.handoff || null;
+          const { chain: toChain } = splitNodeId(recipient);
+          const bareRecipient = bareAddress(recipient);
+          const crossedTo = edge.to_chain || toChain;
+          const entity =
+            handoff?.deposit?.entity || handoff?.bridge?.entity || 'a bridge';
+
           return (
             <div key={idx} className="relative flex items-start gap-3">
               <div
                 className={`absolute -left-6 top-1 w-3.5 h-3.5 ring-4 ring-white dark:ring-[#111111] ${
-                  isFinal ? 'bg-emerald-500' : 'bg-[#627EEA]'
+                  isFinal
+                    ? 'bg-emerald-500'
+                    : isCrossing
+                      ? 'bg-cyan-400'
+                      : 'bg-[#627EEA]'
                 }`}
               />
               <div
                 className={`p-3 flex-1 text-xs border space-y-1 ${
                   isFinal
                     ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-500/50'
-                    : 'bg-[#f4f4f5] dark:bg-[#0a0a0a] border-[#d4d4d8] dark:border-[#262626]'
+                    : isCrossing
+                      ? 'bg-cyan-500/5 dark:bg-cyan-950/20 border-cyan-500/60 border-dashed'
+                      : 'bg-[#f4f4f5] dark:bg-[#0a0a0a] border-[#d4d4d8] dark:border-[#262626]'
                 }`}
               >
                 <div className="flex justify-between items-center mb-0.5">
                   <span
                     className={`font-bold font-mono text-[11px] uppercase tracking-wider ${
-                      isFinal ? 'text-emerald-700 dark:text-emerald-400' : 'text-[#627EEA]'
+                      isFinal
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : isCrossing
+                          ? 'text-cyan-700 dark:text-cyan-300'
+                          : 'text-[#627EEA]'
                     }`}
                   >
                     Hop {hopNumber} ·{' '}
                     {isFinal
                       ? `${summary?.exchange || 'EXCHANGE'} (DESTINATION)`
-                      : 'INTERMEDIARY CONDUIT'}
+                      : isCrossing
+                        ? `CROSSED TO ${(crossedTo || '').toUpperCase()}`
+                        : 'INTERMEDIARY CONDUIT'}
                   </span>
 
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => handleCopy(recipient)}
+                      onClick={() => handleCopy(bareRecipient)}
                       className="text-[#71717a] hover:text-[#627EEA] transition-colors p-0.5"
                       title="Copy address"
                     >
-                      {copiedAddr === recipient ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      {copiedAddr === bareRecipient ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                     </button>
                     {edge.tx_hash && (
                       <a
-                        href={getTxUrl(explorerBase, edge.tx_hash)}
+                        href={getTxUrl(
+                          explorerForChain(crossedTo, explorerBase),
+                          edge.tx_hash
+                        )}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#71717a] hover:text-[#627EEA] flex items-center gap-1 text-[11px] font-mono"
@@ -126,6 +159,15 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     )}
+                    <a
+                      href={explorerUrlForNode(explorerBase, recipient)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#71717a] hover:text-[#627EEA] flex items-center gap-1"
+                      title="View on Explorer"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
                 </div>
 
@@ -134,8 +176,36 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
                   onClick={() => onSelectAddress?.(recipient)}
                   className="font-mono text-[#09090b] dark:text-[#f5f5f5] hover:text-[#627EEA] transition-colors break-all text-left block cursor-pointer font-medium"
                 >
-                  {recipient}
+                  {bareRecipient}
                 </button>
+
+                {/* Chain Crossing Explanation */}
+                {isCrossing && (
+                  <div className="text-[11px] text-cyan-800 dark:text-cyan-200 pt-1 space-y-1">
+                    <p>
+                      Crossed to {crossedTo} via {entity}
+                      {handoff?.confidence_score != null && (
+                        <>
+                          {' '}
+                          — matched{' '}
+                          <strong>{handoff.confidence_score}/100</strong> on amount
+                          and timing
+                        </>
+                      )}
+                      .
+                    </p>
+                    <p className="text-cyan-700/80 dark:text-cyan-300/70 italic">
+                      Inferred, not observed. The deposit is on record; the arrival
+                      of the same value on {crossedTo} is matched by amount, time
+                      and recipient address.
+                    </p>
+                    {handoff?.reason && (
+                      <p className="text-cyan-700/80 dark:text-cyan-300/70">
+                        {handoff.reason}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Transfer Value Info */}
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#52525b] dark:text-[#a3a3a3] pt-1 border-t border-[#d4d4d8] dark:border-[#262626]">

@@ -123,6 +123,19 @@ def _short(address: str) -> str:
     return f"{address[:10]}…{address[-8:]}" if address and len(address) > 20 else (address or "")
 
 
+def _bare(node_id: str) -> str:
+    """
+    Strip the chain prefix from a graph node id.
+
+    Once a trace crosses a chain, node ids look like "arbitrum:0xabc...". That
+    prefix is internal addressing; an investigator needs the plain address to paste
+    into an explorer, with the chain stated separately. Ids without a prefix are
+    returned unchanged, so single-chain traces read exactly as they did before.
+    """
+    node_id = (node_id or "").strip()
+    return node_id.split(":", 1)[1] if ":" in node_id else node_id
+
+
 def _kv_table(rows: list[tuple[str, str]], styles: dict) -> Table:
     data = [[Paragraph(k, styles["small"]), Paragraph(v, styles["body"])] for k, v in rows]
     table = Table(data, colWidths=[38 * mm, 128 * mm])
@@ -156,6 +169,8 @@ def _path_section(payload: dict, styles: dict) -> list:
 
     nodes = {n["id"]: n for n in payload.get("nodes", [])}
     edges = {(e["source"], e["target"]): e for e in payload.get("edges", [])}
+    primary = (payload.get("cross_chain") or {}).get("chains_traced") or []
+    primary = primary[0] if primary else None
 
     taint_computed = bool((payload.get("accounting") or {}).get("rule"))
     head = ["Hop", "Role", "Address", "Value moved"]
@@ -183,10 +198,32 @@ def _path_section(payload: dict, styles: dict) -> list:
 
         edge = edges.get((path[index - 1], address)) if index > 0 else None
         assets = (edge.get("assets") or []) if edge else []
+
+        # A chain crossing is not another transfer. Name the bridge it went through
+        # and mark the address with its chain, so a reader who only knows Ethereum
+        # can tell that the route leaves the chain they were looking at.
+        if edge and edge.get("edge_type") == "cross_chain":
+            handoff = (edge.get("handoff") or {})
+            crossed_to = edge.get("to_chain") or node.get("chain") or "another chain"
+            role = (
+                f"Crossed to {crossed_to} via "
+                f"{handoff.get('entity') or node.get('label') or 'a bridge'}"
+            )
+            score = handoff.get("confidence_score")
+            if score is not None:
+                role += f" (matched, {score}%)"
+
+        # Chain-qualified node ids are an internal addressing scheme, not something
+        # to paste into an explorer. Print the bare address and carry the chain in
+        # the Role column instead.
+        shown = node.get("address") or _bare(address)
+        chain = node.get("chain")
+        if chain and primary and chain != primary:
+            shown = f"{shown}  [{chain}]"
         row = [
             Paragraph(str(index) if index else "—", styles["small"]),
             Paragraph(role, styles["body"]),
-            Paragraph(address, styles["mono"]),
+            Paragraph(shown, styles["mono"]),
             Paragraph(
                 _fmt_assets({a["asset"]: a["value"] for a in assets},
                             edge.get("value_eth")) if edge else "—",
@@ -274,6 +311,145 @@ def _confidence_section(summary: dict, styles: dict) -> list:
                 "Scores are capped at 95. This tool never asserts certainty.",
                 styles["small"],
             )]
+
+
+def _cross_chain_section(payload: dict, styles: dict) -> list:
+    """
+    What the trace did about bridges, and how sure it is.
+
+    This section exists to keep one specific failure out of the report: a reader
+    seeing "Funds reached Binance" must be able to tell whether the whole route was
+    observed on-chain, or whether part of it was carried across a chain boundary on
+    the strength of an amount-and-time match. The two carry different weight in
+    front of a court, and a report that blurs them is worse than no report.
+
+    Every handoff is listed, including the ones we declined. A crossing that was
+    ambiguous or unmatched is where the trail goes cold, and that is exactly the
+    kind of fact an investigator needs before deciding to widen the search.
+    """
+    cross = payload.get("cross_chain") or {}
+    handoffs = cross.get("handoffs") or []
+    if not handoffs:
+        return []
+
+    out = [Paragraph("Cross-chain movement", styles["h2"])]
+    chains = cross.get("chains_traced") or []
+    if len(chains) > 1:
+        out.append(Paragraph(
+            "This route leaves the chain it started on. Chains examined: "
+            + ", ".join(chains) + ".",
+            styles["small"],
+        ))
+    out.append(Paragraph(
+        "A chain crossing is not directly observable. The deposit is on record on "
+        "one chain; the arrival of the same value on another is matched by amount, "
+        "timing, recipient address and payout contract. Each crossing carries its "
+        "own confidence score, reported separately and never merged into the "
+        "on-chain confidence above.",
+        styles["small"],
+    ))
+    out.append(Spacer(1, 6))
+
+    # Labels decide whether a chain could yield an exchange finding at all. Say so
+    # before the findings, not in a footnote.
+    coverage = cross.get("label_coverage") or {}
+    unlabelled = [
+        slug for slug, info in coverage.items()
+        if isinstance(info, dict) and not info.get("identification_possible")
+    ]
+    if unlabelled:
+        out.append(Paragraph(
+            "<b>Coverage limit:</b> we hold no entity labels for "
+            + ", ".join(unlabelled)
+            + ". Exchanges there could not be recognised by name, so a finding on "
+            "this route may understate where the money went.",
+            styles["small"],
+        ))
+        out.append(Spacer(1, 6))
+
+    labels = {
+        "matched": "Followed",
+        "ambiguous": "Ambiguous — not followed",
+        "no_match": "No match — not followed",
+        "hop_cap_reached": "Stopped at the crossing limit",
+        "not_registered": "Bridge not in our registry",
+        "destination_unavailable": "Destination chain unreadable",
+    }
+    for handoff in handoffs:
+        state = handoff.get("status", "")
+        deposit = handoff.get("deposit") or {}
+        bridge = handoff.get("bridge") or {}
+        entity = (
+            deposit.get("entity")
+            or bridge.get("entity")
+            or "Bridge"
+        )
+        from_chain = deposit.get("chain") or ""
+        to_chain = deposit.get("to_chain") or ""
+        out.append(Paragraph(
+            f'<b>{entity}</b> '
+            f'({from_chain} → {to_chain or "?"}) — '
+            f'{labels.get(state, state)}',
+            styles["body"],
+        ))
+        if handoff.get("reason"):
+            out.append(Paragraph(handoff["reason"], styles["small"]))
+
+        chosen = handoff.get("chosen")
+        if chosen:
+            # Which checks the match passed on. Named explicitly, because "85/100"
+            # on its own is a number with nothing behind it.
+            evidence = handoff.get("evidence") or {}
+            checks = [
+                name
+                for name, ok in (
+                    ("same recipient address", evidence.get("destination_address_matched")),
+                    ("paid by a known bridge payout contract",
+                     evidence.get("credit_from_known_bridge_contract")),
+                    ("amount within the fee tolerance", True),
+                    (f"arrived {chosen.get('lag_sec')}s after the deposit", True),
+                ) if ok
+            ]
+            tainted = handoff.get("tainted_value") or chosen.get("tainted_value") or 0.0
+            out.append(Paragraph(
+                f'Arrived as {_fmt_assets({chosen.get("asset", ""): chosen.get("value", 0.0)})}; '
+                f'matched {handoff.get("confidence_score") or chosen.get("score", "?")}/100 on '
+                + ", ".join(checks) + ". "
+                + (
+                    "Of that, "
+                    + _fmt_assets({chosen.get("asset", ""): tainted})
+                    + " is attributed to the suspect."
+                    if tainted > 0
+                    else "None of it is attributed to the suspect."
+                ),
+                styles["small"],
+            ))
+            out.append(Paragraph(
+                f'Payout transaction: {chosen.get("tx_hash", "")}',
+                styles["mono"],
+            ))
+
+        # Show every candidate for a refused crossing, so the decision can be
+        # challenged on the evidence rather than taken on trust.
+        others = [
+            c for c in (handoff.get("candidates") or [])
+            if not chosen or c.get("tx_hash") != chosen.get("tx_hash")
+        ]
+        if others and not handoff.get("matched"):
+            out.append(Spacer(1, 3))
+            out.append(Paragraph("Candidates considered:", styles["small"]))
+            for candidate in others:
+                out.append(Paragraph(
+                    f'· {_fmt_assets({candidate.get("asset", ""): candidate.get("value", 0.0)})} '
+                    f'from {_short(candidate.get("from_addr", ""))}, '
+                    f'{candidate.get("lag_sec", "?")}s later, '
+                    f'score {candidate.get("score", "?")}/100, '
+                    f'tx {_short(candidate.get("tx_hash", ""))}',
+                    styles["mono"],
+                ))
+        out.append(Spacer(1, 8))
+
+    return out
 
 
 def _risk_section(payload: dict, styles: dict) -> list:
@@ -703,8 +879,12 @@ def build_report(payload: dict) -> bytes:
             hops = cluster.get("member_hops") or {}
             for member in cluster.get("members", []):
                 story.append(Paragraph(
-                    f'hop {hops.get(member, "?")} &nbsp; {member}', styles["mono"]
+                    f'hop {hops.get(member, "?")} &nbsp; {_bare(member)}',
+                    styles["mono"],
                 ))
+
+    # --- Cross-chain movement --------------------------------------------
+    story.extend(_cross_chain_section(payload, styles))
 
     # --- Why the trace stopped ------------------------------------------
     termination = summary.get("termination") or payload.get("termination") or {}

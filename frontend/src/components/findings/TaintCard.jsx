@@ -20,13 +20,38 @@ export default function TaintCard({ summary, accounting }) {
 
   if (!summary) return null;
 
+  // "We computed nothing" and "we computed zero" are different statements, and
+  // only the second one is a finding. `taint_computed` is the backend's own
+  // statement of whether the FIFO replay ran at all. When it did not, the
+  // figures below are not answers and the card says so instead of printing
+  // "0.00 stolen" - which reads as "none of this was stolen money".
+  const taintComputed = summary.taint_computed !== false;
+
   const taintedValue = summary.tainted_value_received;
   const grossValue = summary.value_received;
-  const inflowFraction = summary.inflow_fraction;
+  // The backend emits `tainted_inflow_fraction` as a PER-ASSET map
+  // ({ETH: 1.0, USDT: 0.4}), not a single number. An untyped `undefined`
+  // here used to fall through to a hard-coded "100%", so a wallet where
+  // only 40% of the inflow was the suspect's money still reported 100% -
+  // the single most over-claiming line on the panel. A fraction only
+  // appears once at least one asset carries one.
+  const inflowByAsset = summary.tainted_inflow_fraction;
+  const inflowFractions = inflowByAsset && typeof inflowByAsset === 'object'
+    ? Object.values(inflowByAsset).filter((v) => typeof v === 'number')
+    : [];
 
   const hasTaint = taintedValue && Object.keys(taintedValue).length > 0;
+  // Fully observed = every asset's inflow is 100% accounted for. Below
+  // 1.0 means either part of the inflow is pre-existing balance, or the
+  // wallet's own history was never fetched, and the backend says which
+  // via `inflow_fully_observed`. Guessing would be worse than saying so.
+  const fullyObserved = summary.inflow_fully_observed === true;
   const percentStr =
-    typeof inflowFraction === 'number' ? `${(inflowFraction * 100).toFixed(1)}%` : '100%';
+    inflowFractions.length === 0
+      ? null
+      : `${((Math.min(...inflowFractions)) * 100).toFixed(1)}%`;
+  const barWidth =
+    inflowFractions.length === 0 ? 100 : Math.min(100, Math.min(...inflowFractions) * 100);
 
   return (
     <div
@@ -42,9 +67,18 @@ export default function TaintCard({ summary, accounting }) {
           </h3>
         </div>
         <span className="text-[10px] font-mono px-2 py-0.5 bg-[#627EEA]/10 text-[#627EEA] border border-[#627EEA]/30 font-semibold uppercase">
-          FIFO Ledger Replay
+          {taintComputed ? 'FIFO Ledger Replay' : 'Accounting Not Performed'}
         </span>
       </div>
+
+      {/* The replay did not run, so no figure below means anything. */}
+      {!taintComputed && (
+        <p className="text-xs text-[#52525b] dark:text-[#a3a3a3] leading-relaxed">
+          The FIFO replay did not run for this trace, so the split between the
+          suspect's money and pre-existing balance was <strong>not calculated</strong>.
+          The gross inflow below is observed value only.
+        </p>
+      )}
 
       {/* Main Metric comparison */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -55,7 +89,10 @@ export default function TaintCard({ summary, accounting }) {
             Stolen Portion at Destination
           </span>
           <p className="font-mono text-base font-extrabold text-[#09090b] dark:text-[#f5f5f5]">
-            {summary.tainted_value_display || (hasTaint ? formatAssets(taintedValue) : '0.00')}
+            {!taintComputed
+              ? 'Not calculated'
+              : summary.tainted_value_display ||
+                (hasTaint ? formatAssets(taintedValue) : '0.00')}
           </p>
           <span className="text-[10px] text-[#71717a] dark:text-[#888888] block mt-0.5 font-mono">
             Stolen crypto reaching this wallet
@@ -76,8 +113,9 @@ export default function TaintCard({ summary, accounting }) {
         </div>
       </div>
 
-      {/* Inflow Fraction Progress Bar */}
-      {percentStr && (
+      {/* Inflow Fraction Progress Bar. Hidden entirely when the backend sent
+          no fraction, rather than showing a default that asserts a clean trail. */}
+      {percentStr !== null && (
         <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] p-2.5 border border-[#d4d4d8] dark:border-[#262626] space-y-1.5">
           <div className="flex justify-between items-center text-xs font-mono">
             <span className="text-[#52525b] dark:text-[#a3a3a3]">Suspect Share of Observed Inflow</span>
@@ -86,9 +124,19 @@ export default function TaintCard({ summary, accounting }) {
           <div className="w-full bg-[#d4d4d8] dark:bg-[#262626] h-2 overflow-hidden">
             <div
               className="bg-[#627EEA] h-full transition-all duration-700 ease-out"
-              style={{ width: `${Math.min(100, (inflowFraction || 1) * 100)}%` }}
+              style={{ width: `${barWidth}%` }}
             />
           </div>
+          {/* WHY THIS MEASUREMENT IS PARTIAL. The trace stops at this wallet, so
+              its own history is not fetched; the share is measured only against
+              the transfers the trace observed, not against everything the wallet
+              received. The backend says so explicitly, and repeating it here keeps
+              a 100% figure from reading as "we checked every incoming dollar". */}
+          {!fullyObserved && summary.inflow_note && (
+            <p className="text-[10px] text-[#71717a] dark:text-[#888888] leading-snug font-sans">
+              {summary.inflow_note}
+            </p>
+          )}
         </div>
       )}
 
@@ -101,7 +149,12 @@ export default function TaintCard({ summary, accounting }) {
       {accounting?.events_replayed > 0 && (
         <div className="pt-2 border-t border-[#d4d4d8] dark:border-[#262626] flex items-center justify-between text-[11px] font-mono text-[#71717a] dark:text-[#888888]">
           <span>Replayed {accounting.events_replayed} transactions</span>
-          <span>{accounting.observed_wallets} wallets tracked</span>
+          {/* `wallets_observed` is the field the backend emits. The old read of
+              `observed_wallets` matched nothing and rendered " wallets tracked". */}
+          <span>
+            {accounting.wallets_observed ?? accounting.observed_wallets ?? 0} wallets
+            tracked
+          </span>
         </div>
       )}
     </div>

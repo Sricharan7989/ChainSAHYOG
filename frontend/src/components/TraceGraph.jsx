@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { CYTOSCAPE_STYLES, LAYOUT_CONFIG } from '../utils/graphStyle';
 import { findPath, extractPathNodes } from '../utils/pathfinder';
-import { shortAddress } from '../utils/formatters';
+import { shortAddress, splitNodeId } from '../utils/formatters';
 
 /**
  * Interactive Background Matrix: Subtle forensic grid dots that gently displace
@@ -280,6 +280,13 @@ export default function TraceGraph({
     };
   }, [data, focusHighSignal, primaryPathNodes, primaryPathEdges, startAddress]);
 
+  // The chain the investigation started on. The first chain traced is the one the
+  // investigator entered on; anything off it was reached by a bridge crossing, and
+  // has to be marked as such. Computed here, outside the layout memo, so the memo
+  // can depend on it properly.
+  const tracedChains = data?.cross_chain?.chains_traced || [];
+  const primaryChainSlug = tracedChains[0] || data?.chain?.slug || '';
+
   // Compute Vertical Layout coordinates and simplified elements
   const elements = useMemo(() => {
     if (!displayNodes.length) return [];
@@ -352,6 +359,13 @@ export default function TraceGraph({
         n.entity_type === 'sanctioned'
       );
 
+      // A wallet reached after a chain crossing is not the same finding as one
+      // reached on the chain we started on. Marking it lets the reader see that
+      // the route left the chain they were investigating, which is the whole point
+      // of following it.
+      const nodeChain = n.chain || splitNodeId(n.id).chain || '';
+      const isOffChain = Boolean(nodeChain) && nodeChain !== primaryChainSlug;
+
       const isSilent = !isStart && !isVasp && !isObfuscator && !onPath;
 
       // Simplified labels: Suspect -> Target Exchange -> Mixer/Bridge -> Primary Trail Conduit -> Silent Grey Dots
@@ -368,6 +382,14 @@ export default function TraceGraph({
       } else {
         // "Other grey useless nodes": No address label, just clean grey dots
         displayLabel = '';
+      }
+
+      // Name the chain on anything not on the chain we started on. Without it a
+      // reader sees the same short address twice and cannot tell that the route
+      // crossed a bridge - which is the single most important thing to make
+      // visible.
+      if (isOffChain && displayLabel) {
+        displayLabel = `${nodeChain.toUpperCase()}\n${displayLabel}`;
       }
 
       let pos = spinePositions.get(idLower);
@@ -400,6 +422,8 @@ export default function TraceGraph({
           is_obfuscator: isObfuscator,
           is_silent: isSilent,
           on_primary_path: onPath,
+          is_off_chain: isOffChain,
+          chain_slug: nodeChain,
         },
         position: pos,
       });
@@ -512,6 +536,15 @@ export default function TraceGraph({
             target: pe.target,
             on_primary_path: true,
             displayAmount: formatEdgeAmount(pe),
+            // Carried through so the stylesheet can draw a chain crossing
+            // differently from a transfer. A crossing is an inference, not a
+            // transaction, and drawing it as an ordinary arrow would overstate
+            // what we actually know.
+            is_cross_chain: pe.edge_type === 'cross_chain',
+            cross_chain_label:
+              pe.edge_type === 'cross_chain'
+                ? `CROSSED TO ${(pe.to_chain || '').toUpperCase()}`
+                : null,
           },
         });
         addedEdgeKeys.add(key);
@@ -540,7 +573,24 @@ export default function TraceGraph({
       });
     });
 
-    return [...nodeElements, ...edgeElements];
+    // Classify every edge from its OWN edge_type, in one place, after all the
+    // branches above have run. Each branch builds edges slightly differently
+    // (primary path, folded head/tail, side branch), and setting the crossing
+    // flag inside each one meant any branch that forgot it drew an INFERRED
+    // bridge arrival as an ordinary transfer - quietly overstating what we know.
+    const classifiedEdges = edgeElements.map((el) => {
+      if (el.data?.edge_type !== 'cross_chain') return el;
+      return {
+        ...el,
+        data: {
+          ...el.data,
+          is_cross_chain: true,
+          cross_chain_label: `CROSSED TO ${(el.data.to_chain || '').toUpperCase()}`,
+        },
+      };
+    });
+
+    return [...nodeElements, ...classifiedEdges];
   }, [
     displayNodes,
     displayEdges,
@@ -548,6 +598,7 @@ export default function TraceGraph({
     primaryPathEdges,
     startAddress,
     data?.summary?.exchange,
+    primaryChainSlug,
     canFold,
     isFolded,
   ]);

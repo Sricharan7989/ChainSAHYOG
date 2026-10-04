@@ -146,23 +146,34 @@ class EtherscanClient:
 
     async def _request(self, params: dict, chain_id: int | None = None) -> object:
         """
-        One throttled Etherscan V2 call.
+        One throttled explorer call.
 
         Etherscan signals failure with HTTP 200 and status="0", so the response
         body has to be inspected rather than trusting the status code. The one
         benign "failure" is "No transactions found" — a wallet with no outgoing
         history is a normal dead end in a trace, not an error.
+
+        WHICH API answers is decided by config.chain_api: Etherscan V2 for every
+        chain the plan covers, and a chain's own explorer for one it does not
+        (BNB Chain, via BscScan). The caller names a chain and never learns which
+        door the request went through, so a chain-specific endpoint is not
+        something every call site has to know about.
         """
         if not config.has_etherscan_key():
             raise EtherscanError(
                 "ETHERSCAN_API_KEY is not set in backend/.env - cannot run a live trace."
             )
 
-        query = {
-            **params,
-            "chainid": config.chain(chain_id)["chain_id"],
-            "apikey": config.ETHERSCAN_API_KEY,
-        }
+        resolved_chain_id = config.chain(chain_id)["chain_id"]
+        base_url, api_key, send_chainid = config.chain_api(resolved_chain_id)
+        if not api_key:
+            raise EtherscanError(
+                f"No explorer API key is configured for {config.chain(chain_id)['name']}."
+            )
+
+        query = {**params, "apikey": api_key}
+        if send_chainid:
+            query["chainid"] = resolved_chain_id
 
         async with self._lock:
             elapsed = time.monotonic() - self._last_request_at
@@ -171,9 +182,9 @@ class EtherscanClient:
 
             client = await self._get_client()
             try:
-                response = await client.get(config.ETHERSCAN_BASE_URL, params=query)
+                response = await client.get(base_url, params=query)
             except httpx.HTTPError as exc:
-                raise EtherscanError(f"Network error talking to Etherscan: {exc}") from exc
+                raise EtherscanError(f"Network error talking to the explorer API: {exc}") from exc
             finally:
                 self._last_request_at = time.monotonic()
             self.api_calls += 1

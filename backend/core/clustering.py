@@ -142,7 +142,11 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
     suspected: dict[str, Cluster] = {}
 
     for attribution in attributions:
-        address = attribution.address
+        # The graph key, which is the bare address on the chain the trace started
+        # on and a chain-qualified one elsewhere. Once a trace crosses a chain the
+        # same address exists as two separate wallets, and cluster membership has
+        # to be decided per wallet, not per string.
+        address = attribution.node_id or attribution.address
         depth = attribution.hop_distance
 
         if attribution.method == "consolidation":

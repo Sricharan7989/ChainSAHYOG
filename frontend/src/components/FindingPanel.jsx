@@ -5,6 +5,7 @@ import { FileText, Route, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import HeadlineCard from './findings/HeadlineCard';
 import ConfidenceMeter from './findings/ConfidenceMeter';
 import TaintCard from './findings/TaintCard';
+import CrossChainCard from './findings/CrossChainCard';
 import TypologiesCard from './findings/TypologiesCard';
 import ClustersCard from './findings/ClustersCard';
 import RiskFlagsCard from './findings/RiskFlagsCard';
@@ -37,7 +38,12 @@ export default function FindingPanel({
 
   if (!data) return null;
 
-  const targetAddress = data.summary?.address;
+  // The ENDPOINT as a graph node id. Once a trace crosses a chain, the summary's
+  // `address` is the bare wallet address while the node carrying it is qualified
+  // ("arbitrum:0x..."). Matching on the bare address would find no route at all,
+  // and the money trail would silently vanish from a cross-chain trace - so prefer
+  // the node id the backend already resolved.
+  const targetAddress = data.summary?.node_id || data.summary?.address;
   const startAddress = data.start_address;
   const pathEdges = findPath(data.edges, startAddress, targetAddress);
 
@@ -154,6 +160,8 @@ export default function FindingPanel({
             typologies={data.typologies}
             summary={data.typology_summary}
           />
+
+          <CrossChainCard cross={data.cross_chain} />
 
           <ClustersCard clusters={data.clusters} />
 

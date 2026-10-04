@@ -235,7 +235,9 @@ def _as_store(graph):
 # --- (b) Deposit-consolidation clustering — WORKS -----------------------------
 
 
-def consolidation_score(address: str, graph: nx.DiGraph) -> float:
+def consolidation_score(
+    address: str, graph: nx.DiGraph, node: str | None = None
+) -> float:
     """
     Method (b): score how much this address looks like a collection point.
 
@@ -275,14 +277,15 @@ def consolidation_score(address: str, graph: nx.DiGraph) -> float:
     API call per candidate.
     """
     store = _as_store(graph)
-    if not store.has(address):
+    node = node or address
+    if not store.has(node):
         return 0.0
 
     # Distinct senders. The store collapses repeat payments between the same
     # pair into one edge, so this is a distinct-counterparty count by
     # construction. Self-loops do not count - a wallet paying itself is not a
     # third party, and both backends exclude them.
-    fan_in = len(store.predecessors(address))
+    fan_in = len(store.predecessors(node))
 
     if fan_in < CONSOLIDATION_MIN_SENDERS:
         return 0.0
@@ -293,12 +296,15 @@ def consolidation_score(address: str, graph: nx.DiGraph) -> float:
     return (fan_in - CONSOLIDATION_MIN_SENDERS) / span
 
 
-def consolidation_fan_in(address: str, graph: nx.DiGraph) -> int:
+def consolidation_fan_in(
+    address: str, graph: nx.DiGraph, node: str | None = None
+) -> int:
     """Distinct third-party senders into this address, within the traced graph."""
     store = _as_store(graph)
-    if not store.has(address):
+    node = node or address
+    if not store.has(node):
         return 0
-    return len(store.predecessors(address))
+    return len(store.predecessors(node))
 
 
 def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95) -> int:
@@ -320,7 +326,9 @@ def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95) -> int:
     return degrees[index]
 
 
-def consolidation_identify(address: str, graph: nx.DiGraph) -> Identification | None:
+def consolidation_identify(
+    address: str, graph: nx.DiGraph, node: str | None = None
+) -> Identification | None:
     """
     Wrap the consolidation pattern into an Identification, or None if too weak.
 
@@ -330,14 +338,19 @@ def consolidation_identify(address: str, graph: nx.DiGraph) -> Identification | 
     outlier. The gates are sender COUNTS, not the normalised score: scoring is
     for expressing confidence, but the decision to make an accusation at all
     should rest on a number an investigator can check by eye.
+
+    `node` is the graph key for this wallet, which differs from `address` once a
+    trace crosses a chain: the same address on two chains is two different
+    wallets and gets two different nodes. It defaults to `address`, so a
+    single-chain caller is unaffected.
     """
-    fan_in = consolidation_fan_in(address, graph)
+    fan_in = consolidation_fan_in(address, graph, node=node)
     if fan_in < CONSOLIDATION_FLAG_SENDERS:
         return None
     if fan_in < adaptive_fan_in_floor(graph):
         return None
 
-    score = consolidation_score(address, graph)
+    score = consolidation_score(address, graph, node=node)
     confidence = CONSOLIDATION_MAX_CONFIDENCE * max(score, 0.5)
 
     return Identification(
@@ -414,13 +427,20 @@ def cospend_cluster(address: str, graph: nx.DiGraph) -> None:
 # --- Combined entry point -----------------------------------------------------
 
 
-def identify(address: str, graph: nx.DiGraph, chain: str | None = None) -> Identification | None:
+def identify(
+    address: str, graph: nx.DiGraph, chain: str | None = None, node: str | None = None
+) -> Identification | None:
     """
     Run the available methods against one address, best evidence first.
 
     Order matters: a label match names an actual company and outranks any
     statistical pattern, so it is checked first and returned immediately. The
     consolidation heuristic only speaks when the label list is silent.
+
+    `address` is the bare wallet address, which is what labels are keyed by. `node`
+    is the graph key for it, supplied separately because a trace that crosses a
+    chain stores the same address on two chains as two distinct nodes. Defaults to
+    `address`, so single-chain callers are unaffected.
 
     Returns None when nothing recognises the address - the expected outcome for
     the criminal's own wallets, and the reason the trace keeps walking.
@@ -431,7 +451,7 @@ def identify(address: str, graph: nx.DiGraph, chain: str | None = None) -> Ident
 
     # Deliberately chain-agnostic: fan-in is a shape in the traced graph, and
     # that graph is already confined to one chain by the tracer.
-    hit = consolidation_identify(address, graph)
+    hit = consolidation_identify(address, graph, node=node)
     if hit is not None:
         return hit
 

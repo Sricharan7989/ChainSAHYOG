@@ -30,6 +30,11 @@ def health() -> dict:
 
     Reports which graph backend is live. Neo4j is optional: "memory" here is a
     healthy state, not a failure, and traces return identical results either way.
+
+    `chains.readable` is reported per chain for the same reason. A chain whose
+    explorer API the configured key does not cover cannot be traced, and the
+    UI has to be able to say "we cannot read BNB Chain with this key" rather
+    than discover it as a 502 after an investigator has started work.
     """
     return {
         "status": "ok",
@@ -37,6 +42,10 @@ def health() -> dict:
         "chains": {
             "default": config.DEFAULT_CHAIN_ID,
             "supported": config.supported_chains(),
+            "readable": {
+                chain["slug"]: config.chain_readable(chain["chain_id"])
+                for chain in config.supported_chains()
+            },
         },
     }
 

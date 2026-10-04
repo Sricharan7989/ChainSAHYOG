@@ -10,6 +10,7 @@ import LoadingRadar from '../components/LoadingRadar';
 import TraceGraph from '../components/TraceGraph';
 import NodeDrawer from '../components/NodeDrawer';
 import FindingPanel from '../components/FindingPanel';
+import SourceBadge from '../components/SourceBadge';
 import SahyogModal from '../components/SahyogModal';
 import Toast from '../components/Toast';
 import { fetchHealth, fetchDemos, runTrace, getReportUrl } from '../api/client';
@@ -224,7 +225,11 @@ export default function DashboardPage() {
 
           {/* STATE 3: RESULTS LOADED (Graph + Findings Dashboard - Exact 50-50 Split) */}
           {!loading && !error && data && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 min-h-[660px]">
+            <>
+              {/* Provenance of the result above everything else, so nobody has to
+                  guess whether these figures came off the chain just now. */}
+              <SourceBadge data={data} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 min-h-[660px]">
               {/* Left Column: Cytoscape Money-Flow Visualizer (50%) */}
               <div className="flex flex-col relative h-[660px] lg:h-auto min-h-[640px]">
                 <TraceGraph
@@ -259,7 +264,8 @@ export default function DashboardPage() {
                   onSelectAddress={handleSelectAddress}
                 />
               </div>
-            </div>
+              </div>
+            </>
           )}
 
           {/* STATE 4: IDLE / WELCOME STATE */}

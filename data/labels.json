@@ -3139,5 +3139,29 @@
     "type": "sanctioned",
     "source": "ofac",
     "chain": "ethereum"
+  },
+  "polygon:0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "graphsense-tagpacks"
+  },
+  "polygon:0x742d35cc6634c0532925a3b844bc454e4438f44e": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "graphsense-tagpacks"
+  },
+  "polygon:0x876eabf441b2ee5b5b0554fd502a8e0600950cfa": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "graphsense-tagpacks"
+  },
+  "polygon:0xd70250731a72c33bfb93016e3d1f0ca160df7e42": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "polygon",
+    "source": "graphsense-tagpacks"
   }
 }

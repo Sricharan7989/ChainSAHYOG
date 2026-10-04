@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { ShieldCheck, AlertTriangle, AlertOctagon, HelpCircle, ArrowRight, ExternalLink, Building2, Coins, Milestone, CheckCircle2 } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { shortAddress, getExplorerUrl } from '../../utils/formatters';
+import { shortAddress, explorerUrlForNode, splitNodeId } from '../../utils/formatters';
 
 gsap.registerPlugin(useGSAP);
 
@@ -24,6 +24,9 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
   const isLead = !summary.found && summary.lead;
   const isTerminatedMixer = summary.termination?.reason === 'terminated_at_mixer';
   const isTerminatedBridge = summary.termination?.reason === 'terminated_at_bridge';
+  // Which chain the deposit landed on. Absent on single-chain traces, so the
+  // badge only appears once the money has actually left the starting chain.
+  const targetChain = splitNodeId(summary.node_id || summary.address).chain;
 
   return (
     <div
@@ -113,10 +116,14 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             Stolen Funds
           </span>
           <p className="font-bold text-xs sm:text-sm text-[#09090b] dark:text-[#f5f5f5] truncate">
-            {summary.tainted_value_display || 'Observed Value'}
+            {summary.taint_computed === false
+              ? 'Not calculated'
+              : summary.tainted_value_display || 'Observed Value'}
           </p>
           <span className="text-[10px] font-mono text-[#71717a] dark:text-[#888888]">
-            Attributable amount
+            {summary.taint_computed === false
+              ? 'Taint replay did not run'
+              : 'Attributable amount'}
           </span>
         </div>
 
@@ -151,8 +158,15 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
       {summary.address && (
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#52525b] dark:text-[#a3a3a3] bg-[#f4f4f5] dark:bg-[#0a0a0a] p-2 border border-[#d4d4d8] dark:border-[#262626]">
           <span className="font-semibold text-[#09090b] dark:text-[#f5f5f5]">Target Deposit Wallet:</span>
+          {/* The chain the deposit landed on. A requisition that names the wrong
+              chain is a requisition the exchange cannot act on. */}
+          {targetChain && (
+            <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 border border-cyan-500/50">
+              {targetChain}
+            </span>
+          )}
           <a
-            href={getExplorerUrl(params?.explorer, summary.address)}
+            href={explorerUrlForNode(params?.explorer, summary.node_id || summary.address)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#627EEA] hover:underline flex items-center gap-1 font-bold break-all"

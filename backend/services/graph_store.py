@@ -188,6 +188,12 @@ class Neo4jStore:
         attrs = dict(attrs)
         if isinstance(attrs.get("assets"), dict):
             attrs["assets_json"] = json.dumps(attrs.pop("assets"), sort_keys=True)
+        # A BridgeMatch, not a primitive, so the driver cannot encode it and the
+        # whole flush would fail. Nothing reads it back off the edge either: the
+        # crossing evidence is recovered from the Hop list when the payload is
+        # built. Dropped rather than flattened to avoid persisting a second copy
+        # that could disagree with the Hop it came from.
+        attrs.pop("handoff", None)
         self._pending_transfers.append({"src": src, "dst": dst, **attrs})
 
     def flush(self) -> None:
@@ -204,6 +210,30 @@ class Neo4jStore:
             self._pending_wallets.clear()
 
         if self._pending_transfers:
+            # WHY THESE COLUMNS ARE ALL HERE, AND WHY THEY MUST STAY IN SYNC WITH
+            # THE IN-MEMORY STORE. Chain and edge type are not decoration: this
+            # query originally named only the scalar fields an Ethereum-only walk
+            # produced, so a Neo4j-backed trace came back with no chain and no
+            # edge_type on any edge - the crossing was invisible, chain-aware
+            # identification had nothing to read, and the two backends silently
+            # disagreed. `value_eth` is here for the same reason: older consumers
+            # read a single native-currency number, and dropping it made the two
+            # backends disagree on every edge.
+            #
+            # Anything set here must also survive MemoryStore.add_transfer.
+            #
+            # NOTE ON COMMENTS: they are kept OUTSIDE the query. Cypher does not
+            # accept `--` comments inside a SET clause, so an explanatory comment
+            # written between two assignments is a syntax error, not a comment -
+            # and it fails at flush time, once per trace, in the middle of a walk.
+            #
+            # `tainted_value` and `assumed_pre_existing` are on this list for the
+            # same reason as the others. They are what lets a chain-crossing edge
+            # report how much of the arrived value was the suspect's money, and a
+            # cross-chain edge has no transfer for a FIFO replay to recompute them
+            # from. Left off this list they defaulted to absent, and the figure
+            # silently read 0.0 on Neo4j while the in-memory store reported it
+            # correctly - two backends, two different findings, for the same trace.
             self._run(
                 """
                 UNWIND $rows AS row
@@ -211,12 +241,19 @@ class Neo4jStore:
                 MERGE (b:Wallet {trace_id: $trace_id, address: row.dst})
                 MERGE (a)-[r:SENT {trace_id: $trace_id}]->(b)
                 SET r.assets_json = row.assets_json,
-                    r.asset     = row.asset,
-                    r.value     = row.value,
-                    r.tx_count  = row.tx_count,
-                    r.timestamp = row.timestamp,
-                    r.tx_hash   = row.tx_hash,
-                    r.depth     = row.depth
+                    r.asset        = row.asset,
+                    r.value        = row.value,
+                    r.tx_count     = row.tx_count,
+                    r.timestamp    = row.timestamp,
+                    r.tx_hash      = row.tx_hash,
+                    r.depth        = row.depth,
+                    r.chain        = row.chain,
+                    r.edge_type    = row.edge_type,
+                    r.from_chain   = row.from_chain,
+                    r.to_chain     = row.to_chain,
+                    r.value_eth    = row.value_eth,
+                    r.tainted_value        = row.tainted_value,
+                    r.assumed_pre_existing = row.assumed_pre_existing
                 """,
                 rows=self._pending_transfers,
             )

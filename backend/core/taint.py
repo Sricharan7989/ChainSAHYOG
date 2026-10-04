@@ -164,6 +164,16 @@ class TaintResult:
     # tie-break (hash order), per asset. Where this is large, the split is an
     # artefact and should be treated as approximate.
     tie_broken_value: dict[str, float] = field(default_factory=dict)
+    # Which chain this replay covered. A cross-chain trace runs one replay per
+    # chain and keeps them apart, so a report can never sum an Ethereum figure
+    # with an Arbitrum one and call the total taint.
+    chain: str = ""
+    # Tainted value that arrived from a bridge rather than from a transfer this
+    # replay saw: the taint carried across a chain boundary, per asset. Tracked
+    # separately from observed inflow so a reader can see how much of a figure
+    # rests on an inferred handoff.
+    bridged_in: dict[str, float] = field(default_factory=dict)
+    seeds_applied: list = field(default_factory=list)
 
     def edge(self, from_addr: str, to_addr: str, asset: str) -> AssetFlow | None:
         return self.edges.get((from_addr, to_addr, asset))
@@ -295,7 +305,42 @@ def _draw(queue: deque[list[float]], amount: float) -> tuple[float, float]:
     return tainted, shortfall
 
 
-def compute_taint(fetched: dict[str, list], start_address: str) -> TaintResult:
+@dataclass(frozen=True)
+class Seed:
+    """
+    Tainted value that a replay should assume is already sitting in a wallet.
+
+    WHY THIS EXISTS. Value that crossed a bridge arrives on a different chain, so
+    the destination chain's replay never sees the deposit that caused it - the
+    credit looks like an unexplained transfer from a bridge contract, exactly
+    like a gift. A seed is how the tracer carries the taint across that boundary:
+    it injects the tainted share of the matched credit into that wallet's ledger
+    before the replay begins.
+
+    The value is the already-tainted amount, NOT a fresh source of taint. On the
+    source side the tracer knows how much of the deposit was the suspect's
+    money, and scales that by the fraction that actually arrived (a bridge takes
+    a fee), so taint can never increase across a bridge. `confidence` records how
+    that figure was arrived at, because a number derived from an inferred
+    handoff must not be presented as an observed one.
+    """
+
+    address: str
+    asset: str
+    value: float
+    timestamp: int
+    confidence: float = 1.0  # 1.0 for the suspect's own wallet
+    origin: str = "bridge"
+    note: str = ""
+
+
+def compute_taint(
+    fetched: dict[str, list],
+    start_address: str,
+    chain: str = "",
+    seeds: "list[Seed] | tuple[Seed, ...]" = (),
+    taint_source: str | None = None,
+) -> TaintResult:
     """
     Replay every observed transfer in time order and attribute value to the suspect.
 
@@ -311,14 +356,64 @@ def compute_taint(fetched: dict[str, list], start_address: str) -> TaintResult:
     are therefore not examined - tracing where the suspect got the money is
     backwards from what an investigator needs, as the tracer's own direction
     argument explains.
+
+    `seeds` add the same idea for a second source of taint: value that arrived
+    over a bridge. See Seed for why the amount is pre-scaled rather than grown
+    here.
+
+    `taint_source` is the wallet whose outflows are unconditionally tainted - the
+    suspect, on the chain the investigation started on. It is a separate argument
+    from `start_address` because the two stop being the same wallet once a trace
+    crosses a chain. On a destination chain the suspect's address IS the wallet the
+    money arrived in, so treating its outflows as a free taint source would assert
+    the suspect's money on that chain without any bridge evidence at all - and
+    would do so at full value, ignoring the fee. Callers tracing a destination leg
+    pass taint_source="" and let `seeds` be the only thing that can create taint
+    there, which keeps every downstream figure bounded by what actually crossed.
     """
     start = (start_address or "").lower()
-    result = TaintResult(observed=set(fetched))
+    source = (taint_source if taint_source is not None else start).lower()
+    result = TaintResult(observed=set(fetched), chain=chain or "")
     events = build_events(fetched)
     result.events_replayed = len(events)
 
     # (address, asset) -> queue of [size, tainted] lots, oldest first.
     ledgers: dict[tuple[str, str], deque[list[float]]] = {}
+
+    # Value carried in over a bridge, placed before any observed event so the
+    # FIFO queue holds it at the right position in the wallet's history. It is
+    # seeded rather than appended at the end because arriving late in the replay
+    # would let an unrelated outgoing transfer consume it first, which would move
+    # taint onto a payment the suspect's funds never paid for.
+    for seed in seeds or ():
+        address = (seed.address or "").lower()
+        asset = seed.asset
+        if not address or seed.value <= 0:
+            continue
+        # Skip the wallet that is already the unconditional taint source on this
+        # chain, if any: that seed is the primary one, and double-counting it would
+        # inflate every downstream figure. On a destination chain there is no such
+        # wallet (taint_source is ""), so a seed addressed to the suspect's own
+        # address still lands - which is exactly the bridge handoff case.
+        if source and address == source:
+            continue
+        ledgers.setdefault((address, asset), deque()).append(
+            [seed.value, seed.value]
+        )
+        result.bridged_in[asset] = round(
+            result.bridged_in.get(asset, 0.0) + seed.value, 8
+        )
+        result.seeds_applied.append(
+            {
+                "address": address,
+                "asset": asset,
+                "value": round(seed.value, 8),
+                "timestamp": seed.timestamp,
+                "confidence": seed.confidence,
+                "origin": seed.origin,
+                "note": seed.note,
+            }
+        )
 
     ambiguous = _ambiguous_events(events)
 
@@ -329,7 +424,7 @@ def compute_taint(fetched: dict[str, list], start_address: str) -> TaintResult:
         asset = event.asset
         sender_key = (event.from_addr, asset)
 
-        if event.from_addr == start:
+        if source and event.from_addr == source:
             # The taint source. The suspect can always pay, and everything it
             # pays is the money under investigation.
             tainted_out, shortfall = event.value, 0.0
