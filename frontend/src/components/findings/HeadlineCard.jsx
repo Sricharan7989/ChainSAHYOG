@@ -268,6 +268,34 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         </div>
       </div>
 
+      {/* WHAT THE NAME RESTS ON. The evidence tier at a glance - the entity's own
+          signed statement, a government list, a third-party pack, or our own
+          inference - and the full provenance chain beneath it. */}
+      {summary.evidence_tier && (
+        <div className="text-xs border border-[#d4d4d8] dark:border-[#262626] p-2.5 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="uppercase text-[10px] font-mono font-bold text-[#71717a] dark:text-[#888888]">
+              Evidence tier
+            </span>
+            <span
+              className={`px-1.5 py-0.5 text-[10px] font-mono uppercase border ${
+                ['self_published_signed', 'self_published', 'court_record', 'government_list'].includes(summary.evidence_tier)
+                  ? 'border-emerald-500/50 text-emerald-700 dark:text-emerald-400'
+                  : 'border-amber-500/50 text-amber-700 dark:text-amber-400'
+              }`}
+              title={summary.evidence_tier_text || ''}
+            >
+              {summary.evidence_tier_label || summary.evidence_tier}
+            </span>
+          </div>
+          {summary.citation && (
+            <p className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] leading-snug break-words">
+              Source: {summary.citation}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Target Address if present */}
       {summary.address && (
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#52525b] dark:text-[#a3a3a3] bg-[#f4f4f5] dark:bg-[#0a0a0a] p-2 border border-[#d4d4d8] dark:border-[#262626]">

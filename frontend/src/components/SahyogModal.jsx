@@ -118,12 +118,14 @@ export default function SahyogModal({ isOpen, onClose, data, onShowToast }) {
   const assumedOnRoute = rec ? rec.path_assumed_pre_existing_display : summary.path_assumed_pre_existing_display;
   const crossChain = rec ? rec.cross_chain_inferred : summary.cross_chain_inferred;
   const handoffScores = (rec ? rec.handoff_scores : summary.handoff_scores) || [];
-  const labelSource = rec?.label_source || null;
+  // The provenance chain and evidence tier of the label behind the attribution.
+  const labelSource = rec?.citation || rec?.label_source || null;
+  const tierText = rec?.evidence_tier_text || null;
   const annexureText = `ANNEXURE A - TECHNICAL BASIS OF THE ATTRIBUTION
 (Attached to draft VASP request ${caseId}. Explains how paragraph 1 was reached.)
 
 A1. How the deposit address was attributed to ${targetExchange}
-   Method: ${methodText}.${labelSource ? `\n   Source of the label: ${labelSource}.` : ''}
+   Method: ${methodText}.${tierText ? `\n   Evidence tier: ${tierText}.` : ''}${labelSource ? `\n   Source of the label: ${labelSource}.` : ''}
 
 A2. Route traced (${hops} hop${hops === 1 ? '' : 's'}, public blockchain records only)
 ${route.length ? route.map((n, i) => `   ${i === 0 ? 'Suspect wallet' : `Hop ${i}`}: ${n}`).join('\n') : '   (route not recorded in this result)'}${crossChain ? `\n   Part of this route is a bridge crossing between chains that is INFERRED from matching amounts and timing, not observed as one transaction (match score${handoffScores.length === 1 ? '' : 's'}: ${handoffScores.join(', ')} out of 100).` : ''}

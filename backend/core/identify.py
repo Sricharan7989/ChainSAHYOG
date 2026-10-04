@@ -128,12 +128,18 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
     mid-demo rather than now. Caching on mtime keeps lookups free while making
     an edit to labels.json take effect on the next request.
     """
-    global _labels, _labels_mtime
+    global _labels, _labels_mtime, label_origin_counts
 
-    try:
-        mtime = config.LABELS_PATH.stat().st_mtime
-    except OSError:
-        mtime = None
+    def _mtime(path):
+        try:
+            return path.stat().st_mtime
+        except OSError:
+            return None
+
+    # Both files are watched: the committed labels.json and the gitignored
+    # labels.local.json (rows we may use but not redistribute).
+    local_path = getattr(config, "LABELS_LOCAL_PATH", None)
+    mtime = (_mtime(config.LABELS_PATH), _mtime(local_path) if local_path else None)
 
     if _labels is not None and not force_reload and mtime == _labels_mtime:
         return _labels
@@ -144,14 +150,27 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
     except FileNotFoundError:
         # A missing labels file disables method (a) but must not break a trace;
         # the consolidation heuristic still works.
-        _labels = {}
-        return _labels
+        raw = {}
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"data/labels.json is not valid JSON: {exc}") from exc
 
+    # The local file only ADDS rows. On a clash the committed row wins, so a
+    # local copy can never silently override a published, cited label.
+    local_raw = {}
+    if local_path is not None and local_path.exists():
+        try:
+            local_raw = json.loads(local_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"data/labels.local.json is not valid JSON: {exc}") from exc
+    label_origin_counts = {"committed": 0, "local": 0, "local_file_present": bool(local_raw)}
+    merged = dict(raw)
+    for key, meta in local_raw.items():
+        if not str(key).startswith("_") and key not in raw:
+            merged[key] = meta
+
     index: dict[tuple[str, str], dict] = {}
     rejected: list[str] = []
-    for key, meta in raw.items():
+    for key, meta in merged.items():
         key = str(key).strip()
         if key.startswith("_") or not isinstance(meta, dict):
             continue
@@ -171,6 +190,7 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
             rejected.append(key)
             continue
         index[(chain_name, canonical)] = meta
+        label_origin_counts["local" if key in local_raw and key not in raw else "committed"] += 1
 
     global rejected_label_keys
     rejected_label_keys = rejected
@@ -180,6 +200,28 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
 
 # Label rows refused by the format guard on the last load, for diagnostics.
 rejected_label_keys: list[str] = []
+# How many indexed rows came from the committed file and from the local one.
+label_origin_counts: dict = {"committed": 0, "local": 0, "local_file_present": False}
+
+
+def label_stats() -> dict:
+    """Label counts for /health: committed vs local, and per chain, type and evidence tier."""
+    labels = load_labels()
+    by_chain, by_type, by_tier = {}, {}, {}
+    for (chain_name, _), meta in labels.items():
+        by_chain[chain_name] = by_chain.get(chain_name, 0) + 1
+        t = str(meta.get("type", "unknown"))
+        by_type[t] = by_type.get(t, 0) + 1
+        tier = str(meta.get("evidence_tier") or "unrecorded")
+        by_tier[tier] = by_tier.get(tier, 0) + 1
+    return {
+        "total": len(labels),
+        **label_origin_counts,
+        "refused_by_format_guard": len(rejected_label_keys),
+        "by_chain": by_chain,
+        "by_type": by_type,
+        "by_evidence_tier": by_tier,
+    }
 
 
 def label_count(chain: str | None = None) -> int:
@@ -270,9 +312,11 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
         method="known_label",
         confidence=LABEL_CONFIDENCE,
         evidence=(
-            f"Exact match in labels.json: {entity} ({entity_type}"
+            f"Label: {entity} ({entity_type}"
             + (f", {role}" if role else "")
-            + f") on {chain_name}."
+            + f") on {chain_name}. Source: "
+            + (meta.get("citation") or "not recorded")
+            + "."
         ),
     )
 

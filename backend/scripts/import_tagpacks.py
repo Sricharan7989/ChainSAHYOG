@@ -67,6 +67,7 @@ import yaml
 
 from app import config
 from core import addresses, label_names
+from scripts import apply_provenance
 
 GITHUB_API = (
     "https://api.github.com/repos/graphsense/graphsense-tagpacks/contents/packs/"
@@ -261,6 +262,8 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
             "type": entity_type,
             "chain": chain_slug,
             "source": filename,
+            # The tag's own upstream link, for the provenance chain.
+            "source_url": str(tag.get("source") or document.get("source") or ""),
         }
         # Same company/role split as scripts/normalize_label_names, so a fresh
         # import cannot reintroduce names like "binance reserve wallets ETH".
@@ -418,12 +421,21 @@ def merge(rows: list[dict], dry_run: bool) -> dict:
         # "<chain>:<address>" so the same wallet on two chains is two
         # entries, not one overwriting the other.
         key = address if chain == "ethereum" else f"{chain}:{address}"
+        # Provenance chain stated on the row itself: the pack (MIT) AND the
+        # pack's own upstream source - never collapsed to a tidier origin.
+        entries = apply_provenance.pack_entries(
+            [{"pack": row["source"].rsplit(".", 1)[0], "source_url": row.get("source_url", "")}]
+        )
         additions[key] = {
             "entity": row["entity"],
             "type": row["type"],
             "chain": chain,
             "source": "graphsense-tagpacks",
             **{k: row[k] for k in ("role", "source_name", "name_note") if row.get(k)},
+            "evidence_tier": "third_party_pack",
+            "redistributable": True,
+            "citation": apply_provenance.pack_citation(entries),
+            "provenance": entries,
         }
         stats["added"] += 1
 

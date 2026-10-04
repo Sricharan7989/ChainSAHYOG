@@ -30,3 +30,9 @@ Thumbs.db
 
 # Agent Skills
 .agents
+# Labels we may not redistribute (our own copies of explorer name tags). Merged by
+# the loader when present; see backend/core/provenance.py.
+data/labels.local.json
+
+# Downloaded GraphSense TagPacks, a cache for scripts/apply_provenance.
+data/.tagpacks-cache/

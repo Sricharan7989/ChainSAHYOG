@@ -88,6 +88,7 @@ import networkx as nx
 from app import config
 from core import (
     addresses,
+    provenance,
     bridges,
     clustering,
     identify,
@@ -233,6 +234,10 @@ class Attribution:
     # account from the transaction. Filled for exchanges after the taint pass.
     deposits: list = field(default_factory=list)
     deposits_total: int = 0
+    # Who says this address is this entity, and how strong that source is (see
+    # core/provenance.py). Empty for a consolidation lead, which has no source.
+    citation: str = ""
+    evidence_tier: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -279,6 +284,7 @@ class Attribution:
             "jurisdiction": self.jurisdiction or None,
             "deposits": list(self.deposits),
             "deposits_total": self.deposits_total,
+            **_provenance_fields(self),
         }
 
 
@@ -539,6 +545,18 @@ class _WalkContext:
             chain=slug,
             node_id=node,
         )
+        # Provenance of the label behind this identification, or of the inference.
+        meta = identify.load_labels().get((slug, address)) or {}
+        a = self.attributions[node]
+        if ident.method == "consolidation":
+            a.evidence_tier = "inferred"
+            a.citation = (
+                "Inferred by ChainSAHYOG from a deposit-consolidation pattern in the traced "
+                "graph; no published source names this address"
+            )
+        else:
+            a.evidence_tier = meta.get("evidence_tier", "")
+            a.citation = meta.get("citation", "")
         if ident.entity_type == "exchange":
             # Status from the label row where it was stamped, else from the
             # company table directly, so an unstamped row is never silently
@@ -2086,27 +2104,13 @@ METHOD_TEXT = {
 }
 
 
-def _label_source(a: Attribution) -> str | None:
-    """
-    Where the label behind an attribution came from, in words a reader outside
-    this codebase can check. A request annexure must not cite an internal file.
-    """
-    if a.method == "consolidation":
-        return None
-    meta = identify.load_labels().get((a.chain, a.address)) or {}
-    source = meta.get("source")
-    if source == "graphsense-tagpacks":
-        return "GraphSense public TagPacks (published address-attribution tags)"
-    if source == "ofac":
-        return "US Treasury OFAC Specially Designated Nationals list"
-    if source == "inferred_cross_chain_same_address":
-        origin = meta.get("inferred_from") or {}
-        return (
-            f"inferred: the same address is labelled {origin.get('entity', a.entity)} on "
-            f"{origin.get('chain', 'ethereum')}, and on {a.chain} it is an ordinary account "
-            "(not a contract) with outgoing activity; the label is not published for this chain"
-        )
-    return "project seed list from public explorer labels; per-address source not recorded"
+def _provenance_fields(a: Attribution) -> dict:
+    """Citation and evidence tier for one attribution, in the shape every consumer reads."""
+    return {
+        **provenance.describe({"citation": a.citation or None, "evidence_tier": a.evidence_tier or None}),
+        # Kept for consumers written against the Step 1 payload.
+        "label_source": a.citation or None,
+    }
 
 
 def _branch_relation(nearest: Attribution, recommended: Attribution) -> dict:
@@ -2157,7 +2161,7 @@ def _vasp_block(result: TraceResult, a: Attribution) -> dict:
         "method": a.method,
         "method_text": METHOD_TEXT.get(a.method, a.method),
         "evidence": a.evidence,
-        "label_source": _label_source(a),
+        **_provenance_fields(a),
         "confidence_score": a.confidence_score,
         "confidence_breakdown": a.confidence_breakdown,
         "confidence_components": a.confidence_components,
@@ -2307,6 +2311,7 @@ def summarize(result: TraceResult) -> dict:
             "confidence_breakdown": lead.confidence_breakdown,
             "confidence_components": lead.confidence_components,
             "method": lead.method,
+            **_provenance_fields(lead),
             "cross_chain_inferred": bool(lead.handoff_scores),
             "handoff_scores": list(lead.handoff_scores),
             "value_received": {k: round(v, 8) for k, v in lead.value_received.items()},
@@ -2428,6 +2433,7 @@ def summarize(result: TraceResult) -> dict:
         ),
         "deposits": list(nearest.deposits),
         "deposits_total": nearest.deposits_total,
+        **_provenance_fields(nearest),
         "method_text": METHOD_TEXT.get(nearest.method, nearest.method),
         "termination": result.termination,
         "cluster_id": nearest.cluster_id,

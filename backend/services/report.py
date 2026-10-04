@@ -858,6 +858,15 @@ def build_report(payload: dict) -> bytes:
                 ),
             }.get(summary.get("method"), "Deposit-consolidation pattern (unconfirmed)"),
         ))
+        # What the name rests on, at a glance: the evidence tier, then the full
+        # provenance chain - who published the fact and through whom we got it.
+        rows.append((
+            "Evidence tier",
+            (summary.get("evidence_tier_label") or "Not recorded")
+            + (f' <font size="7">({summary.get("evidence_tier_text")})</font>'
+               if summary.get("evidence_tier_text") else ""),
+        ))
+        rows.append(("Source of the label", summary.get("citation") or "Not recorded"))
         story.append(_kv_table(rows, styles))
     elif summary.get("lead"):
         story.append(Paragraph(

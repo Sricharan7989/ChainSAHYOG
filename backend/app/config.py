@@ -192,6 +192,9 @@ def chain_by_slug(slug: str) -> dict | None:
 # address -> entity mapping (exchanges, mixers, bridges). Method (a) of
 # exchange identification — the known-label lookup — reads from here.
 LABELS_PATH = DATA_DIR / "labels.json"
+# Labels we may NOT redistribute (our own copy of an explorer name tag, say).
+# Gitignored; merged by the loader when present. See core/provenance.py.
+LABELS_LOCAL_PATH = DATA_DIR / "labels.local.json"
 
 # --- Graph store (optional) ---------------------------------------------------
 

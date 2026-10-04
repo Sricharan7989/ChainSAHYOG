@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response
 from app import config
 from core import tracer
 from services import graph_store, replay, report
-from core import addresses
+from core import addresses, identify
 from services.etherscan import EtherscanError
 
 router = APIRouter()
@@ -48,6 +48,9 @@ def health() -> dict:
                 for chain in config.supported_chains()
             },
         },
+        # Committed (redistributable) and local (not redistributable) label
+        # counts, reported separately, with the evidence-tier mix.
+        "labels": identify.label_stats(),
     }
 
 
