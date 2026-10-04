@@ -685,7 +685,15 @@ async def _walk_leg(
             fetched_transfers = await ctx.client.get_wallet_transfers(
                 address, chain_id=chain["chain_id"]
             )
-            fetched[address] = fetched_transfers
+            # Merge rather than overwrite: a bridge handoff may already have added
+            # an older credit transfer to this wallet's history (found by a
+            # block-range query), and the taint replay needs it.
+            prior = fetched.get(address) or []
+            fresh = {(t.hash, t.from_addr, t.to_addr, t.asset, t.value) for t in fetched_transfers}
+            fetched[address] = list(fetched_transfers) + [
+                t for t in prior
+                if (t.hash, t.from_addr, t.to_addr, t.asset, t.value) not in fresh
+            ]
             transfers = [t for t in fetched_transfers if t.from_addr == address]
         except Exception as exc:  # noqa: BLE001 - one bad wallet must not kill the trace
             if is_start and node == ctx.node(ctx.suspect, slug):
@@ -953,11 +961,50 @@ async def _follow_bridges(
             ctx.handoffs.append(bridges.destination_unavailable(dest_slug, deposit))
             continue
 
-        ctx.chain_fetched(dest_slug)[hop.from_addr] = dest_transfers
+        # A COPY, never the client's cached list: the credit found by the windowed
+        # query may be appended to this wallet's history below, and that must not
+        # leak into the client cache shared with later traces.
+        ctx.chain_fetched(dest_slug)[hop.from_addr] = list(dest_transfers)
 
-        candidates = bridges.match_candidates(deposit, dest_transfers, spec)
+        # MATCH AGAINST THE DEPOSIT'S OWN TIME WINDOW. The fetch above is the
+        # wallet's most recent history, which is what the destination walk needs
+        # but can end long after an old deposit. Where the client supports it, the
+        # destination chain is also queried by the block range covering
+        # [deposit - 10 min, deposit + the route's window], so the credit is looked
+        # for where it would actually be. The two sets are merged, without
+        # duplicates, so nothing the recent fetch found is lost.
+        match_transfers = list(dest_transfers)
+        window_reach = None
+        windowed = getattr(ctx.client, "get_wallet_transfers_window", None)
+        if windowed is not None:
+            try:
+                in_window, window_reach = await windowed(
+                    hop.from_addr,
+                    dest_chain["chain_id"],
+                    deposit.timestamp - 600,
+                    deposit.timestamp + int(spec.get("window_sec") or config.BRIDGE_TIME_WINDOW_SEC),
+                )
+                seen = {(t.hash, t.from_addr, t.to_addr, t.asset, t.value) for t in match_transfers}
+                for t in in_window:
+                    k = (t.hash, t.from_addr, t.to_addr, t.asset, t.value)
+                    if k not in seen:
+                        seen.add(k)
+                        match_transfers.append(t)
+            except Exception as exc:  # noqa: BLE001 - fall back to the recent history
+                ctx.notes.append(
+                    f"Could not query {dest_slug} by block range for the {spec['entity']} "
+                    f"deposit {deposit.tx_hash[:12]}: {exc}. Matched against recent history only."
+                )
+                window_reach = None
+
+        candidates = bridges.match_candidates(deposit, match_transfers, spec)
         match = bridges.resolve(candidates, deposit, spec)
-        if not candidates:
+        if not candidates and window_reach is not None and not window_reach.get("complete", True):
+            ctx.notes.append(
+                f"The {dest_slug} block-range query for deposit {deposit.tx_hash[:12]} hit the "
+                "row cap, so even the deposit's own window was not fully read."
+            )
+        if not candidates and (window_reach is None or not window_reach.get("complete", True)):
             # An empty result only means "no match" if the fetched history reaches
             # back to the deposit. The credit arrives as a token (e.g. a WETH mint)
             # or as a native transfer, and each comes from its own capped fetch.
@@ -983,6 +1030,16 @@ async def _follow_bridges(
             continue
 
         credit = match.chosen
+        # If the credit came from the windowed query it is older than the history
+        # the destination replay will see. Add that one transfer to the wallet's
+        # history so the seed attaches to the credit itself (counted once, at its
+        # real time) rather than falling back to a separate lot.
+        dest_history = ctx.chain_fetched(dest_slug).setdefault(hop.from_addr, [])
+        if not any(t.hash == credit.tx_hash and t.to_addr == hop.from_addr for t in dest_history):
+            for t in match_transfers:
+                if t.hash == credit.tx_hash and t.to_addr == hop.from_addr and t.asset == credit.asset:
+                    dest_history.append(t)
+                    break
         carried = _carried_taint(ctx, deposit, credit)
         # Set on the handoff itself so the report can state how much of the crossed
         # value is the suspect's, rather than only that a crossing happened.

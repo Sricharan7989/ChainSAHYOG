@@ -131,6 +131,9 @@ class EtherscanClient:
         # a window that never covered the event is a false negative. Recording
         # the reach lets a caller say "we could not look that far back" instead.
         self.history_reach: dict[tuple[int, str], dict[str, dict]] = {}
+        # (chain_id, address, start_block, end_block) -> (transfers, reach), for
+        # the windowed lookups used to match bridge credits.
+        self._window_cache: dict[tuple, tuple[list, dict]] = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -150,6 +153,7 @@ class EtherscanClient:
 
     def clear_cache(self) -> None:
         self._cache.clear()
+        self._window_cache.clear()
         self._skipped_by_wallet.clear()
         self._tallied.clear()
 
@@ -324,6 +328,79 @@ class EtherscanClient:
         self._cache[key] = transfers
         self._count_skipped(key)
         return transfers
+
+    async def block_at(self, timestamp: int, chain_id: int, closest: str = "before") -> int:
+        """The block number at a unix time on one chain (Etherscan getblocknobytime)."""
+        result = await self._request(
+            {
+                "module": "block",
+                "action": "getblocknobytime",
+                "timestamp": int(max(0, timestamp)),
+                "closest": closest,
+            },
+            chain_id=chain_id,
+        )
+        return int(result)
+
+    async def get_wallet_transfers_window(
+        self, address: str, chain_id: int, start_ts: int, end_ts: int
+    ) -> tuple[list[Transfer], dict]:
+        """
+        One wallet's transfers within a TIME WINDOW, both directions, oldest first.
+
+        WHY THIS EXISTS. get_wallet_transfers returns a wallet's most recent rows,
+        which is right for walking forward but wrong for answering "did this
+        specific thing happen at that time?". A busy wallet's newest 1,000 rows
+        can all post-date a bridge deposit made weeks ago, so its credit is never
+        in the data. Here the request is bounded by the block range covering the
+        window instead, so the answer is about the window that matters.
+
+        Returns (transfers, reach). `reach` says whether the window itself hit the
+        row cap, in which case it is still incomplete and the caller must say so.
+        Cached per (chain, address, block range); never mixed into the forward-walk
+        cache, which describes a different slice of history.
+        """
+        chain = config.chain(chain_id)
+        resolved = chain["chain_id"]
+        wallet = normalize_address(address)
+        start_block = await self.block_at(start_ts, resolved, "before")
+        end_block = await self.block_at(end_ts, resolved, "after")
+        key = (resolved, wallet, start_block, end_block)
+        cached = self._window_cache.get(key)
+        if cached is not None:
+            self.cache_hits += 1
+            return cached
+
+        common = {
+            "module": "account",
+            "address": wallet,
+            "startblock": start_block,
+            "endblock": end_block,
+            "page": 1,
+            "offset": config.MAX_TXNS_PER_ADDRESS,
+            "sort": "asc",
+        }
+        raw = await self._request({**common, "action": "txlist"}, chain_id=resolved)
+        token_raw = await self._request({**common, "action": "tokentx"}, chain_id=resolved)
+
+        transfers: list[Transfer] = []
+        for tx in raw if isinstance(raw, list) else []:
+            transfer = _parse_native_transfer(tx, wallet=wallet, asset=chain["native"])
+            if transfer is not None:
+                transfers.append(transfer)
+        for tx in token_raw if isinstance(token_raw, list) else []:
+            transfer, _ = _parse_token_transfer(tx, wallet=wallet, chain_id=resolved)
+            if transfer is not None:
+                transfers.append(transfer)
+
+        cap = config.MAX_TXNS_PER_ADDRESS
+        reach = {
+            "start_block": start_block,
+            "end_block": end_block,
+            "complete": (len(raw or []) < cap) and (len(token_raw or []) < cap),
+        }
+        self._window_cache[key] = (transfers, reach)
+        return transfers, reach
 
     def _count_skipped(self, key: tuple[int, str]) -> None:
         """

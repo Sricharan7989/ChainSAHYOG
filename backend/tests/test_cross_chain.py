@@ -568,6 +568,40 @@ def tie_break_tests():
     return fail
 
 
+def windowed_fetch_tests():
+    print("\n--- 20. an old credit outside the recent history is found by the block-range query ---")
+    # The 0x6242 case: the destination wallet's newest rows all post-date the
+    # deposit, so the credit is only reachable by asking for the deposit's window.
+    books = {ETH: {SUSPECT: [tx(SUSPECT, BRIDGE, 10.0, "0xolddeposit", ts=1700000000)]}}
+    books.update({ARB: {SUSPECT: [tx(SUSPECT, NEXT, 1.0, "0xrecent", ts=1709000000)]}})
+    old_credit = tx(L2_GATEWAY, SUSPECT, 9.98, "0xoldcredit", ts=1700000060)
+
+    class WindowClient(ChainClient):
+        history_reach = {(ARB, SUSPECT): {"native": {"rows": config.MAX_TXNS_PER_ADDRESS,
+                                                     "truncated": True, "oldest": 1708000000}}}
+        windows = []
+
+        async def get_wallet_transfers_window(self, address, chain_id, start_ts, end_ts):
+            self.windows.append((chain_id, address, start_ts, end_ts))
+            hits = [old_credit] if start_ts <= old_credit.timestamp <= end_ts else []
+            return hits, {"complete": True}
+
+    client = WindowClient(books)
+    with world_with_test_registry():
+        result = asyncio.run(tracer.trace(SUSPECT, max_depth=4, client=client))
+    match = result.cross_chain_handoffs[0]
+    check("the destination was queried by the deposit's window", len(client.windows) >= 1, True)
+    check("starting just before the deposit", client.windows[0][2] if client.windows else None, 1700000000 - 600)
+    check("the old credit is matched instead of 'not checked'", match.status, "matched")
+    check("it is the credit from the window", match.chosen.tx_hash if match.chosen else None, "0xoldcredit")
+    arb = result.taint_chains.get("arbitrum")
+    check("the credit joins the destination history, so the seed attaches to it once",
+          arb.nodes[(SUSPECT, "ETH")].received if arb else None, 9.98 + 0.0, 1e-9)
+    check("and the client's cached history was not mutated",
+          all(t.hash != "0xoldcredit" for t in books[ARB][SUSPECT]), True)
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -659,6 +693,7 @@ def run_all():
     real_registry_tests()
     history_reach_tests()
     tie_break_tests()
+    windowed_fetch_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 
