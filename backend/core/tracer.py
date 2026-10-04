@@ -93,6 +93,7 @@ from core import (
     scoring,
     taint as taint_engine,
     typologies,
+    vasp_status,
 )
 from services import graph_store
 from services.etherscan import EtherscanClient, Transfer, get_client, normalize_address
@@ -219,6 +220,12 @@ class Attribution:
     # for display and for looking the wallet up on an explorer.
     chain: str = ""
     node_id: str = ""
+    # Can a request be served on this VASP, and how? From the label (see
+    # core/vasp_status.py). None for anything that is not a named exchange.
+    actionable: bool | None = None
+    actionable_reason: str = ""
+    jurisdiction: str = ""
+    role: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -259,6 +266,10 @@ class Attribution:
             "handoff_scores": list(self.handoff_scores),
             "cross_chain_inferred": bool(self.handoff_scores),
             "chain": self.chain,
+            "role": self.role or None,
+            "actionable": self.actionable,
+            "actionable_reason": self.actionable_reason or None,
+            "jurisdiction": self.jurisdiction or None,
         }
 
 
@@ -519,6 +530,17 @@ class _WalkContext:
             chain=slug,
             node_id=node,
         )
+        if ident.entity_type == "exchange":
+            # Status from the label row where it was stamped, else from the
+            # company table directly, so an unstamped row is never silently
+            # treated as actionable without its reason.
+            meta = identify.load_labels().get((slug, address)) or {}
+            status = vasp_status.status_for(ident.entity)
+            a = self.attributions[node]
+            a.actionable = meta.get("actionable", status["actionable"])
+            a.actionable_reason = meta.get("actionable_reason", status["actionable_reason"])
+            a.jurisdiction = meta.get("jurisdiction", status["jurisdiction"])
+            a.role = meta.get("role", "") or ""
 
     def taint_for(self, slug: str) -> object | None:
         """
@@ -2110,6 +2132,31 @@ def summarize(result: TraceResult) -> dict:
         }
 
     nearest = exchanges[0]
+
+    # WHO TO SERVE. The nearest named exchange is the finding; it is not always
+    # where a request can go. If it is insolvent, sanctioned or seized, it stays
+    # the headline and the evidence, and the recommendation moves to the nearest
+    # ACTIONABLE exchange the trace reached - if there is one.
+    recommended = next((a for a in exchanges if a.actionable is not False), None)
+    if nearest.actionable is False:
+        action = (
+            f"{nearest.entity} is not actionable ({nearest.actionable_reason}). It remains the "
+            "nearest endpoint and is kept as evidence. "
+        )
+        if recommended is not None:
+            action += (
+                f"The nearest actionable VASP this trace reached is {recommended.entity} "
+                f"({recommended.hop_distance} hops). "
+                + vasp_status.request_route(recommended.entity, recommended.jurisdiction, recommended.address)
+            )
+        else:
+            action += (
+                "No other actionable VASP was reached in this trace; a deeper trace may find "
+                "where the funds went after this point."
+            )
+    else:
+        action = vasp_status.request_route(nearest.entity, nearest.jurisdiction, nearest.address)
+
     return {
         "found": True,
         "lead": False,
@@ -2144,10 +2191,29 @@ def summarize(result: TraceResult) -> dict:
         **_taint_fields(nearest, result),
         "headline": _headline(result, nearest),
         "caveat": _caveat_for(result, nearest),
-        "recommended_action": (
-            f"Serve a lawful data request to {nearest.entity} via SAHYOG for "
-            f"KYC records on deposits to {nearest.address}, covering the "
-            f"transactions listed in the traced path."
+        "recommended_action": action,
+        "actionable": nearest.actionable,
+        "actionable_reason": nearest.actionable_reason,
+        "jurisdiction": nearest.jurisdiction or "unknown",
+        # The VASP a request should actually go to: the nearest exchange unless it
+        # is not actionable, then the nearest actionable one reached, else None.
+        "recommended_vasp": (
+            None
+            if recommended is None
+            else {
+                "entity": recommended.entity,
+                "address": recommended.address,
+                "node_id": recommended.node_id,
+                "hop_distance": recommended.hop_distance,
+                "jurisdiction": recommended.jurisdiction or "unknown",
+                "chain": recommended.chain,
+                "confidence_score": recommended.confidence_score,
+                "tainted_value_display": (
+                    format_assets(recommended.tainted_value_received)
+                    if recommended.tainted_value_received
+                    else None
+                ),
+            }
         ),
         "termination": result.termination,
         "cluster_id": nearest.cluster_id,

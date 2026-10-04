@@ -602,6 +602,36 @@ def windowed_fetch_tests():
     return fail
 
 
+def actionable_tests():
+    print("\n--- 21. a non-actionable endpoint stays the finding; the request moves to the nearest actionable VASP ---")
+    ftx = "0x2faf487a4414fe77e2327f0bf4ae2a264a776ad2"      # FTX: insolvent
+    binance = "0x28c6c06298d514db089934071355e5743bf21d60"  # Binance: foreign
+    books = {ETH: {
+        SUSPECT: [tx(SUSPECT, ftx, 5.0, "0xtoftx", ts=1700000100), tx(SUSPECT, NEXT, 4.0, "0xtonext", ts=1700000100)],
+        NEXT: [tx(NEXT, binance, 4.0, "0xtobinance", ts=1700000200)],
+    }}
+    result, _ = traced(books)
+    summary = tracer.to_json(result)["summary"]
+    check("the nearest named exchange is still the headline", summary.get("exchange"), "FTX")
+    check("marked not actionable", summary.get("actionable"), False)
+    check("with the reason", "insolvent" in (summary.get("actionable_reason") or ""), True)
+    check("the recommended VASP is the nearest actionable one", (summary.get("recommended_vasp") or {}).get("entity"), "Binance")
+    action = summary.get("recommended_action", "")
+    check("the action says FTX is not actionable and is kept as evidence",
+          "FTX is not actionable (" in action and "kept as evidence" in action, True)
+    check("and routes Binance as a foreign VASP: LE channel and MLAT",
+          "foreign VASP" in action and "MLAT" in action, True)
+
+    print("\n--- 21b. with no actionable VASP reached, it says so instead of recommending FTX ---")
+    books = {ETH: {SUSPECT: [tx(SUSPECT, ftx, 5.0, "0xtoftx", ts=1700000100)]}}
+    result, _ = traced(books)
+    summary = tracer.to_json(result)["summary"]
+    check("no VASP is recommended", summary.get("recommended_vasp"), None)
+    check("and the action says none was reached",
+          "No other actionable VASP was reached" in summary.get("recommended_action", ""), True)
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -700,6 +730,7 @@ def run_all():
     history_reach_tests()
     tie_break_tests()
     windowed_fetch_tests()
+    actionable_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 

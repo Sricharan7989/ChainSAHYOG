@@ -997,9 +997,22 @@ def build_report(payload: dict) -> bytes:
     action = summary.get("recommended_action", "")
     if action:
         story.append(Paragraph("Recommended action", styles["h2"]))
-        story.append(KeepTogether([
-            Paragraph(action, styles["body"]),
-        ]))
+        block = [Paragraph(action, styles["body"])]
+        if summary.get("found"):
+            rec = summary.get("recommended_vasp") or {}
+            jurisdiction = rec.get("jurisdiction") or summary.get("jurisdiction") or "unknown"
+            block.append(Spacer(1, 4))
+            block.append(_kv_table([
+                ("Actionable",
+                 "Yes - no bar recorded" if summary.get("actionable") is not False
+                 else f'No - {summary.get("actionable_reason", "")}'),
+                ("Request goes to", rec.get("entity") or "No actionable VASP reached"),
+                ("Jurisdiction", {
+                    "india": "Indian VASP - BNSS 94 notice for production of customer records",
+                    "foreign": "Foreign VASP - its law-enforcement request channel; MLAT for evidence relied on in court",
+                }.get(jurisdiction, "Not established - confirm before choosing BNSS 94 or the foreign route")),
+            ], styles))
+        story.append(KeepTogether(block))
 
     # --- Disclaimer -----------------------------------------------------
     story.append(Spacer(1, 10))

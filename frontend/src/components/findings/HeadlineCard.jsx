@@ -291,6 +291,39 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         </div>
       )}
 
+      {/* WHO CAN ACTUALLY BE SERVED. The nearest exchange is the finding; if it is
+          insolvent, sanctioned or seized it is kept as evidence and the request moves
+          to the nearest actionable VASP reached - or the card says none was. */}
+      {isConfirmed && summary.actionable === false && (
+        <div className="text-xs bg-red-500/10 border border-red-500/40 p-2.5 space-y-1">
+          <span className="font-bold uppercase font-mono text-[10px] text-red-700 dark:text-red-400 block">
+            Not actionable: {summary.exchange}
+          </span>
+          <p className="text-[#52525b] dark:text-[#a3a3a3] leading-snug">
+            {summary.exchange} is {summary.actionable_reason}. It stays on record as the
+            nearest endpoint.{' '}
+            {summary.recommended_vasp
+              ? `The request goes to the nearest actionable VASP reached: ${summary.recommended_vasp.entity} (${summary.recommended_vasp.hop_distance} hops${summary.recommended_vasp.tainted_value_display ? `, ${summary.recommended_vasp.tainted_value_display} attributable` : ''}).`
+              : 'No other actionable VASP was reached in this trace.'}
+          </p>
+        </div>
+      )}
+      {isConfirmed && (summary.recommended_vasp || summary.jurisdiction) && (
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-[#52525b] dark:text-[#a3a3a3]">
+          <span className="uppercase text-[10px] font-bold">Jurisdiction</span>
+          <span className="px-1.5 py-0.5 border border-[#d4d4d8] dark:border-[#262626] uppercase">
+            {(summary.recommended_vasp?.jurisdiction || summary.jurisdiction || 'unknown')}
+          </span>
+          <span>
+            {{
+              india: 'Indian VASP: BNSS 94 notice for customer records',
+              foreign: 'Foreign VASP: its law-enforcement channel; MLAT for court evidence',
+            }[summary.recommended_vasp?.jurisdiction || summary.jurisdiction] ||
+              'Not established: confirm before choosing the route'}
+          </span>
+        </div>
+      )}
+
       {/* Recommended Action & Action Buttons */}
       <div className="pt-3 border-t border-[#d4d4d8] dark:border-[#262626] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex-1 space-y-0.5">
@@ -305,7 +338,9 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         </div>
 
         <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
-          {isConfirmed && (
+          {/* Only when there is a VASP a request can actually go to. Older payloads
+              carry no recommended_vasp, so they keep the button as before. */}
+          {isConfirmed && (summary.recommended_vasp || summary.actionable === undefined) && (
             <button
               type="button"
               onClick={onOpenSahyog}
