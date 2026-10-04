@@ -149,6 +149,12 @@ class BridgeMatch:
     # much of the crossed value is actually under investigation - a crossing can be
     # genuine and still carry none of the suspect's funds.
     tainted_value: float = 0.0
+    # Which bridge this is about, for outcomes that never built a Deposit (a
+    # bridge with no registered route). Without it the report could only say
+    # "Bridge ? -> ?", which names nothing an investigator can look up.
+    bridge_entity: str = ""
+    bridge_address: str = ""
+    bridge_chain: str = ""
 
     @property
     def matched(self) -> bool:
@@ -197,6 +203,13 @@ class BridgeMatch:
             "candidates": [c.to_payload() for c in self.candidates],
             "evidence": self.evidence(),
         }
+        if not self.spec and (self.bridge_entity or self.bridge_address):
+            payload["bridge"] = {
+                "entity": self.bridge_entity or "Unnamed bridge",
+                "address": self.bridge_address,
+                "chain": self.bridge_chain,
+                "registered": False,
+            }
         if self.spec:
             payload["bridge"] = {
                 "entity": self.spec.get("entity", ""),
@@ -481,17 +494,19 @@ def unmatched(chain_slug: str, address: str, entity: str = "") -> BridgeMatch:
     route for. Both stop the trace honestly; only the first is a decision.
     """
     reason = config.bridge_unsupported_reason(chain_slug, address)
+    who = dict(bridge_entity=entity, bridge_address=address, bridge_chain=chain_slug)
     if reason:
-        return BridgeMatch(status="unsupported", reason=reason, spec=None)
+        return BridgeMatch(status="unsupported", reason=reason, spec=None, **who)
     return BridgeMatch(
         status="not_registered",
         reason=(
-            f"{entity or address} is tagged as a bridge in our label data, but no verified deposit "
-            f"and payout pattern is registered for it on {chain_slug}. The trace stops here rather "
-            "than guessing a destination chain. This is a gap in our registry, not a claim that "
-            "the funds did not move."
+            f"{entity or address} is labelled a bridge, but its route is not registered in this "
+            f"tool, so no handoff was attempted: we do not know which chain it leads to or how its "
+            f"payouts appear there. The trace stops at it on {chain_slug} rather than guessing a "
+            "destination. This is a gap in our registry, not a claim that the funds did not move."
         ),
         spec=None,
+        **who,
     )
 
 

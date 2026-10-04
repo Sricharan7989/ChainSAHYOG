@@ -679,6 +679,12 @@ def cap_tests():
     check("and the gap is reported", result.cross_chain_handoffs[0].status, "not_registered")
     check("saying the registry is the problem, not the money",
           "gap in our registry" in result.cross_chain_handoffs[0].reason, True)
+    payload = result.cross_chain_handoffs[0].to_payload()
+    check("the bridge is named from its label", payload.get("bridge", {}).get("entity"), "Some Bridge")
+    check("with its address and chain", (payload["bridge"].get("address"), payload["bridge"].get("chain")),
+          (unlisted, "ethereum"))
+    check("and it says no handoff was attempted",
+          "no handoff was attempted" in result.cross_chain_handoffs[0].reason, True)
 
     return fail
 

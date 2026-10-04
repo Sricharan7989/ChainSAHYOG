@@ -394,10 +394,15 @@ def _cross_chain_section(payload: dict, styles: dict) -> list:
         )
         from_chain = deposit.get("chain") or ""
         to_chain = deposit.get("to_chain") or ""
+        # A bridge with no registered route has no known destination; say that
+        # rather than printing "( -> ?)".
+        route = (
+            f'{from_chain} → {to_chain or "unknown chain"}'
+            if from_chain
+            else f'on {bridge.get("chain") or "this chain"}, destination unknown: route not registered'
+        )
         out.append(Paragraph(
-            f'<b>{entity}</b> '
-            f'({from_chain} → {to_chain or "?"}) — '
-            f'{labels.get(state, state)}',
+            f'<b>{entity}</b> ({route}) — {labels.get(state, state)}',
             styles["body"],
         ))
         if handoff.get("reason"):

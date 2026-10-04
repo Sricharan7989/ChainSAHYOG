@@ -155,10 +155,23 @@ export default function CrossChainCard({ cross }) {
               </span>
             </div>
 
+            {/* A crossing attempt has a source and a destination; an unregistered
+                bridge has no known destination, and says so rather than "? -> ?". */}
             <div className="text-[#888888] uppercase">
-              {deposit.chain || '?'} <span className="text-cyan-400">&rarr;</span>{' '}
-              {deposit.to_chain || '?'}
+              {deposit.chain ? (
+                <>
+                  {deposit.chain} <span className="text-cyan-400">&rarr;</span>{' '}
+                  {deposit.to_chain || 'unknown chain'}
+                </>
+              ) : (
+                <>
+                  on {h.bridge?.chain || 'this chain'} · destination unknown, route not registered
+                </>
+              )}
             </div>
+            {!deposit.chain && h.bridge?.address && (
+              <div className="text-[#666666] truncate">{h.bridge.address}</div>
+            )}
 
             {h.reason && (
               <p className="text-[#a3a3a3] leading-relaxed">{h.reason}</p>

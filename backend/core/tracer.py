@@ -873,7 +873,8 @@ async def _follow_bridges(
     for bridge_addr, hop in sorted(
         unregistered.items(), key=lambda kv: (-kv[1].value, kv[0])
     ):
-        handoff = bridges.unmatched(slug, bridge_addr)
+        label = ctx.store.wallet(ctx.node(bridge_addr, slug)).get("label") or ""
+        handoff = bridges.unmatched(slug, bridge_addr, label)
         ctx.handoffs.append(handoff)
         ctx.notes.append(
             f"{bridge_addr} is labelled a bridge on {slug} but is not followed: "
@@ -914,7 +915,8 @@ async def _follow_bridges(
         if spec is None:
             # Tagged as a bridge but we hold no verified route for it. A real
             # state, and a gap in our data rather than in the money.
-            ctx.handoffs.append(bridges.unmatched(slug, hop.to_addr))
+            label = ctx.store.wallet(ctx.node(hop.to_addr, slug)).get("label") or ""
+            ctx.handoffs.append(bridges.unmatched(slug, hop.to_addr, label))
             continue
 
         dest_slug = spec["to_chain"]
