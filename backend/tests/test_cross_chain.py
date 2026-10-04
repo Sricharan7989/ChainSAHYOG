@@ -443,6 +443,28 @@ def second_deposit_tests():
     return fail
 
 
+def route_uncertainty_tests():
+    print("\n--- 16. route uncertainty is measured past a crossing too ---")
+    # On the destination chain the wallet receives 9.98 over the bridge but sends
+    # 15 onward, so 5.02 of that leg rests on an assumed prior balance. The route
+    # to the exchange crosses that leg and must NOT read as fully accounted for.
+    books = {ETH: {SUSPECT: [tx(SUSPECT, BRIDGE, 10.0, "0xdeposit", ts=1700000000)]}}
+    books.update({
+        ARB: {
+            L2_GATEWAY: [tx(L2_GATEWAY, SUSPECT, 9.98, "0xcredit", ts=1700000060)],
+            SUSPECT: [tx(SUSPECT, NEXT, 15.0, "0xarbnext", ts=1700000700)],
+            NEXT: [tx(NEXT, BINANCE_ARB, 14.0, "0xarbbinance", ts=1700000800)],
+        }
+    })
+    result, _ = traced(books)
+    summary = tracer.to_json(result)["summary"]
+    check("the finding is the exchange past the crossing", summary.get("node_id"), f"arbitrum:{BINANCE_ARB}")
+    check("the route is NOT reported as fully accounted for", summary.get("path_fully_accounted"), False)
+    check("and the assumed share on the route is quantified",
+          summary.get("path_assumed_pre_existing", {}).get("ETH", 0.0) > 5.0, True)
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -516,6 +538,7 @@ def run_all():
     nomatch_tests()
     cap_tests()
     second_deposit_tests()
+    route_uncertainty_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 

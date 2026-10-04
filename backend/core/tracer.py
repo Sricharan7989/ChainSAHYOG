@@ -1859,6 +1859,27 @@ def _caveat_for(result: TraceResult, attribution: Attribution | None) -> str:
     return NO_TAINT_CAVEAT
 
 
+def _hop_nodes(result: TraceResult, hop: Hop) -> tuple[str, str]:
+    """
+    The graph edge a hop corresponds to, as (source node id, target node id).
+
+    A route is a list of NODE IDS, which carry their chain off the starting chain
+    ("polygon:0xabc"), while a Hop records bare addresses plus a chain. Comparing
+    the two directly never matches past a crossing - which made every cross-chain
+    route read as fully accounted for, however much of it rested on an assumed
+    prior balance. A crossing's source is the bridge on the chain the deposit
+    LEFT, not the chain it arrived on.
+    """
+    primary = result.chain.get("slug", "")
+    source_chain = hop.chain
+    if hop.edge_type == "cross_chain" and getattr(hop.handoff, "deposit", None) is not None:
+        source_chain = hop.handoff.deposit.chain
+    return (
+        _node_id(hop.from_addr, source_chain, primary),
+        _node_id(hop.to_addr, hop.chain, primary),
+    )
+
+
 def _path_assumption(result: TraceResult, attribution: Attribution) -> dict[str, float]:
     """
     How much of THIS finding's route rested on the pre-existing-balance assumption.
@@ -1873,7 +1894,7 @@ def _path_assumption(result: TraceResult, attribution: Attribution) -> dict[str,
     legs = set(zip(attribution.path, attribution.path[1:]))
     totals: dict[str, float] = {}
     for hop in result.hops:
-        if (hop.from_addr, hop.to_addr) in legs and hop.assumed_pre_existing > 0:
+        if _hop_nodes(result, hop) in legs and hop.assumed_pre_existing > 0:
             totals[hop.asset] = totals.get(hop.asset, 0.0) + hop.assumed_pre_existing
     return {asset: round(value, 8) for asset, value in totals.items()}
 
