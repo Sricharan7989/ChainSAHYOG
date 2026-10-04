@@ -793,17 +793,22 @@ async def _follow_bridges(
     """
     slug = chain["slug"]
 
-    # Deposits = hops whose destination is a bridge we have a registered route
-    # for. Deduplicated per (wallet, bridge, asset) keeping the largest, because a
-    # wallet that bridged repeatedly is one interesting fact, not five.
-    deposits: dict[tuple[str, str, str], Hop] = {}
+    # Deposits are INDIVIDUAL TRANSFERS to a bridge we hold a route for - not
+    # hops. A hop is an aggregate: one real wallet made 38 separate deposits to
+    # the Polygon bridge, and its hop carried their 184 ETH sum, the latest
+    # timestamp and the largest hash. No credit on the destination chain can equal
+    # a sum of 38 deposits, so matching the hop guaranteed a false "no match". A
+    # bridge credits each deposit separately, so each deposit is matched on its
+    # own amount and its own time.
+    deposits: list[tuple[Hop, object]] = []
     # Tagged as a bridge, but no verified route on file. Collected separately so
     # the gap gets reported: a trail that goes cold at a bridge we do not know is
     # a data gap on our side, and saying nothing about it would read as "nothing
     # to follow here".
     unregistered: dict[str, Hop] = {}
+    fetched = ctx.fetched_by_chain.get(slug) or {}
     for hop in ctx.hops:
-        if hop.chain != slug:
+        if hop.chain != slug or hop.edge_type != "transfer":
             continue
         if bridges.lookup(slug, hop.to_addr) is None:
             # The store is keyed by NODE ID, which is the bare address on the chain
@@ -818,42 +823,61 @@ async def _follow_bridges(
             if _flags.get("is_bridge"):
                 unregistered.setdefault(hop.to_addr, hop)
             continue
-        key = (hop.from_addr, hop.to_addr, hop.asset)
-        best = deposits.get(key)
-        if best is None or hop.value > best.value:
-            deposits[key] = hop
+        floor = config.dust_threshold_for(hop.asset, ctx.dust_threshold)
+        for transfer in fetched.get(hop.from_addr, ()):
+            if (
+                transfer.from_addr == hop.from_addr
+                and transfer.to_addr == hop.to_addr
+                and transfer.asset == hop.asset
+                and transfer.value >= floor
+            ):
+                deposits.append((hop, transfer))
 
     for bridge_addr, hop in sorted(
         unregistered.items(), key=lambda kv: (-kv[1].value, kv[0])
     ):
-        ctx.handoffs.append(bridges.unmatched(slug, bridge_addr))
+        handoff = bridges.unmatched(slug, bridge_addr)
+        ctx.handoffs.append(handoff)
         ctx.notes.append(
-            f"{bridge_addr} is labelled a bridge on {slug} but we hold no "
-            f"verified route for it; the trail cannot be continued past it."
+            f"{bridge_addr} is labelled a bridge on {slug} but is not followed: "
+            + (
+                "it is a recognised but unsupported route."
+                if handoff.status == "unsupported"
+                else "we hold no verified route for it."
+            )
         )
 
-    ranked = sorted(deposits.values(), key=lambda h: (-h.value, h.to_addr))
+    # WHICH DEPOSITS TO ATTEMPT. Each attempt costs a destination-chain walk, so
+    # the count is capped - and the ones carrying the suspect's money go first.
+    # Ranking by size alone would spend the budget on a large deposit that FIFO
+    # says carried none of the suspect's funds, and skip the one that did.
+    leg = ctx.taint.get(slug)
+
+    def _deposit_taint(item) -> float:
+        hop, transfer = item
+        if leg is None:
+            return 0.0
+        return leg.transfer(transfer.hash, transfer.from_addr, transfer.to_addr, transfer.asset) or 0.0
+
+    ranked = sorted(
+        deposits,
+        key=lambda item: (-_deposit_taint(item), -item[1].value, item[1].hash),
+    )
     if len(ranked) > config.BRIDGE_MAX_DEPOSITS_PER_CHAIN:
         ctx.notes.append(
-            f"{slug} deposited into {len(ranked)} bridges; attempted the "
-            f"{config.BRIDGE_MAX_DEPOSITS_PER_CHAIN} largest by value."
+            f"{len(ranked)} individual bridge deposits were found on {slug}; "
+            f"attempted the {config.BRIDGE_MAX_DEPOSITS_PER_CHAIN} carrying the most "
+            "suspect-attributable value (then the largest). The others were not "
+            "matched, so this is not a complete account of what crossed."
         )
         ranked = ranked[: config.BRIDGE_MAX_DEPOSITS_PER_CHAIN]
 
-    for hop in ranked:
+    for hop, transfer in ranked:
         spec = bridges.lookup(slug, hop.to_addr)
         if spec is None:
             # Tagged as a bridge but we hold no verified route for it. A real
             # state, and a gap in our data rather than in the money.
             ctx.handoffs.append(bridges.unmatched(slug, hop.to_addr))
-            continue
-
-        if ctx.cross_chain_hops >= config.MAX_CROSS_CHAIN_HOPS:
-            ctx.handoffs.append(
-                bridges.hop_cap_reached(
-                    ctx.cross_chain_hops, config.MAX_CROSS_CHAIN_HOPS
-                )
-            )
             continue
 
         dest_slug = spec["to_chain"]
@@ -864,12 +888,20 @@ async def _follow_bridges(
             chain=slug,
             to_chain=dest_slug,
             entity=spec["entity"],
-            asset=hop.asset,
-            dest_asset=bridges.dest_asset_for(spec, hop.asset),
-            value=hop.value,
-            timestamp=hop.timestamp,
-            tx_hash=hop.tx_hash,
+            asset=transfer.asset,
+            dest_asset=bridges.dest_asset_for(spec, transfer.asset),
+            value=transfer.value,
+            timestamp=transfer.timestamp,
+            tx_hash=transfer.hash,
         )
+
+        if ctx.cross_chain_hops >= config.MAX_CROSS_CHAIN_HOPS:
+            ctx.handoffs.append(
+                bridges.hop_cap_reached(
+                    ctx.cross_chain_hops, config.MAX_CROSS_CHAIN_HOPS, deposit
+                )
+            )
+            continue
 
         if dest_chain is None:
             # We know the route but cannot read where it leads. Said plainly, so
@@ -905,7 +937,7 @@ async def _follow_bridges(
             continue
 
         credit = match.chosen
-        carried = _carried_taint(ctx, hop, credit)
+        carried = _carried_taint(ctx, deposit, credit)
         # Set on the handoff itself so the report can state how much of the crossed
         # value is the suspect's, rather than only that a crossing happened.
         match.tainted_value = carried
@@ -1018,7 +1050,7 @@ async def _follow_bridges(
         await _follow_bridges(ctx, dest_chain, suspect, depth_budget)
 
 
-def _carried_taint(ctx: _WalkContext, hop: Hop, credit) -> float:
+def _carried_taint(ctx: _WalkContext, deposit, credit) -> float:
     """
     How much of the suspect's money to credit on the other side of this bridge.
 
@@ -1034,14 +1066,18 @@ def _carried_taint(ctx: _WalkContext, hop: Hop, credit) -> float:
     honest answer: we cannot say how much of that deposit was the suspect's money,
     so we credit none of it and say so rather than assuming all of it.
     """
-    leg = ctx.taint.get(hop.chain)
-    if leg is None or hop.value <= 0:
+    leg = ctx.taint.get(deposit.chain)
+    if leg is None or deposit.value <= 0:
         return 0.0
-    flow = leg.edge(hop.from_addr, hop.to_addr, hop.asset)
-    if flow is None:
+    # THIS deposit's tainted share, from the replay's per-transfer ledger - not the
+    # edge total, which sums every deposit the wallet ever made to the bridge.
+    deposit_tainted = leg.transfer(
+        deposit.tx_hash, deposit.wallet, deposit.bridge, deposit.asset
+    )
+    if deposit_tainted is None:
         return 0.0
-    deposit_tainted = min(flow.tainted, hop.value)
-    carried = deposit_tainted * (float(credit.value) / float(hop.value))
+    deposit_tainted = min(deposit_tainted, deposit.value)
+    carried = deposit_tainted * (float(credit.value) / float(deposit.value))
     # Never credit more taint than value actually landed.
     return max(0.0, min(carried, float(credit.value)))
 

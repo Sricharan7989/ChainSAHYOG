@@ -17,6 +17,10 @@ const STATUS = {
     label: 'STOPPED AT CROSSING LIMIT',
     cls: 'text-[#627EEA] bg-[#151726] border-[#627EEA]/50',
   },
+  unsupported: {
+    label: 'RECOGNISED BRIDGE — NOT FOLLOWED',
+    cls: 'text-zinc-300 bg-zinc-900/60 border-zinc-700',
+  },
   not_registered: {
     label: 'BRIDGE NOT IN OUR REGISTRY',
     cls: 'text-zinc-300 bg-zinc-900/60 border-zinc-700',

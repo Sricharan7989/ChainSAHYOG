@@ -174,9 +174,19 @@ class TaintResult:
     # rests on an inferred handoff.
     bridged_in: dict[str, float] = field(default_factory=dict)
     seeds_applied: list = field(default_factory=list)
+    # Tainted value per individual transfer, keyed (tx_hash, from, to, asset).
+    # The edge totals above sum every transfer between a pair, which is right for
+    # reporting but wrong for a bridge handoff: a handoff matches ONE deposit to
+    # ONE credit, so it needs that one deposit's tainted share, not the share of
+    # thirty-eight deposits added together.
+    transfer_tainted: dict[tuple[str, str, str, str], float] = field(default_factory=dict)
 
     def edge(self, from_addr: str, to_addr: str, asset: str) -> AssetFlow | None:
         return self.edges.get((from_addr, to_addr, asset))
+
+    def transfer(self, tx_hash: str, from_addr: str, to_addr: str, asset: str) -> float | None:
+        """Tainted value of one specific transfer, or None if the replay never saw it."""
+        return self.transfer_tainted.get((tx_hash, from_addr, to_addr, asset))
 
     def tainted_into(self, address: str) -> dict[str, float]:
         """Per-asset tainted value that reached this wallet. Non-zero only."""
@@ -444,6 +454,8 @@ def compute_taint(
         edge.tainted += tainted_out
         edge.assumed_pre_existing += shortfall
         edge.tx_count += 1
+        key = (event.tx_hash, event.from_addr, event.to_addr, asset)
+        result.transfer_tainted[key] = result.transfer_tainted.get(key, 0.0) + tainted_out
 
         sender = node(event.from_addr, asset)
         sender.sent += event.value

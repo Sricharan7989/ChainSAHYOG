@@ -17,9 +17,17 @@ Plus the properties that make a combined result trustworthy: per-chain taint tha
 is never summed across chains, a cross-chain hop that costs a hop, a hop cap, and
 an honest statement when a chain has no labels and so cannot yield a finding.
 
+These suites test the TRACER's cross-chain mechanics - following a match,
+carrying taint, the hop cap, a round trip - so they run against a test-only
+registry on synthetic addresses (TEST_REGISTRY below), injected for the
+duration of each trace. The production registry holds a single verified route
+(Polygon PoS) that cannot exercise a round trip, and these tests must not imply
+that any real contract behaves the way the fixtures do.
+
 Run from backend/:  python -m tests.test_cross_chain
 """
 import asyncio
+import contextlib
 import sys
 
 import app  # noqa: E402,F401
@@ -33,12 +41,57 @@ ARB = 42161
 SUSPECT = "0x" + "a" * 40
 NEXT = "0x" + "b" * 40
 BINANCE_ARB = "0x" + "c" * 40
-# The real Arbitrum L1 Bridge, as registered in app/config.py.
-BRIDGE = "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a"
-# The real Arbitrum L2 Gateway Router, which pays credits out on Arbitrum One.
-L2_GATEWAY = "0x5288c571fd7ad117bea99bf60fe0846c4e84f933"
-# The real Arbitrum L1 Gateway Router, which pays credits out back on Ethereum.
-L1_GATEWAY = "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef"
+# Synthetic bridge contracts. Deliberately NOT real addresses: see the module
+# docstring.
+BRIDGE = "0x" + "1" * 40       # the bridge on Ethereum
+L2_GATEWAY = "0x" + "2" * 40   # pays credits out on the far chain, and takes withdrawals
+L1_GATEWAY = "0x" + "3" * 40   # pays the return leg out on Ethereum
+
+TEST_REGISTRY = {
+    ("ethereum", BRIDGE): {
+        "entity": "Test Bridge",
+        "from_chain": "ethereum",
+        "to_chain": "arbitrum",
+        "credit_sources": (L2_GATEWAY,),
+        "asset_map": {"ETH": "ETH"},
+        "window_sec": 1800,
+        "min_amount": 0.05,
+        "fee_tolerance": 0.02,
+        "how_it_appears": "test fixture",
+        "verified_from": "test fixture",
+    },
+    ("arbitrum", L2_GATEWAY): {
+        "entity": "Test Bridge (return)",
+        "from_chain": "arbitrum",
+        "to_chain": "ethereum",
+        "credit_sources": (L1_GATEWAY,),
+        "asset_map": {"ETH": "ETH"},
+        "window_sec": 604800,
+        "min_amount": 0.05,
+        "fee_tolerance": 0.02,
+        "how_it_appears": "test fixture",
+        "verified_from": "test fixture",
+    },
+}
+
+
+@contextlib.contextmanager
+def test_world(extra_labels=None, bare=False):
+    """Inject the test registry, plus labels for the synthetic bridges."""
+    real_registry = config.BRIDGE_REGISTRY
+    real_load = identify.load_labels
+    labels = dict(real_load())
+    labels[("ethereum", BRIDGE)] = {"entity": "Test Bridge", "type": "bridge"}
+    if not bare:
+        labels[("arbitrum", BINANCE_ARB)] = {"entity": "Binance (Arbitrum)", "type": "exchange"}
+    labels.update(extra_labels or {})
+    config.BRIDGE_REGISTRY = TEST_REGISTRY
+    identify.load_labels = lambda *a, **k: labels
+    try:
+        yield
+    finally:
+        config.BRIDGE_REGISTRY = real_registry
+        identify.load_labels = real_load
 
 fail = 0
 
@@ -101,31 +154,10 @@ class ChainClient:
         return {chain for chain, _ in self.fetched}
 
 
-def labels_with_arb_exchange(real_load):
-    """
-    Real labels plus one Arbitrum-only exchange label.
-
-    data/labels.json is Ethereum-only today, which is precisely the situation the
-    phase warns about: without a label on the destination chain, an exchange there
-    cannot be recognised and the report has to say so rather than imply the money
-    went nowhere.
-    """
-    labels = dict(real_load())
-    labels[("arbitrum", BINANCE_ARB)] = {
-        "entity": "Binance (Arbitrum)",
-        "type": "exchange",
-    }
-    return labels
-
-
 def traced(books, depth=4):
     client = ChainClient(books)
-    real_load = identify.load_labels
-    identify.load_labels = lambda *a, **k: labels_with_arb_exchange(real_load)
-    try:
+    with test_world():
         return asyncio.run(tracer.trace(SUSPECT, max_depth=depth, client=client)), client
-    finally:
-        identify.load_labels = real_load
 
 
 def arb_book(credits):
@@ -248,10 +280,7 @@ def matched_tests():
           all(a["node_id"] for a in payload["attributions"]), True)
 
     print("\n--- 7. labels: a chain with none cannot yield a finding, and says so ---")
-    real_load = identify.load_labels
-    bare_labels = dict(real_load())
-    identify.load_labels = lambda *a, **k: bare_labels
-    try:
+    with test_world(bare=True):
         bare = asyncio.run(
             tracer.trace(
                 SUSPECT,
@@ -259,8 +288,6 @@ def matched_tests():
                 client=ChainClient({ETH: {SUSPECT: [tx(SUSPECT, BRIDGE, 10.0, "0xdeposit")]}}),
             )
         )
-    finally:
-        identify.load_labels = real_load
     cov = bare.label_coverage.get("arbitrum", {})
     check("arbitrum is reported as traced", "arbitrum" in bare.label_coverage, True)
     check("with no labels held", cov.get("labels"), 0)
@@ -323,7 +350,7 @@ def nomatch_tests():
     match = result.cross_chain_handoffs[0]
     check("status is no_match", match.status, "no_match")
     check("with a specific reason", "could not be followed" in match.reason, True)
-    check("naming the bridge", "Arbitrum Bridge" in match.reason, True)
+    check("naming the bridge", "Test Bridge" in match.reason, True)
     check("and no confidence claimed", match.to_payload()["confidence_score"], None)
     check("no cross-chain hop invented",
           sum(1 for h in result.hops if h.edge_type == "cross_chain"), 0)
@@ -354,8 +381,8 @@ def cap_tests():
     books = {
         ETH: {
             SUSPECT: [tx(SUSPECT, BRIDGE, 10.0, "0xdeposit1", ts=1700000000)],
-            # The credit for the return leg, paid out on Ethereum by the real
-            # Arbitrum L1 Gateway Router.
+            # The credit for the return leg, paid out on Ethereum by the test
+            # route's return payout contract.
             L1_GATEWAY: [tx(L1_GATEWAY, SUSPECT, 9.96, "0xcreditback", ts=1700000900)],
         },
         ARB: {
@@ -390,11 +417,7 @@ def cap_tests():
 
     print("\n--- 14. a bridge we hold no route for is reported as a gap, not a dead end ---")
     unlisted = "0x" + "e" * 40
-    real_load = identify.load_labels
-    labels = dict(real_load())
-    labels[("ethereum", unlisted)] = {"entity": "Some Bridge", "type": "bridge"}
-    identify.load_labels = lambda *a, **k: labels
-    try:
+    with test_world({("ethereum", unlisted): {"entity": "Some Bridge", "type": "bridge"}}):
         result = asyncio.run(
             tracer.trace(
                 SUSPECT,
@@ -404,8 +427,6 @@ def cap_tests():
                 ),
             )
         )
-    finally:
-        identify.load_labels = real_load
 
     check("the bridge was still flagged as a bridge",
           any(f.risk_type == "bridge" for f in result.risk_flags), True)

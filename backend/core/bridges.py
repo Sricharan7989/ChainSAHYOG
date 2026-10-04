@@ -30,6 +30,8 @@ score and the evidence behind it, plus an explicit status:
     no_match    - nothing on the destination chain looks like this deposit.
                   This is a real, reportable finding: the trace stops honestly
                   rather than inventing a continuation.
+    unsupported - a bridge we recognise but deliberately do not follow, with the
+                  reason (see config.BRIDGE_UNSUPPORTED).
     not_registered / hop_cap_reached / destination_unavailable
                 - we could not even attempt it, and we say which of these it was.
 
@@ -58,6 +60,11 @@ from app import config
 VALUE_POINTS = 60
 TIME_POINTS = 25
 CREDIT_SOURCE_POINTS = 15
+
+# A route the registry marks as fee-free (fee_tolerance 0) still compares floats
+# derived from integer wei, so "exact" means equal to within this relative margin
+# rather than bit-for-bit.
+EXACT_MATCH_EPSILON = 1e-9
 
 
 @dataclass
@@ -192,7 +199,7 @@ class BridgeMatch:
                 "how_it_appears": self.spec.get("how_it_appears", ""),
                 "verified_from": self.spec.get("verified_from", ""),
                 "window_sec": self.spec.get("window_sec", config.BRIDGE_TIME_WINDOW_SEC),
-                "fee_tolerance": config.BRIDGE_FEE_TOLERANCE,
+                "fee_tolerance": tolerance_for(self.spec),
             }
         return payload
 
@@ -220,7 +227,7 @@ class BridgeMatch:
         if deposit:
             out["deposit_asset"] = deposit.asset
             out["credit_asset_expected"] = deposit.dest_asset
-            out["fee_tolerance"] = config.BRIDGE_FEE_TOLERANCE
+            out["fee_tolerance"] = tolerance_for(self.spec or {})
             out["time_window_sec"] = (
                 self.spec.get("window_sec", config.BRIDGE_TIME_WINDOW_SEC)
                 if self.spec
@@ -242,6 +249,18 @@ def lookup(chain_slug: str, address: str) -> dict | None:
 
 def _window_for(spec: dict) -> int:
     return int(spec.get("window_sec") or config.BRIDGE_TIME_WINDOW_SEC)
+
+
+def tolerance_for(spec: dict) -> float:
+    """
+    The fee tolerance for this route: the registry entry's own, else the default.
+
+    Per route because bridges differ: Polygon PoS credits the exact amount, so a
+    2% band there would only admit false rivals, while a fee-charging bridge needs
+    the slack. Zero means exact (see EXACT_MATCH_EPSILON).
+    """
+    own = spec.get("fee_tolerance")
+    return max(0.0, float(config.BRIDGE_FEE_TOLERANCE if own is None else own))
 
 
 def _min_amount_for(spec: dict) -> float:
@@ -281,7 +300,7 @@ def score_candidate(deposit: Deposit, credit, spec: dict) -> Candidate:
     and no amount of circumstantial agreement should let it print as certainty.
     """
     window = max(1, _window_for(spec))
-    tolerance = max(0.0, config.BRIDGE_FEE_TOLERANCE)
+    tolerance = tolerance_for(spec)
 
     delta = abs(float(credit.value) - float(deposit.value))
     ratio = (delta / float(deposit.value)) if deposit.value > 0 else 1.0
@@ -291,7 +310,7 @@ def score_candidate(deposit: Deposit, credit, spec: dict) -> Candidate:
     # Value: full marks for an exact amount, tapering to zero at the fee
     # tolerance. A candidate outside tolerance is never scored at all.
     if tolerance <= 0:
-        value_points = VALUE_POINTS if delta == 0 else 0.0
+        value_points = VALUE_POINTS if ratio <= EXACT_MATCH_EPSILON else 0.0
     else:
         value_points = VALUE_POINTS * max(0.0, 1.0 - (ratio / tolerance))
 
@@ -339,7 +358,7 @@ def match_candidates(deposit: Deposit, transfers: list, spec: dict) -> list:
     not happened yet, so such a transfer is by definition not this deposit.
     """
     window = max(1, _window_for(spec))
-    tolerance = max(0.0, config.BRIDGE_FEE_TOLERANCE)
+    tolerance = max(tolerance_for(spec), EXACT_MATCH_EPSILON)
     min_amount = _min_amount_for(spec)
 
     if deposit.value < min_amount:
@@ -449,7 +468,16 @@ def resolve(candidates: list, deposit: Deposit | None = None, spec: dict | None 
 
 
 def unmatched(chain_slug: str, address: str, entity: str = "") -> BridgeMatch:
-    """A bridge we recognised as a bridge but have no recorded route for."""
+    """
+    A bridge we recognised as a bridge but do not follow.
+
+    Two different states, kept apart: a bridge we deliberately do not support,
+    with a stated reason (config.BRIDGE_UNSUPPORTED), and one we simply have no
+    route for. Both stop the trace honestly; only the first is a decision.
+    """
+    reason = config.bridge_unsupported_reason(chain_slug, address)
+    if reason:
+        return BridgeMatch(status="unsupported", reason=reason, spec=None)
     return BridgeMatch(
         status="not_registered",
         reason=(

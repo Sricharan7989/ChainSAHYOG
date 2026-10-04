@@ -14,8 +14,13 @@ Two halves, in order of how much damage a mistake does:
 
   2. MATCHING BEHAVIOUR, with no network: one clear match, two equally good
      candidates, nothing found, a fee just outside tolerance, a credit just
-     outside the window, and the ETH -> POL rename that a naive asset comparison
-     would reject as a real handoff.
+     outside the window, and the ETH -> WETH rename on Polygon that a naive asset
+     comparison would reject as a real handoff.
+
+The generic matching rules run against TEST_SPEC, a synthetic fee-charging
+route, so they do not depend on which real bridges the registry happens to
+hold. The one real route (Polygon PoS) is tested against a deposit/credit pair
+checked on both chains.
 
 Run from backend/:  python -m tests.test_bridges
 """
@@ -29,6 +34,25 @@ from services.etherscan import Transfer  # noqa: E402
 
 WALLET = "0x" + "a" * 40
 ARB_BRIDGE = "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a"
+POLY_BRIDGE = "0xa0c68c638235ee32657e8f720a23cec1bfc77c77"
+TEST_BRIDGE = "0x" + "b" * 40
+GATEWAY = "0x" + "6" * 40
+ZERO = "0x0000000000000000000000000000000000000000"
+WETH_POLYGON = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
+
+# A synthetic route that charges a fee, for the generic matching rules.
+TEST_SPEC = {
+    "entity": "Test Bridge",
+    "from_chain": "ethereum",
+    "to_chain": "polygon",
+    "credit_sources": (GATEWAY,),
+    "asset_map": {"ETH": "ETH"},
+    "window_sec": 1800,
+    "min_amount": 0.05,
+    "fee_tolerance": 0.02,
+    "how_it_appears": "test",
+    "verified_from": "test",
+}
 
 fail = 0
 
@@ -60,24 +84,25 @@ def credit(value, ts, frm, to=WALLET, asset="ETH", h=None):
     )
 
 
-def deposit(value=10.0, ts=1000, asset="ETH", chain="ethereum", to_chain="arbitrum"):
-    spec = bridges.lookup(chain, ARB_BRIDGE if chain == "ethereum" else "")
+def deposit(value=10.0, ts=1000, asset="ETH", chain="ethereum", to_chain="polygon", spec=None):
+    spec = spec or TEST_SPEC
     return bridges.Deposit(
         wallet=WALLET,
-        bridge=ARB_BRIDGE if chain == "ethereum" else "",
+        bridge=TEST_BRIDGE,
         chain=chain,
         to_chain=to_chain,
-        entity=(spec or {}).get("entity", "Arbitrum Bridge"),
+        entity=spec.get("entity", "Test Bridge"),
         asset=asset,
-        dest_asset=bridges.dest_asset_for(spec or {}, asset),
+        dest_asset=bridges.dest_asset_for(spec, asset),
         value=value,
         timestamp=ts,
         tx_hash="0xdeposit",
     )
 
 
-ARB_L2_GATEWAY = "0x5288c571fd7ad117bea99bf60fe0846c4e84f933"
-SPEC = bridges.lookup("ethereum", ARB_BRIDGE)
+ARB_L2_GATEWAY = GATEWAY  # kept so the matching tests below read unchanged
+SPEC = TEST_SPEC
+POLY = bridges.lookup("ethereum", POLY_BRIDGE)
 
 
 def registry_tests():
@@ -101,25 +126,21 @@ def registry_tests():
             check(f"credit source {src[:10]} on {chain} is lowercase", src, src.lower())
             check(f"credit source {src[:10]} on {chain} is 42 chars", len(src), 42)
 
-    print("\n--- 2. the addresses the registry depends on, asserted against two sources ---")
-    # Verified against docs.arbitrum.io and docs.polygon.technology, and
-    # cross-checked against data/labels.json below. If any of these move, the
-    # registry is wrong and should fail here rather than in the field.
-    check(
-        "Arbitrum L1 Bridge address",
-        ARB_BRIDGE,
-        "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a",
-    )
-    check(
-        "Arbitrum L2 Gateway Router address",
-        ARB_L2_GATEWAY,
-        "0x5288c571fd7ad117bea99bf60fe0846c4e84f933",
-    )
-    check(
-        "Polygon RootChainManager address",
-        bridges.lookup("ethereum", "0xa0c68c638235ee32657e8f720a23cec1bfc77c77") is not None,
-        True,
-    )
+    print("\n--- 2. the one registered route, and the routes we deliberately dropped ---")
+    check("Polygon RootChainManager is registered", POLY is not None, True)
+    check("Polygon is the only registered route", list(config.BRIDGE_REGISTRY),
+          [("ethereum", POLY_BRIDGE)])
+    check("Polygon route cites verified deposit/credit pairs",
+          len(POLY.get("verified_pairs", ())) >= 2, True)
+    for pair in POLY.get("verified_pairs", ()):
+        check(f"verified pair {pair['deposit_tx'][:10]} has full hashes",
+              (len(pair["deposit_tx"]), len(pair["credit_tx"])), (66, 66))
+    check("the Polygon payout is a mint from the zero address",
+          ZERO in POLY["credit_sources"], True)
+    check("the Polygon route is fee-free, so exact", bridges.tolerance_for(POLY), 0.0)
+    check("Arbitrum is NOT registered", bridges.lookup("ethereum", ARB_BRIDGE), None)
+    check("but is recognised as unsupported, with a reason",
+          bool(config.bridge_unsupported_reason("ethereum", ARB_BRIDGE)), True)
 
     labels = json.loads(config.LABELS_PATH.read_text(encoding="utf-8"))
     for (chain, addr) in config.BRIDGE_REGISTRY:
@@ -128,33 +149,27 @@ def registry_tests():
             check(f"{addr[:10]} agrees with labels.json type", known.get("type"), "bridge")
 
     print("\n--- 3. lookup behaviour ---")
-    check("finds a registered bridge", bridges.lookup("ethereum", ARB_BRIDGE.upper()) is not None, True)
-    check("chain separation holds: the L2 gateway is not an Ethereum bridge",
-          bridges.lookup("ethereum", ARB_L2_GATEWAY), None)
-    check("but is an Arbitrum one", bridges.lookup("arbitrum", ARB_L2_GATEWAY) is not None, True)
+    check("finds a registered bridge, case-insensitively",
+          bridges.lookup("ethereum", POLY_BRIDGE.upper()) is not None, True)
     check("returns None for an unknown address",
           bridges.lookup("ethereum", "0x" + "d" * 40), None)
     check("returns None for the wrong chain",
-          bridges.lookup("polygon", ARB_BRIDGE), None)
+          bridges.lookup("polygon", POLY_BRIDGE), None)
     check("returns None rather than guessing on empty input",
           bridges.lookup("", ""), None)
-    check("ethereum reaches arbitrum", "arbitrum" in config.bridge_destinations("ethereum"), True)
-    check("ethereum reaches polygon", "polygon" in config.bridge_destinations("ethereum"), True)
-    check("arbitrum leads back to ethereum only",
-          config.bridge_destinations("arbitrum"), {"ethereum"})
-    check("polygon has no registered outbound route yet",
+    check("ethereum reaches polygon", config.bridge_destinations("ethereum"), {"polygon"})
+    check("polygon has no registered outbound route",
           config.bridge_destinations("polygon"), set())
 
     print("\n--- 4. asset renaming across a bridge ---")
-    poly = bridges.lookup("ethereum", "0xa0c68c638235ee32657e8f720a23cec1bfc77c77")
-    check("ETH becomes POL on the Polygon bridge",
-          bridges.dest_asset_for(poly, "ETH"), "POL")
+    check("ETH becomes WETH on the Polygon bridge",
+          bridges.dest_asset_for(POLY, "ETH"), "WETH")
     check("WETH keeps its symbol on the Polygon bridge",
-          bridges.dest_asset_for(poly, "WETH"), "WETH")
-    check("ETH keeps its symbol on Arbitrum",
-          bridges.dest_asset_for(SPEC, "ETH"), "ETH")
+          bridges.dest_asset_for(POLY, "WETH"), "WETH")
     check("an unmapped asset passes through unchanged",
           bridges.dest_asset_for(SPEC, "USDC"), "USDC")
+    check("a route without its own tolerance uses the default",
+          bridges.tolerance_for({}), config.BRIDGE_FEE_TOLERANCE)
 
     return fail
 
@@ -238,7 +253,7 @@ def matching_tests():
     check("a bridge test transaction is too small to chase",
           bridges.match_candidates(deposit(value=0.000001), [credit(0.000001, 1060, ARB_L2_GATEWAY)], SPEC), [])
     check("a fee exactly at the tolerance is still a candidate",
-          len(bridges.match_candidates(dep, [credit(10.0 * (1 - config.BRIDGE_FEE_TOLERANCE), 1060, ARB_L2_GATEWAY)], SPEC)), 1)
+          len(bridges.match_candidates(dep, [credit(10.0 * (1 - SPEC["fee_tolerance"]), 1060, ARB_L2_GATEWAY)], SPEC)), 1)
     check("a credit exactly at the window edge is still a candidate",
           len(bridges.match_candidates(dep, [credit(9.98, 1000 + 1800, ARB_L2_GATEWAY)], SPEC)), 1)
 
@@ -250,25 +265,45 @@ def matching_tests():
     check("and scores lower than the recognised-source case",
           cands[0].score < bridges.score_candidate(dep, credit(9.98, 1060, ARB_L2_GATEWAY), SPEC).score, True)
 
-    print("\n--- 11. ETH deposited to Polygon is credited as POL ---")
-    poly = bridges.lookup("ethereum", "0xa0c68c638235ee32657e8f720a23cec1bfc77c77")
-    dep = deposit(asset="ETH", to_chain="polygon")
-    dep.dest_asset = bridges.dest_asset_for(poly, "ETH")
-    dep.entity = poly["entity"]
-    cands = bridges.match_candidates(
-        dep, [credit(9.99, 1300, "0x0000000000000000000000000000000000001010", asset="POL")], poly
+    print("\n--- 11. the real Polygon route: ETH in, WETH minted out, exact amount ---")
+    # A real pair, checked through Etherscan V2 on both chains (2026-10-04):
+    # 10 ETH from 0x02d2...3817 to the RootChainManager, then 10 WETH minted from
+    # the zero address to the same wallet on Polygon 1,249 seconds later.
+    pair = POLY["verified_pairs"][0]
+    real = bridges.Deposit(
+        wallet=pair["wallet"], bridge=POLY_BRIDGE, chain="ethereum", to_chain="polygon",
+        entity=POLY["entity"], asset="ETH", dest_asset=bridges.dest_asset_for(POLY, "ETH"),
+        value=10.0, timestamp=1791005915, tx_hash=pair["deposit_tx"],
     )
-    check("the POL credit is recognised as the deposit", len(cands), 1)
-    check("the asset rename is disclosed in the evidence",
-          bridges.resolve(cands, dep, poly).evidence()["asset_renamed_across_bridge"], True)
-    check("while an ETH-denominated credit would not match",
-          bridges.match_candidates(dep, [credit(9.99, 1300, "0x" + "1" * 40, asset="ETH")], poly), [])
+
+    def poly_credit(h, value, lag, asset="WETH"):
+        return Transfer(
+            hash=h, from_addr=ZERO, to_addr=pair["wallet"], value=value,
+            timestamp=1791005915 + lag, block=94868016, asset=asset,
+            contract=None if asset == "POL" else WETH_POLYGON, decimals=18, tx_index=0,
+        )
+
+    mint = poly_credit(pair["credit_tx"], 10.0, 1249)
+    cands = bridges.match_candidates(real, [mint], POLY)
+    match = bridges.resolve(cands, real, POLY)
+    check("the real WETH mint is the match", match.status, "matched")
+    check("it is the verified credit", match.chosen.tx_hash if match.chosen else None, pair["credit_tx"])
+    check("the mint counts as the known payout path",
+          match.chosen.from_known_credit_source if match.chosen else None, True)
+    check("the asset rename is disclosed in the evidence", match.evidence()["asset_renamed_across_bridge"], True)
+    check("a native POL credit of the same amount does NOT match",
+          bridges.match_candidates(real, [poly_credit("0xpol", 10.0, 600, asset="POL")], POLY), [])
+    check("on this fee-free route, 0.1% short is NOT the same money",
+          bridges.match_candidates(real, [poly_credit("0xnear", 9.99, 600)], POLY), [])
 
     print("\n--- 12. outcomes that never attempted a match ---")
     m = bridges.unmatched("ethereum", "0x" + "e" * 40, "Some Bridge")
     check("unregistered bridge is not a match", m.status, "not_registered")
     check("and says the registry is the gap, not the money",
           "gap in our registry" in m.reason, True)
+    m = bridges.unmatched("ethereum", ARB_BRIDGE, "Arbitrum Bridge")
+    check("a dropped route is reported as unsupported", m.status, "unsupported")
+    check("with its stated reason", "internal transaction" in m.reason, True)
     m = bridges.hop_cap_reached(2, 2, deposit())
     check("hop cap is not a match", m.status, "hop_cap_reached")
     check("and says the stop was deliberate", "on purpose" in m.reason, True)

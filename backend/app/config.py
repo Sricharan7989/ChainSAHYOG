@@ -636,56 +636,6 @@ BRIDGE_MATCH_MAX_SCORE = _env_int("BRIDGE_MATCH_MAX_SCORE", 85)
 # docs, add the entry, then confirm by hand on BOTH explorers that a deposit and
 # its matching credit are visible as ordinary address history on each side.
 BRIDGE_REGISTRY: dict[tuple[str, str], dict] = {
-    # --- Arbitrum ---------------------------------------------------------
-    (
-        "ethereum",
-        "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a",
-    ): {
-        "entity": "Arbitrum Bridge",
-        "from_chain": "ethereum",
-        "to_chain": "arbitrum",
-        # Deposits land at the L1 Bridge; the credit appears on Arbitrum One
-        # from the L2 token-gateway pair.
-        "credit_sources": (
-            "0x5288c571fd7ad117bea99bf60fe0846c4e84f933",  # L2 Gateway Router
-            "0x6c411ad3e74de3e7bd422b94a27770f5b86c623b",  # L2 Weth Gateway
-        ),
-        "asset_map": {"ETH": "ETH", "WETH": "WETH"},
-        # L1 -> L2 is a sequencer relay: minutes, not hours.
-        "window_sec": 1800,
-        "min_amount": 0.05,
-        "how_it_appears": (
-            "The deposit is an ordinary transfer from the user's Ethereum address "
-            "to the Arbitrum Bridge contract, and the credit is an ordinary "
-            "incoming transfer to the SAME address on Arbitrum One."
-        ),
-        "verified_from": "https://docs.arbitrum.io/arbitrum-essentials/reference/contract-addresses",
-    },
-    (
-        "arbitrum",
-        "0x5288c571fd7ad117bea99bf60fe0846c4e84f933",
-    ): {
-        "entity": "Arbitrum Bridge",
-        "from_chain": "arbitrum",
-        "to_chain": "ethereum",
-        # A withdrawal is initiated on Arbitrum and settles on Ethereum from the
-        # L1 token gateway, after the ~7 day fraud-proof challenge period.
-        "credit_sources": (
-            "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef",  # L1 Gateway Router
-        ),
-        "asset_map": {"ETH": "ETH", "WETH": "WETH"},
-        # The challenge period, not a transfer delay: the exit transaction comes
-        # about seven days after the burn.
-        "window_sec": 604800,
-        "min_amount": 0.05,
-        "how_it_appears": (
-            "The deposit is an outgoing transfer to the L2 Gateway Router on "
-            "Arbitrum One; the credit is an incoming transfer to the same address "
-            "on Ethereum from the L1 Gateway Router, once the challenge period "
-            "has passed."
-        ),
-        "verified_from": "https://docs.arbitrum.io/arbitrum-essentials/reference/contract-addresses",
-    },
     # --- Polygon PoS ------------------------------------------------------
     (
         "ethereum",
@@ -694,27 +644,80 @@ BRIDGE_REGISTRY: dict[tuple[str, str], dict] = {
         "entity": "Polygon Bridge",
         "from_chain": "ethereum",
         "to_chain": "polygon",
-        # Native ETH deposited here is credited as native POL, which is why the
-        # asset map has to be able to rename the asset. The Polygon system
-        # contracts are the ones that mint on the child chain.
+        # The credit is a MINT of Polygon's WETH token to the depositing address,
+        # so it appears in tokentx as a transfer FROM the zero address. That is
+        # the payout path observed on every deposit checked (see verified_pairs).
         "credit_sources": (
-            "0x0000000000000000000000000000000000001001",  # StateReceiver
-            "0x0000000000000000000000000000000000001010",  # MaticToken
-            "0x8cc8538d60901d19692f5ba22684732bc28f54a3",  # MaticWeth
+            "0x0000000000000000000000000000000000000000",  # WETH mint on Polygon
         ),
-        "asset_map": {"ETH": "POL", "WETH": "WETH"},
-        # State sync to the child chain runs on the order of 5-7 minutes.
+        # Native ETH deposited through the RootChainManager is credited on Polygon
+        # as WETH (contract 0x7ceb23fd6bc0add59e62ac25578270cff1b9f619), NOT as
+        # native POL. An earlier version of this entry mapped ETH -> POL, which no
+        # real credit can ever satisfy: two recorded deposits returned no_match with
+        # zero candidates examined because of it.
+        "asset_map": {"ETH": "WETH", "WETH": "WETH"},
+        # The PoS bridge charges no fee on this route: every credit checked was the
+        # exact deposited amount, to the wei. So the tolerance is exact rather than
+        # the 2% default. This matters for honesty, not just precision: the same
+        # wallet often makes several deposits of similar size, and a 2% band
+        # would let one deposit's credit look like a rival candidate for another.
+        "fee_tolerance": 0.0,
+        # Observed lag on the verified pairs: 1,020 - 1,260 seconds.
         "window_sec": 3600,
         "min_amount": 0.05,
         "how_it_appears": (
-            "The deposit is a transfer to the RootChainManager on Ethereum; the "
-            "credit is an incoming transfer to the same address on Polygon, "
-            "arriving once the state sync has been picked up. ETH deposited this "
-            "way is credited as native POL."
+            "The deposit is an ordinary ETH transfer from the user's address to the "
+            "RootChainManager on Ethereum. About 17-21 minutes later the same amount "
+            "is minted as WETH to the same address on Polygon (a token transfer from "
+            "the zero address)."
         ),
-        "verified_from": "https://docs.polygon.technology/pos/how-to/bridging/ethereum-polygon/matic-to-ethereum",
+        "verified_from": "https://docs.polygon.technology/pos/how-to/bridging/ethereum-polygon/ethereum-to-matic/",
+        # Real deposit/credit pairs checked through Etherscan V2 on both chains
+        # (2026-10-04). Each is the exact amount, minted from the zero address.
+        "verified_pairs": (
+            {
+                "deposit_tx": "0xf5ff3b2e1553a2224d981450a0b8f2b6fe651b56e92caccd717ae03c448b36c4",
+                "credit_tx": "0xc933adb6d22753ce392f4a3cbd8bfe857b03dafc1b7e47adc4ffc79c6a509378",
+                "wallet": "0x02d2050481f6baa6396e629f791504f52af93817",
+                "value": 10.0,
+                "lag_sec": 1249,
+            },
+            {
+                "deposit_tx": "0x978f29f9d3c61ea3767f9f1a2cbe871461a0d8bd5bc35c000db65fb645a4bfab",
+                "credit_tx": "0x2470a4436020d97f6a1dbeb70f90079826e25c34e1e5195f0d37f007cf1ae953",
+                "wallet": "0xf30d7e22a3139b53940f68397e88958a4153b95d",
+                "value": 6.174729411420538,
+                "lag_sec": 1260,
+            },
+        ),
     },
 }
+
+# Bridges we RECOGNISE but deliberately do not follow, with the reason. A trace
+# that reaches one stops there and says why, rather than either guessing a
+# destination or quietly treating the bridge as an unknown wallet.
+#
+# Both Arbitrum routes were removed from the registry after review: the deposit
+# route was keyed on the L1 Bridge contract, but users call the Inbox and the
+# Bridge only receives ETH by an internal transaction, which this tool does not
+# fetch; the withdrawal route was keyed on the L2 Gateway Router, which ETH
+# withdrawals do not pass through. Neither could ever produce a correct match,
+# and a route that looks registered but silently cannot fire is worse than an
+# honest "not supported".
+BRIDGE_UNSUPPORTED: dict[tuple[str, str], str] = {
+    ("ethereum", "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a"): (
+        "Arbitrum Bridge is a recognised bridge, but this tool does not follow it: "
+        "deposits reach it by an internal transaction from the Arbitrum Inbox, and "
+        "internal transactions are not fetched, so no deposit could be matched to its "
+        "Arbitrum credit with evidence. The trace stops here rather than guessing."
+    ),
+}
+
+
+def bridge_unsupported_reason(chain_slug: str, address: str) -> str | None:
+    """Why we recognise this bridge but do not follow it, or None."""
+    key = ((chain_slug or "").strip().lower(), (address or "").strip().lower())
+    return BRIDGE_UNSUPPORTED.get(key)
 
 
 def bridge_lookup(chain_slug: str, address: str) -> dict | None:

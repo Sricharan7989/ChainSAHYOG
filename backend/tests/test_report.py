@@ -95,7 +95,7 @@ def main():
           "ethereum, arbitrum" in text, True)
 
     print("\n--- the evidence is shown, so the decision can be challenged ---")
-    check("the bridge is named", "Arbitrum Bridge" in text, True)
+    check("the bridge is named", "Test Bridge" in text, True)
     check("the score is printed", "85/100" in text, True)
     check("the recipient-address check is named",
           "same recipient address" in text, True)
