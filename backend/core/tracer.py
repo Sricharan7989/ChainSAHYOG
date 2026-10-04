@@ -1311,9 +1311,21 @@ async def trace(
         attribution.confidence = scored.score / 100.0
 
     # Nearest first, then most confident: the closest exit point is the one an
-    # investigator should act on.
+    # investigator should act on. Among endpoints still tied, the one the
+    # suspect's money actually REACHED comes first, then by the amount - before
+    # this, ties fell to insertion order, and the re-recorded 0x6242 demo
+    # headlined a Coinbase wallet that received no attributable value while
+    # another Coinbase wallet at the same distance and score received 19 ETH.
+    # Address last, so the order never depends on walk or backend order.
+    def _arrival_rank(a: Attribution) -> tuple:
+        tainted = a.tainted_value_received or {}
+        native = float(tainted.get((chain or {}).get("native", "ETH"), 0.0))
+        largest = max((float(v) for v in tainted.values()), default=0.0)
+        return (0 if largest > 0 else 1, -native, -largest)
+
     ordered = sorted(
-        attributions.values(), key=lambda a: (a.hop_distance, -a.confidence)
+        attributions.values(),
+        key=lambda a: (a.hop_distance, -a.confidence, *_arrival_rank(a), a.node_id or a.address),
     )
 
     risk_flags = _collect_risk_flags(store, start, ordered)

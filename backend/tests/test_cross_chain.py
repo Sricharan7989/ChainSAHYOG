@@ -542,6 +542,32 @@ def history_reach_tests():
     return fail
 
 
+def tie_break_tests():
+    print("\n--- 19. among equally near, equally confident exchanges, the headline is where value ARRIVED ---")
+    binance = "0x28c6c06298d514db089934071355e5743bf21d60"
+    coinbase = "0x71660c4005ba85c37ccec55d0c4493e66fe775d3"
+    w1, w2, outsider = "0x" + "4" * 40, "0x" + "5" * 40, "0x" + "6" * 40
+    books = {
+        ETH: {
+            # The larger flow is expanded first, so its exchange is recorded first.
+            SUSPECT: [tx(SUSPECT, w1, 6.0, "0xs1", ts=1700000100), tx(SUSPECT, w2, 5.0, "0xs2", ts=1700000100)],
+            # W1 already held outside money, so under FIFO what it forwards is not
+            # the suspect's; W2 forwards the suspect's funds directly.
+            outsider: [tx(outsider, w1, 6.0, "0xo1", ts=1700000000)],
+            w1: [tx(w1, binance, 6.0, "0xw1", ts=1700000200)],
+            w2: [tx(w2, coinbase, 5.0, "0xw2", ts=1700000200)],
+        }
+    }
+    result, _ = traced(books)
+    summary = tracer.to_json(result)["summary"]
+    check("both exchanges sit at the same distance",
+          sorted(a.hop_distance for a in result.exchanges), [2, 2])
+    check("the headline names the exchange the suspect's money reached",
+          summary.get("exchange"), "Coinbase")
+    check("and states the value that arrived", bool(summary.get("tainted_value_received")), True)
+    return fail
+
+
 def cap_tests():
     print("\n--- 13. the cross-chain hop cap is enforced ---")
     # A round trip: Ethereum -> Arbitrum, then Arbitrum -> Ethereum again. The
@@ -632,6 +658,7 @@ def run_all():
     route_uncertainty_tests()
     real_registry_tests()
     history_reach_tests()
+    tie_break_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 
