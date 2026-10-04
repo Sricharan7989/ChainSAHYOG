@@ -295,6 +295,24 @@ def matched_tests():
     check("and the payload says what that means",
           "could not be recognised" in (cov.get("note") or ""), True)
 
+    print("\n--- 7b. a SPARSE label set counts as no coverage ---")
+    few = {("arbitrum", "0x" + f"{i:040x}"): {"entity": f"Ex{i}", "type": "exchange"} for i in range(1, 5)}
+    with test_world(few, bare=True):
+        sparse = asyncio.run(
+            tracer.trace(
+                SUSPECT,
+                max_depth=4,
+                client=ChainClient({ETH: {SUSPECT: [tx(SUSPECT, BRIDGE, 10.0, "0xdeposit")]}}),
+            )
+        )
+    cov = sparse.label_coverage.get("arbitrum", {})
+    check("four labels are counted", cov.get("labels"), 4)
+    check("but treated as no coverage", cov.get("identification_possible"), False)
+    check("and called sparse", cov.get("coverage"), "sparse")
+    check("with a note that says why", "fewer than the" in (cov.get("note") or ""), True)
+    check("while the starting chain is adequately covered",
+          sparse.label_coverage.get("ethereum", {}).get("identification_possible"), True)
+
     return fail
 
 

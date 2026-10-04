@@ -329,8 +329,24 @@ def _cross_chain_section(payload: dict, styles: dict) -> list:
     """
     cross = payload.get("cross_chain") or {}
     handoffs = cross.get("handoffs") or []
+
+    # Label coverage is stated on EVERY report, not only cross-chain ones: a trace
+    # that starts on a chain we hold no labels for has the same blind spot, and
+    # used to print nothing about it because there was no bridge to hang the
+    # warning on.
+    coverage = cross.get("label_coverage") or {}
+    uncovered = [
+        (slug, info) for slug, info in coverage.items()
+        if isinstance(info, dict) and not info.get("identification_possible")
+    ]
     if not handoffs:
-        return []
+        if not uncovered:
+            return []
+        out = [Paragraph("Label coverage", styles["h2"])]
+        for slug, info in uncovered:
+            out.append(Paragraph(f"<b>Coverage limit:</b> {info.get('note') or slug}", styles["small"]))
+        out.append(Spacer(1, 6))
+        return out
 
     out = [Paragraph("Cross-chain movement", styles["h2"])]
     chains = cross.get("chains_traced") or []
@@ -352,19 +368,9 @@ def _cross_chain_section(payload: dict, styles: dict) -> list:
 
     # Labels decide whether a chain could yield an exchange finding at all. Say so
     # before the findings, not in a footnote.
-    coverage = cross.get("label_coverage") or {}
-    unlabelled = [
-        slug for slug, info in coverage.items()
-        if isinstance(info, dict) and not info.get("identification_possible")
-    ]
-    if unlabelled:
-        out.append(Paragraph(
-            "<b>Coverage limit:</b> we hold no entity labels for "
-            + ", ".join(unlabelled)
-            + ". Exchanges there could not be recognised by name, so a finding on "
-            "this route may understate where the money went.",
-            styles["small"],
-        ))
+    for slug, info in uncovered:
+        out.append(Paragraph(f"<b>Coverage limit:</b> {info.get('note') or slug}", styles["small"]))
+    if uncovered:
         out.append(Spacer(1, 6))
 
     labels = {

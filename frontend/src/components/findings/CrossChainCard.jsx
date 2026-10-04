@@ -56,9 +56,9 @@ export default function CrossChainCard({ cross }) {
   if (handoffs.length === 0 && chains.length < 2) return null;
 
   const coverage = cross.label_coverage || {};
-  const unlabelled = Object.entries(coverage)
-    .filter(([, info]) => info && !info.identification_possible)
-    .map(([slug]) => slug);
+  const uncovered = Object.entries(coverage).filter(
+    ([, info]) => info && !info.identification_possible
+  );
   const isCrossChain = chains.length > 1;
 
   return (
@@ -110,16 +110,19 @@ export default function CrossChainCard({ cross }) {
       )}
 
       {/* Coverage limit */}
-      {unlabelled.length > 0 && (
+      {uncovered.length > 0 && (
         <div className="border border-amber-500/40 bg-amber-950/20 p-2 text-[10px] leading-relaxed text-amber-200/90 flex items-start gap-1.5">
           <ShieldAlert className="w-3 h-3 mt-0.5 shrink-0 text-amber-400" />
           <span>
             <span className="font-bold uppercase block">
               Coverage limit
             </span>
-            We hold no entity labels for {unlabelled.join(', ')}. An exchange there
-            could not be recognised by name, so this route may understate where the
-            money actually went.
+            {uncovered.map(([slug, info]) => (
+              <span key={slug} className="block">
+                {info.note ||
+                  `Too few labels are held for ${slug} to recognise an exchange there.`}
+              </span>
+            ))}
           </span>
         </div>
       )}

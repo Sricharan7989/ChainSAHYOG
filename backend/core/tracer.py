@@ -554,20 +554,35 @@ class _WalkContext:
         has to be able to tell them apart.
         """
         out = {}
+        floor = config.MIN_LABELS_FOR_COVERAGE
         for slug in self.chains_traced:
             count = identify.label_count(chain=slug)
+            # SPARSE IS TREATED AS NONE. A handful of labels on a chain is not
+            # coverage: the chance that a trace reaches one of those exact wallets
+            # is negligible, so "no exchange found" there means the same thing it
+            # means with zero labels.
+            covered = count >= floor
+            if covered:
+                note = None
+            elif count == 0:
+                note = (
+                    f"No labels are held for {slug}, so an exchange reached on that "
+                    "chain could not be recognised by name. A trace that finds nothing "
+                    "there has not established that no exchange was involved."
+                )
+            else:
+                note = (
+                    f"Only {count} label{'s are' if count != 1 else ' is'} held for {slug}, "
+                    f"fewer than the {floor} treated as coverage, so an exchange reached on "
+                    "that chain would very likely not be recognised by name. A trace that "
+                    "finds nothing there has not established that no exchange was involved."
+                )
             out[slug] = {
                 "labels": count,
-                "identification_possible": count > 0,
-                "note": (
-                    None
-                    if count > 0
-                    else (
-                        f"No labels are held for {slug}, so an exchange reached on that "
-                        "chain could not be recognised. A trace that finds nothing there "
-                        "has not established that no exchange was involved."
-                    )
-                ),
+                "coverage": "adequate" if covered else ("sparse" if count else "none"),
+                "identification_possible": covered,
+                "min_labels_for_coverage": floor,
+                "note": note,
             }
         return out
 

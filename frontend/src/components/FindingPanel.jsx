@@ -109,6 +109,7 @@ export default function FindingPanel({
             termination={data.termination || data.summary?.termination}
             truncated={data.stats?.truncated}
             notes={data.notes}
+            labelCoverage={data.cross_chain?.label_coverage}
           />
 
           <RiskFlagsCard

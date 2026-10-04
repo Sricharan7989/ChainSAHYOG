@@ -739,6 +739,14 @@ def bridge_destinations(chain_slug: str) -> set[str]:
     return {entry["to_chain"] for (from_slug, _), entry in BRIDGE_REGISTRY.items() if from_slug == slug}
 
 
+# LABEL COVERAGE. Below this many labels on a chain, identification there is
+# treated as NOT POSSIBLE rather than merely weak. Four exchange addresses on a
+# chain with thousands of exchange wallets will almost never be the one a trace
+# reaches, so reporting that chain as "covered" would let an empty result read as
+# "no exchange was involved". The number is a judgement, stated so it can be
+# argued with.
+MIN_LABELS_FOR_COVERAGE = _env_int("MIN_LABELS_FOR_COVERAGE", 25)
+
 # Cap on outgoing transfers expanded per wallet, largest-value first. Stops one
 # hot wallet from fanning the graph out to thousands of nodes.
 MAX_EDGES_PER_NODE = 25
