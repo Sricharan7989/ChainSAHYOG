@@ -453,11 +453,25 @@ def _cross_chain_section(payload: dict, styles: dict) -> list:
 
 
 def _risk_section(payload: dict, styles: dict) -> list:
+    # Absent and empty are different statements. A payload with no `risk_flags`
+    # key was never screened, and saying "none were identified" over it would
+    # certify a trail nobody examined. An empty list means the screen ran, but
+    # it can only recognise addresses in our label set - so it is reported as
+    # "none of our labelled risk entities", never as a clean trail.
+    if "risk_flags" not in payload:
+        return [Paragraph(
+            "Risk-label screening was not performed for this result: the recorded "
+            "trace predates it. This report makes no statement either way about "
+            "mixers, bridges, scam or sanctioned addresses on the route.",
+            styles["body"],
+        )]
     flags = payload.get("risk_flags") or []
     if not flags:
         return [Paragraph(
-            "No mixers, bridges, scam or sanctioned addresses were identified "
-            "in this trace.", styles["body"],
+            "No address in our label set for mixers, bridges, scams or sanctions "
+            "appeared in this trace. Only labelled addresses can be flagged; an "
+            "unlabelled mixer or sanctioned wallet would not appear here.",
+            styles["body"],
         )]
 
     rows = [[Paragraph(f"<b>{h}</b>", styles["small"])
@@ -512,6 +526,19 @@ def _typology_section(payload: dict, styles: dict) -> list:
     """
     found = payload.get("typologies") or []
     summary = payload.get("typology_summary") or {}
+    # A recording made before the detectors existed has neither key. Reporting
+    # "no typology met its threshold" over it would state a result for an
+    # analysis that never ran - the same false negative the panel used to show.
+    if not found and "typology_summary" not in payload and "typologies" not in payload:
+        return [
+            Paragraph("Laundering typologies", styles["h2"]),
+            Paragraph(
+                "No typology analysis was performed for this result: the recorded "
+                "trace predates the laundering detectors. This is not a finding "
+                "that the movement was ordinary.",
+                styles["body"],
+            ),
+        ]
     if not found:
         return [
             Paragraph("Laundering typologies", styles["h2"]),

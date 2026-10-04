@@ -107,6 +107,7 @@ export default function FindingPanel({
           <RiskFlagsCard
             riskFlags={data.risk_flags}
             explorerBase={data.params?.explorer}
+            labelCoverage={data.cross_chain?.label_coverage}
           />
 
           {/* Quick Legal Guidance Box */}
