@@ -430,15 +430,20 @@ def _cross_chain_section(payload: dict, styles: dict) -> list:
                 styles["mono"],
             ))
 
-        # Show every candidate for a refused crossing, so the decision can be
-        # challenged on the evidence rather than taken on trust.
+        # Show every other candidate on EVERY outcome, so the decision can be
+        # challenged on the evidence rather than taken on trust. On a followed
+        # crossing this is what distinguishes "the only candidate" from "the best
+        # of several"; hiding it there would be a silent pick.
         others = [
             c for c in (handoff.get("candidates") or [])
             if not chosen or c.get("tx_hash") != chosen.get("tx_hash")
         ]
-        if others and not handoff.get("matched"):
+        if others:
             out.append(Spacer(1, 3))
-            out.append(Paragraph("Candidates considered:", styles["small"]))
+            out.append(Paragraph(
+                "Other candidates considered:" if chosen else "Candidates considered:",
+                styles["small"],
+            ))
             for candidate in others:
                 out.append(Paragraph(
                     f'· {_fmt_assets({candidate.get("asset", ""): candidate.get("value", 0.0)})} '

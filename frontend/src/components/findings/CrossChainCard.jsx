@@ -133,7 +133,6 @@ export default function CrossChainCard({ cross }) {
         const deposit = h.deposit || {};
         const entity = deposit.entity || h.bridge?.entity || 'Bridge';
         const chosen = h.chosen;
-        const declined = !h.matched;
 
         return (
           <div
@@ -191,25 +190,32 @@ export default function CrossChainCard({ cross }) {
               </div>
             )}
 
-            {/* Candidates for a crossing we did not follow. Shown so the decision
-                can be challenged on the evidence rather than taken on trust. */}
-            {declined && (h.candidates || []).length > 0 && (
+            {/* EVERY candidate, on every outcome. Shown so the decision can be
+                challenged on the evidence rather than taken on trust - including a
+                followed crossing, where hiding the list would make "the only
+                candidate" and "the best of several" look identical. The one we
+                followed, if any, is marked. */}
+            {(h.candidates || []).length > 0 && (
               <div className="border-t border-[#262626] pt-1.5 space-y-1">
                 <span className="text-[#888888] uppercase flex items-center gap-1">
                   <CircleSlash className="w-3 h-3" />
-                  Candidates considered
+                  Candidates considered ({h.candidates.length})
                 </span>
-                {(h.candidates || []).map((c, ci) => (
-                  <div
-                    key={c.tx_hash || ci}
-                    className="flex justify-between text-[#666666]"
-                  >
-                    <span className="truncate">
-                      {c.value} {c.asset} · {c.lag_sec}s · {shortTx(c.tx_hash)}
-                    </span>
-                    <span>{c.score}/100</span>
-                  </div>
-                ))}
+                {h.candidates.map((c, ci) => {
+                  const followed = chosen && c.tx_hash === chosen.tx_hash;
+                  return (
+                    <div
+                      key={c.tx_hash || ci}
+                      className={`flex justify-between ${followed ? 'text-emerald-300' : 'text-[#666666]'}`}
+                    >
+                      <span className="truncate">
+                        {followed ? '✓ ' : ''}
+                        {c.value} {c.asset} · {c.lag_sec}s · {shortTx(c.tx_hash)}
+                      </span>
+                      <span>{c.score}/100</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

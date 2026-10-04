@@ -578,11 +578,11 @@ MAX_CROSS_CHAIN_HOPS = _env_int("MAX_CROSS_CHAIN_HOPS", 2)
 # registry knows to be part of the bridge - see core/bridges.py for the split.
 BRIDGE_MATCH_MIN_SCORE = _env_int("BRIDGE_MATCH_MIN_SCORE", 60)
 
-# Candidates this close to the best one are reported as AMBIGUOUS rather than
-# resolved. Two withdrawals of the same size inside the window are, on the
-# evidence available, equally good - and picking one silently would present a
-# coin toss as a finding.
-BRIDGE_AMBIGUITY_MARGIN = _env_int("BRIDGE_AMBIGUITY_MARGIN", 10)
+# AMBIGUITY has no tunable margin. Any second credit inside the fee tolerance and
+# the time window makes a handoff ambiguous, whatever the scores - see
+# core/bridges.resolve. An earlier score-margin rule let a credit 100 seconds
+# after the deposit "beat" an identical one 1,700 seconds after, which is not
+# evidence about which one is the same money.
 
 # Smallest deposit worth attempting to match. Bridge test transactions of a few
 # wei are everywhere; matching them would turn every bridge visit into a false

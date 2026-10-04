@@ -212,9 +212,10 @@ def matching_tests():
     check("BOTH candidates are still reported", len(match.candidates), 2)
     check("not reported as a match", match.to_payload()["matched"], False)
     check("the ambiguity is stated, not hidden",
-          "equally consistent" in match.reason, True)
+          "cannot tell same-sized withdrawals apart" in match.reason, True)
+    check("and the count is the real number of candidates", match.reason.startswith("2 transfers"), True)
 
-    print("\n--- 7. one candidate clearly ahead is not treated as ambiguous ---")
+    print("\n--- 7. a second in-tolerance credit makes it ambiguous, even when it scores far lower ---")
     transfers = [
         credit(9.99, 1005, ARB_L2_GATEWAY, h="0xnear"),
         # Same address and still within the fee tolerance, so it survives
@@ -225,9 +226,24 @@ def matching_tests():
     cands = bridges.match_candidates(dep, transfers, SPEC)
     check("both candidates survive filtering", len(cands), 2)
     match = bridges.resolve(cands, dep, SPEC)
-    check("the near-in-time, near-in-value credit wins", match.chosen.tx_hash, "0xnear")
-    check("and it is reported as matched", match.status, "matched")
-    check("the weaker candidate is still listed", len(match.candidates), 2)
+    check("the score gap does not pick a winner", match.status, "ambiguous")
+    check("nothing is chosen", match.chosen, None)
+    check("the strongest is still listed first", match.candidates[0].tx_hash, "0xnear")
+    check("and the weaker candidate is listed too", len(match.candidates), 2)
+
+    print("\n--- 7b. two IDENTICAL credits at different lags are ambiguous ---")
+    # The case the old score-margin rule got wrong: 10 ETH at +100s scored 84 and
+    # 10 ETH at +1700s scored 61, so the first was silently "matched".
+    transfers = [
+        credit(10.0, 1100, "0x" + "9" * 40, h="0xearly"),
+        credit(10.0, 2700, "0x" + "9" * 40, h="0xlate"),
+    ]
+    cands = bridges.match_candidates(dep, transfers, SPEC)
+    check("both survive filtering", len(cands), 2)
+    check("their scores differ only by lag", cands[0].score > cands[1].score, True)
+    match = bridges.resolve(cands, dep, SPEC)
+    check("yet the result is ambiguous", match.status, "ambiguous")
+    check("and neither is followed", match.chosen, None)
 
     print("\n--- 8. nothing found: the trace must stop honestly, not invent a hop ---")
     match = bridges.resolve([], dep, SPEC)

@@ -314,7 +314,7 @@ def ambiguous_tests():
     check("both candidates are reported", len(match.candidates), 2)
     check("neither was chosen", match.chosen, None)
     check("the payload does not claim a match", match.to_payload()["matched"], False)
-    check("and explains the tie", "equally consistent" in match.reason, True)
+    check("and explains the tie", "cannot tell same-sized withdrawals apart" in match.reason, True)
 
     check("no cross-chain hop was added",
           sum(1 for h in result.hops if h.edge_type == "cross_chain"), 0)
@@ -333,7 +333,7 @@ def ambiguous_tests():
     print("\n--- 9. candidates are listed with their scores, so a reader can judge ---")
     scores = [c["score"] for c in handoff["candidates"]]
     check("each candidate is scored", all(s > 0 for s in scores), True)
-    check("and the two are effectively tied", abs(scores[0] - scores[1]) <= config.BRIDGE_AMBIGUITY_MARGIN, True)
+    check("both are inside the tolerance and window, so both are listed", len(scores), 2)
     check("each shows how far it was from the deposit",
           all(c["value_delta_ratio"] is not None for c in handoff["candidates"]), True)
     check("and when it arrived", all(c["lag_sec"] is not None for c in handoff["candidates"]), True)

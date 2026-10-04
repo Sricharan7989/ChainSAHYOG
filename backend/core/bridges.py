@@ -394,11 +394,18 @@ def resolve(candidates: list, deposit: Deposit | None = None, spec: dict | None 
     """
     Turn candidates into a decision, honestly.
 
-    The rule that matters: we only pick a winner when one candidate is clearly
-    ahead of the rest. Two candidates within config.BRIDGE_AMBIGUITY_MARGIN of
-    each other are reported as ambiguous and the trace stops - because on the
-    evidence available they really are tied, and a report that does not say so
-    is lying by omission.
+    THE RULE: we follow a crossing only when exactly ONE credit on the
+    destination chain falls inside the fee tolerance and the time window. If two
+    or more do, the result is ambiguous, every candidate is listed, and the trace
+    stops - whatever their scores.
+
+    Why not let the score pick the winner: when credits are the same size, the
+    score differs only by time lag and payout source, and neither says which
+    withdrawal is the same money. A credit 100 seconds after the deposit and one
+    1,700 seconds after are both ordinary bridge delays; ranking the first above
+    the second would put a coin toss in a police report and call it a finding.
+    The score still ranks the list, so a reader sees the strongest first, but it
+    never resolves a tie on its own.
     """
     entity = (spec or {}).get("entity", "the bridge")
     if deposit is not None:
@@ -417,6 +424,22 @@ def resolve(candidates: list, deposit: Deposit | None = None, spec: dict | None 
             spec=spec,
         )
 
+    if len(candidates) > 1:
+        return BridgeMatch(
+            status="ambiguous",
+            reason=(
+                f"{len(candidates)} transfers on the destination chain each fall within the "
+                f"fee tolerance and time window of this deposit (scores "
+                f"{', '.join(str(c.score) for c in candidates)}). Time lag and payout "
+                "source cannot tell same-sized withdrawals apart, so none is followed "
+                "and all are listed."
+            ),
+            deposit=deposit,
+            chosen=None,
+            candidates=candidates,
+            spec=spec,
+        )
+
     best = candidates[0]
     if best.score < int(config.BRIDGE_MATCH_MIN_SCORE):
         return BridgeMatch(
@@ -427,28 +450,6 @@ def resolve(candidates: list, deposit: Deposit | None = None, spec: dict | None 
                 "below as a lead rather than treated as the same money."
             ),
             deposit=deposit,
-            candidates=candidates,
-            spec=spec,
-        )
-
-    margin = int(config.BRIDGE_AMBIGUITY_MARGIN)
-    rivals = [
-        c
-        for c in candidates[1:]
-        if c.score >= int(config.BRIDGE_MATCH_MIN_SCORE)
-        and (best.score - c.score) <= margin
-    ]
-    if rivals:
-        return BridgeMatch(
-            status="ambiguous",
-            reason=(
-                f"{len(candidates) if len(candidates) > 1 else 2} transfers on the destination chain are "
-                f"equally consistent with this deposit (best {best.score}/100, "
-                f"{', '.join(str(c.score) for c in [best] + rivals)}). They cannot be told apart on "
-                "public data, so none is followed and all are listed."
-            ),
-            deposit=deposit,
-            chosen=None,
             candidates=candidates,
             spec=spec,
         )
