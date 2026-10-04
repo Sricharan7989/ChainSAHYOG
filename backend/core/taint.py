@@ -342,6 +342,10 @@ class Seed:
     confidence: float = 1.0  # 1.0 for the suspect's own wallet
     origin: str = "bridge"
     note: str = ""
+    # The destination-chain transfer that IS the credit, when the replay can see
+    # it. The seed then taints that transfer at its own position in time instead
+    # of adding a separate lot - see compute_taint.
+    tx_hash: str = ""
 
 
 def compute_taint(
@@ -390,11 +394,21 @@ def compute_taint(
     # (address, asset) -> queue of [size, tainted] lots, oldest first.
     ledgers: dict[tuple[str, str], deque[list[float]]] = {}
 
-    # Value carried in over a bridge, placed before any observed event so the
-    # FIFO queue holds it at the right position in the wallet's history. It is
-    # seeded rather than appended at the end because arriving late in the replay
-    # would let an unrelated outgoing transfer consume it first, which would move
-    # taint onto a payment the suspect's funds never paid for.
+    # SEEDS ATTACH TO THE CREDIT TRANSFER, NOT BESIDE IT. The bridge credit is an
+    # ordinary incoming transfer on the destination chain (a WETH mint, a payout
+    # from a gateway), and the replay sees it like any other. An earlier version
+    # ALSO added the seed as a separate lot at the front of the wallet's queue, so
+    # the same money was counted twice: once tainted (the seed) and once untainted
+    # (the observed credit). The wallet then appeared to hold double what arrived,
+    # and any shortfall on its outflows - value that can only have come from an
+    # unobserved prior balance - vanished into the phantom copy, making routes read
+    # as fully accounted for when they were not.
+    #
+    # So a seed that names its credit transfer marks THAT event as carrying the
+    # tainted amount, at the credit's real place in time. Only a seed whose credit
+    # the replay cannot see (no fetched history) falls back to a separate lot.
+    event_hashes = {e.tx_hash for e in events}
+    credit_taint: dict[tuple[str, str, str], float] = {}
     for seed in seeds or ():
         address = (seed.address or "").lower()
         asset = seed.asset
@@ -407,9 +421,13 @@ def compute_taint(
         # address still lands - which is exactly the bridge handoff case.
         if source and address == source:
             continue
-        ledgers.setdefault((address, asset), deque()).append(
-            [seed.value, seed.value]
-        )
+        if seed.tx_hash and seed.tx_hash in event_hashes:
+            key = (seed.tx_hash, address, asset)
+            credit_taint[key] = credit_taint.get(key, 0.0) + seed.value
+        else:
+            ledgers.setdefault((address, asset), deque()).append(
+                [seed.value, seed.value]
+            )
         result.bridged_in[asset] = round(
             result.bridged_in.get(asset, 0.0) + seed.value, 8
         )
@@ -434,7 +452,14 @@ def compute_taint(
         asset = event.asset
         sender_key = (event.from_addr, asset)
 
-        if source and event.from_addr == source:
+        seeded = credit_taint.pop((event.tx_hash, event.to_addr, asset), None)
+        if seeded is not None:
+            # The bridge credit itself. Its tainted share is what crossed; the
+            # sender is the bridge's payout path (often a mint from the zero
+            # address), not a wallet whose balance we could or should replay, so
+            # no shortfall is recorded against it.
+            tainted_out, shortfall = min(seeded, event.value), 0.0
+        elif source and event.from_addr == source:
             # The taint source. The suspect can always pay, and everything it
             # pays is the money under investigation.
             tainted_out, shortfall = event.value, 0.0

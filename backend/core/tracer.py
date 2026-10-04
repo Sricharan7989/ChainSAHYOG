@@ -985,6 +985,7 @@ async def _follow_bridges(
                         f"{carried:.8g} {credit.asset} attributed to the suspect "
                         f"across {spec['entity']} to {dest_slug}"
                     ),
+                    tx_hash=credit.tx_hash,
                 )
             )
 

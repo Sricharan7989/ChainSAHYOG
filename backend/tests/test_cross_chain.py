@@ -228,6 +228,10 @@ def matched_tests():
     # 10.0, so exactly that fraction of the taint arrives - no more.
     check("exactly the credited fraction arrived", carried, 9.98, 1e-6)
     check("taint did not grow across the bridge", carried <= 10.0, True)
+    # The credit is an observed transfer AND the carrier of the seed. Counting it
+    # as both once doubled the wallet's balance on the destination chain.
+    check("the bridge credit is counted once, not twice",
+          arb_taint.nodes[(SUSPECT, "ETH")].received, 9.98, 1e-9)
     check("and it is reported separately from observed inflow",
           carried > 0, True)
     check("the exchange is credited the tainted share of what it received",
