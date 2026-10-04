@@ -162,34 +162,46 @@
     "chain": "ethereum"
   },
   "0x12d66f87a04a9e220743712ce6d9bb1b5616b8fc": {
-    "entity": "Tornado Cash (0.1 ETH pool)",
+    "entity": "Tornado Cash",
     "type": "mixer",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado Cash (0.1 ETH pool)",
+    "role": "0.1 ETH pool"
   },
   "0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936": {
-    "entity": "Tornado Cash (1 ETH pool)",
+    "entity": "Tornado Cash",
     "type": "mixer",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado Cash (1 ETH pool)",
+    "role": "1 ETH pool"
   },
   "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf": {
-    "entity": "Tornado Cash (10 ETH pool)",
+    "entity": "Tornado Cash",
     "type": "mixer",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado Cash (10 ETH pool)",
+    "role": "10 ETH pool"
   },
   "0xa160cdab225685da1d56aa342ad8841c3b53f291": {
-    "entity": "Tornado Cash (100 ETH pool)",
+    "entity": "Tornado Cash",
     "type": "mixer",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado Cash (100 ETH pool)",
+    "role": "100 ETH pool"
   },
   "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b": {
-    "entity": "Tornado Cash Router",
+    "entity": "Tornado Cash",
     "type": "mixer",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado Cash Router",
+    "role": "router"
   },
   "0x722122df12d4e14e13ac3b6895a86e84145b6967": {
-    "entity": "Tornado Cash Proxy",
+    "entity": "Tornado Cash",
     "type": "mixer",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado Cash Proxy",
+    "role": "proxy"
   },
   "0xa0c68c638235ee32657e8f720a23cec1bfc77c77": {
     "entity": "Polygon Bridge",
@@ -213,322 +225,425 @@
     "chain": "ethereum"
   },
   "0x178169b423a011fff22b9e3f3abea13414ddd0f1": {
-    "entity": "Tornado.Cash: 0.1 WBTC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 0.1 WBTC",
+    "role": "0.1 WBTC"
   },
   "0x610b717796ad172b316836ac95a2ffad065ceab4": {
-    "entity": "Tornado.Cash: 1 WBTC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 1 WBTC",
+    "role": "1 WBTC"
   },
   "0x4736dcf1b7a3d580672cce6e7c65cd5cc9cfba9d": {
-    "entity": "Tornado.Cash: 1,00 USDC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 1,00 USDC",
+    "role": "1,00 USDC"
   },
   "0xfd8610d20aa15b7b2e3be39b396a1bc3516c7144": {
-    "entity": "Tornado.Cash: 1,000 DAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 1,000 DAI",
+    "role": "1,000 DAI"
   },
   "0xd96f2b1c14db8458374d9aca76e26c3d18364307": {
-    "entity": "Tornado.Cash: 1,000 USDC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 1,000 USDC",
+    "role": "1,000 USDC"
   },
   "0x0836222f2b2b24a3f36f98668ed8f0b38d1a872f": {
-    "entity": "Tornado.Cash: 1,000 USDT",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 1,000 USDT",
+    "role": "1,000 USDT"
   },
   "0xbb93e510bbcd0b7beb5a853875f9ec60275cf498": {
-    "entity": "Tornado.Cash: 10 WBTC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 10 WBTC",
+    "role": "10 WBTC"
   },
   "0xf60dd140cff0706bae9cd734ac3ae76ad9ebc32a": {
-    "entity": "Tornado.Cash: 10,000 DAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 10,000 DAI",
+    "role": "10,000 DAI"
   },
   "0x07687e702b410fa43f4cb4af7fa097918ffd2730": {
-    "entity": "Tornado.Cash: 10,000 DAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 10,000 DAI",
+    "role": "10,000 DAI"
   },
   "0xd691f27f38b395864ea86cfc7253969b409c362d": {
-    "entity": "Tornado.Cash: 10,000 USDC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 10,000 USDC",
+    "role": "10,000 USDC"
   },
   "0xf67721a2d8f736e75a49fdd7fad2e31d8676542a": {
-    "entity": "Tornado.Cash: 10,000 USDT",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 10,000 USDT",
+    "role": "10,000 USDT"
   },
   "0xd4b88df4d29f5cedd6857912842cff3b20c8cfa3": {
-    "entity": "Tornado.Cash: 100 DAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 100 DAI",
+    "role": "100 DAI"
   },
   "0x169ad27a470d064dede56a2d3ff727986b15d52b": {
-    "entity": "Tornado.Cash: 100 USDT",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 100 USDT",
+    "role": "100 USDT"
   },
   "0x23773e65ed146a459791799d01336db287f25334": {
-    "entity": "Tornado.Cash: 100,000 DAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 100,000 DAI",
+    "role": "100,000 DAI"
   },
   "0x9ad122c22b14202b4490edaf288fdb3c7cb3ff5e": {
-    "entity": "Tornado.Cash: 100,000 USDT",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 100,000 USDT",
+    "role": "100,000 USDT"
   },
   "0x22aaa7720ddd5388a3c0a3333430953c68f1849b": {
-    "entity": "Tornado.Cash: 5,000 cDAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 5,000 cDAI",
+    "role": "5,000 cDAI"
   },
   "0xaeaac358560e11f52454d997aaff2c5731b6f8a6": {
-    "entity": "Tornado.Cash: 5,000 cUSDC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 5,000 cUSDC",
+    "role": "5,000 cUSDC"
   },
   "0xd21be7248e0197ee08e0c20d4a96debdac3d20af": {
-    "entity": "Tornado.Cash: 5,000,000 cDAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 5,000,000 cDAI",
+    "role": "5,000,000 cDAI"
   },
   "0xba214c1c1928a32bffe790263e38b4af9bfcd659": {
-    "entity": "Tornado.Cash: 50,000 cDAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 50,000 cDAI",
+    "role": "50,000 cDAI"
   },
   "0x1356c899d8c9467c7f71c195612f8a395abf2f0a": {
-    "entity": "Tornado.Cash: 50,000 cUSDC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 50,000 cUSDC",
+    "role": "50,000 cUSDC"
   },
   "0xb1c8094b234dce6e03f10a5b673c1d8c69739a00": {
-    "entity": "Tornado.Cash: 500,000 cDAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 500,000 cDAI",
+    "role": "500,000 cDAI"
   },
   "0x2717c5e28cf931547b621a5dddb772ab6a35b701": {
-    "entity": "Tornado.Cash: 500,000 cDAI",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 500,000 cDAI",
+    "role": "500,000 cDAI"
   },
   "0xa60c772958a3ed56c1f15dd055ba37ac8e523a0d": {
-    "entity": "Tornado.Cash: 500,000 cUSDC",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: 500,000 cUSDC",
+    "role": "500,000 cUSDC"
   },
   "0xb04e030140b30c27bcdfaafffa98c57d80eda7b4": {
-    "entity": "Tornado.Cash: Community Fund",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Community Fund",
+    "role": "Community Fund"
   },
   "0x8589427373d6d84e98730d7795d8f6f8731fda16": {
-    "entity": "Tornado.Cash: Donate",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Donate",
+    "role": "Donate"
   },
   "0x756c4628e57f7e7f8a459ec2752968360cf4d1aa": {
-    "entity": "Tornado.Cash: Echoer",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Echoer",
+    "role": "Echoer"
   },
   "0x5f6c97c6ad7bdd0ae7e0dd4ca33a4ed3fdabd4d7": {
-    "entity": "Tornado.Cash: Fee Manager",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Fee Manager",
+    "role": "Fee Manager"
   },
   "0xfa4c1f3f7d5dd7c12a9adb82cd7dda542e3d59ef": {
-    "entity": "Tornado.Cash: Gas Compensation Vault",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Gas Compensation Vault",
+    "role": "Gas Compensation Vault"
   },
   "0x5efda50f22d34f262c29268506c5fa42cb56a1ce": {
-    "entity": "Tornado.Cash: Governance",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Governance",
+    "role": "Governance"
   },
   "0xffbac21a641dcfe4552920138d90f3638b3c9fba": {
-    "entity": "Tornado.Cash: Governance Impl",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Governance Impl",
+    "role": "Governance Impl"
   },
   "0x2fc93484614a34f26f7970cbb94615ba109bb4bf": {
-    "entity": "Tornado.Cash: Governance Staking",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Governance Staking",
+    "role": "Governance Staking"
   },
   "0x2f50508a8a3d323b91336fa3ea6ae50e55f32185": {
-    "entity": "Tornado.Cash: Governance Vault",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Governance Vault",
+    "role": "Governance Vault"
   },
   "0x179f48c78f57a3a78f0608cc9197b8972921d1d2": {
-    "entity": "Tornado.Cash: Governance Vesting",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Governance Vesting",
+    "role": "Governance Vesting"
   },
   "0xb20c66c4de72433f3ce747b58b86830c459ca911": {
-    "entity": "Tornado.Cash: Instance Registry",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Instance Registry",
+    "role": "Instance Registry"
   },
   "0xca0840578f57fe71599d29375e16783424023357": {
-    "entity": "Tornado.Cash: L1 Helper",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: L1 Helper",
+    "role": "L1 Helper"
   },
   "0x746aebc06d2ae31b71ac51429a19d54e797878e9": {
-    "entity": "Tornado.Cash: Mining v2",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Mining v2",
+    "role": "Mining v2"
   },
   "0x94a1b5cdb22c43faab4abeb5c74999895464ddaf": {
-    "entity": "Tornado.Cash: Mixer",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Mixer",
+    "role": "Mixer"
   },
   "0xb541fc07bc7619fd4062a54d96268525cbc6ffef": {
-    "entity": "Tornado.Cash: Mixer",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Mixer",
+    "role": "Mixer"
   },
   "0x94c92f096437ab9958fc0a37f09348f30389ae79": {
-    "entity": "Tornado.Cash: Poseidon",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Poseidon",
+    "role": "Poseidon"
   },
   "0xd82ed8786d7c69dc7e052f7a542ab047971e73d2": {
-    "entity": "Tornado.Cash: Poseidon",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Poseidon",
+    "role": "Poseidon"
   },
   "0x58e8dcc13be9780fc42e8723d8ead4cf46943df2": {
-    "entity": "Tornado.Cash: Relayer Registry",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Relayer Registry",
+    "role": "Relayer Registry"
   },
   "0x5cab7692d4e94096462119ab7bf57319726eed2a": {
-    "entity": "Tornado.Cash: Reward Swap",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Reward Swap",
+    "role": "Reward Swap"
   },
   "0x88fd245fedec4a936e700f9173454d1931b4c307": {
-    "entity": "Tornado.Cash: Reward Verifier",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Reward Verifier",
+    "role": "Reward Verifier"
   },
   "0x5f48c2a71b2cc96e3f0ccae4e39318ff0dc375b2": {
-    "entity": "Tornado.Cash: Team 1 Vesting",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Team 1 Vesting",
+    "role": "Team 1 Vesting"
   },
   "0x00d5ec4cdf59374b2a47e842b799027356eac02b": {
-    "entity": "Tornado.Cash: Team 2 Vesting",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Team 2 Vesting",
+    "role": "Team 2 Vesting"
   },
   "0x77c08248c93ab53ff734ac555c932f8b9089d4c9": {
-    "entity": "Tornado.Cash: Team 3 Vesting",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Team 3 Vesting",
+    "role": "Team 3 Vesting"
   },
   "0xc3877028655ebe90b9447dd33de391c955ead267": {
-    "entity": "Tornado.Cash: Team 4 Vesting",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Team 4 Vesting",
+    "role": "Team 4 Vesting"
   },
   "0xb43432ec23e228fb7cb0fa52968949458b509f4f": {
-    "entity": "Tornado.Cash: Team 5 Vesting",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Team 5 Vesting",
+    "role": "Team 5 Vesting"
   },
   "0x653477c392c16b0765603074f157314cc4f40c32": {
-    "entity": "Tornado.Cash: Tree Update Verifier",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Tree Update Verifier",
+    "role": "Tree Update Verifier"
   },
   "0x09193888b3f38c82dedfda55259a82c0e7de875e": {
-    "entity": "Tornado.Cash: Withdraw Verifier",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Tornado.Cash: Withdraw Verifier",
+    "role": "Withdraw Verifier"
   },
   "0x527653ea119f3e6a1f5bd18fbf4714081d7b31ce": {
-    "entity": "tornado.cash",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "tornado.cash"
   },
   "0x905b63fff465b9ffbf41dea908ceb12478ec7601": {
-    "entity": "tornado.cash",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "tornado.cash"
   },
   "0x03893a7c7463ae47d46bc7f091665f1893656003": {
-    "entity": "tornado.cash",
+    "entity": "Tornado Cash",
     "type": "mixer",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "tornado.cash"
   },
   "0x05f51aab068caa6ab7eeb672f88c180f67f17ec7": {
     "entity": "ABCC",
@@ -795,10 +910,12 @@
     "chain": "ethereum"
   },
   "0xc365c3315cf926351ccaf13fa7d19c8c4058c8e1": {
-    "entity": "Binance Pool",
+    "entity": "Binance",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Binance Pool",
+    "role": "mining pool"
   },
   "0x61189da79177950a7272c88c6058b96d4bcd6be2": {
     "entity": "Binance US",
@@ -807,10 +924,12 @@
     "chain": "ethereum"
   },
   "0x2f47a1c2db4a3b78cda44eade915c3b19107ddcc": {
-    "entity": "Binance: Eth2 Depositor",
+    "entity": "Binance",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Binance: Eth2 Depositor",
+    "role": "Eth2 depositor"
   },
   "0x4b729cf402cfcffd057e254924b32241aedc1795": {
     "entity": "Bit-Z",
@@ -963,10 +1082,12 @@
     "chain": "ethereum"
   },
   "0xdb044b8298e04d442fdbe5ce01b8cc8f77130e33": {
-    "entity": "Bitkub Hot Wallet",
+    "entity": "Bitkub",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Bitkub Hot Wallet",
+    "role": "hot wallet"
   },
   "0x6cc8dcbca746a6e4fdefb98e1d0df903b107fd21": {
     "entity": "Bitrue",
@@ -1035,10 +1156,12 @@
     "chain": "ethereum"
   },
   "0xd7c866d0d536937bf9123e02f7c052446588189f": {
-    "entity": "C2CX: Hot Wallet",
+    "entity": "C2CX",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "C2CX: Hot Wallet",
+    "role": "hot wallet"
   },
   "0x0d6b5a54f940bf3d52e438cab785981aaefdf40c": {
     "entity": "COSS.io",
@@ -1047,10 +1170,12 @@
     "chain": "ethereum"
   },
   "0x43f07efe28e092a0fe4ec5b5662022b461ffac80": {
-    "entity": "COSS.io: Warm Wallet",
+    "entity": "COSS.io",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "COSS.io: Warm Wallet",
+    "role": "warm wallet"
   },
   "0x521db06bf657ed1d6c98553a70319a8ddbac75a3": {
     "entity": "CREX24",
@@ -1149,22 +1274,27 @@
     "chain": "ethereum"
   },
   "0xf6874c88757721a02f47592140905c4336dfbc61": {
-    "entity": "Coinbase: Coinbase Commerce",
+    "entity": "Coinbase",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Coinbase: Coinbase Commerce",
+    "role": "Coinbase Commerce"
   },
   "0x881d4032abe4188e2237efcd27ab435e81fc6bb1": {
-    "entity": "Coinbase: Commerce",
+    "entity": "Coinbase",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Coinbase: Commerce",
+    "role": "Coinbase Commerce"
   },
   "0xa090e606e30bd747d4e6245a1517ebe430f0057e": {
-    "entity": "Coinbase: Miscellaneous",
+    "entity": "Coinbase",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Coinbase: Miscellaneous"
   },
   "0x9539e0b14021a43cde41d9d45dc34969be9c7cb0": {
     "entity": "Coinbene",
@@ -1173,10 +1303,12 @@
     "chain": "ethereum"
   },
   "0x33683b94334eebc9bd3ea85ddbda4a86fb461405": {
-    "entity": "Coinbene: Cold Wallet",
+    "entity": "Coinbene",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Coinbene: Cold Wallet",
+    "role": "cold wallet"
   },
   "0xb6ba1931e4e74fd080587688f6db10e830f810d5": {
     "entity": "Coindelta",
@@ -1293,16 +1425,18 @@
     "chain": "ethereum"
   },
   "0x2faf487a4414fe77e2327f0bf4ae2a264a776ad2": {
-    "entity": "FTX Exchange",
+    "entity": "FTX",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "FTX Exchange"
   },
   "0xc098b2a3aa256d2140208c3de6543aaef5cd3a94": {
-    "entity": "FTX Exchange",
+    "entity": "FTX",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "FTX Exchange"
   },
   "0x94fe3ad91dacba8ec4b82f56ff7c122181f1535d": {
     "entity": "Faa.st",
@@ -1779,10 +1913,11 @@
     "chain": "ethereum"
   },
   "0xe59cd29be3be4461d79c0881d238cbe87d64595a": {
-    "entity": "Kucoin",
+    "entity": "KuCoin",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Kucoin"
   },
   "0xea81ce54a0afa10a027f65503bd52fba83d745b8": {
     "entity": "Kuna.io",
@@ -1851,16 +1986,18 @@
     "chain": "ethereum"
   },
   "0x75e89d5979e4f6fba9f97c104c2f0afb3f1dcb88": {
-    "entity": "MEXC: Mexc.com",
+    "entity": "MEXC",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "MEXC: Mexc.com"
   },
   "0x0211f3cedbef3143223d3acf0e589747933e8527": {
-    "entity": "MEXC: Mexc.com",
+    "entity": "MEXC",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "MEXC: Mexc.com"
   },
   "0x477b8d5ef7c2c42db84deb555419cd817c336b6f": {
     "entity": "MaiCoin",
@@ -1875,10 +2012,11 @@
     "chain": "ethereum"
   },
   "0x3cc936b795a188f0e246cbb2d74c5bd190aecf18": {
-    "entity": "Mexc.com",
+    "entity": "MEXC",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Mexc.com"
   },
   "0xac338d9faac562df26d702880c796e1024e2698a": {
     "entity": "MinedTrade.com",
@@ -1893,16 +2031,20 @@
     "chain": "ethereum"
   },
   "0x2c8fbb630289363ac80705a1a61273f76fd5a161": {
-    "entity": "OKEx",
+    "entity": "OKX",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "OKEx",
+    "name_note": "formerly OKEx"
   },
   "0x5041ed759dd4afc3a72b8192c143f72f4724081a": {
-    "entity": "OKEx",
+    "entity": "OKX",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "OKEx",
+    "name_note": "formerly OKEx"
   },
   "0x03e3ff995863828554282e80870b489cc31dc8bc": {
     "entity": "OMGFIN Exchange",
@@ -1917,16 +2059,20 @@
     "chain": "ethereum"
   },
   "0xcacc694840ecebadd9b4c419e5b7f1d73fedf999": {
-    "entity": "Panda.Exchange 1: Hot Wallet",
+    "entity": "Panda.Exchange",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Panda.Exchange 1: Hot Wallet",
+    "role": "hot wallet 1"
   },
   "0xb709d82f0706476457ae6bad7c3534fbf424382c": {
-    "entity": "Panda.Exchange 2: Hot Wallet",
+    "entity": "Panda.Exchange",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Panda.Exchange 2: Hot Wallet",
+    "role": "hot wallet 2"
   },
   "0xbd8ef191caa1571e8ad4619ae894e07a75de0c35": {
     "entity": "Paribu",
@@ -1983,100 +2129,132 @@
     "chain": "ethereum"
   },
   "0xaa9fa73dfe17ecaa2c89b39f0bb2779613c5fc3b": {
-    "entity": "Poloniex: BAT",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: BAT",
+    "role": "BAT wallet"
   },
   "0x2fa2bc2ce6a4f92952921a4caa46b3727d24a1ec": {
-    "entity": "Poloniex: BNT",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: BNT",
+    "role": "BNT wallet"
   },
   "0x31a2feb9b5d3b5f4e76c71d6c92fc46ebb3cb1c1": {
-    "entity": "Poloniex: CVC",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: CVC",
+    "role": "CVC wallet"
   },
   "0x6b71834d65c5c4d8ed158d54b47e6ea4ff4e5437": {
-    "entity": "Poloniex: FOAM",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: FOAM",
+    "role": "FOAM wallet"
   },
   "0x48d466b7c0d32b61e8a82cd2bcf060f7c3f966df": {
-    "entity": "Poloniex: GNO",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: GNO",
+    "role": "GNO wallet"
   },
   "0x0536806df512d6cdde913cf95c9886f65b1d3462": {
-    "entity": "Poloniex: GNT",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: GNT",
+    "role": "GNT wallet"
   },
   "0x8d451ae5ee8f557a9ce7a9d7be8a8cb40002d5cb": {
-    "entity": "Poloniex: KNC",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: KNC",
+    "role": "KNC wallet"
   },
   "0xbd2ec7c608a06fe975dbdca729e84dedb34ecc21": {
-    "entity": "Poloniex: LOOM",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: LOOM",
+    "role": "LOOM wallet"
   },
   "0xc0e30823e5e628df8bc9bf2636a347e1512f0ecb": {
-    "entity": "Poloniex: MANA",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: MANA",
+    "role": "MANA wallet"
   },
   "0x65f9b2e4d7aaeb40ffea8c6f5844d5ad7da257e0": {
-    "entity": "Poloniex: NXC",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: NXC",
+    "role": "NXC wallet"
   },
   "0x36b01066b7fa4a0fdb2968ea0256c848e9135674": {
-    "entity": "Poloniex: OMG",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: OMG",
+    "role": "OMG wallet"
   },
   "0xab11204cfeaccffa63c2d23aef2ea9accdb0a0d5": {
-    "entity": "Poloniex: REP",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: REP",
+    "role": "REP wallet"
   },
   "0x6795cf8eb25585eadc356ae32ac6641016c550f2": {
-    "entity": "Poloniex: SNT",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: SNT",
+    "role": "SNT wallet"
   },
   "0xfbf2173154f7625713be22e0504404ebfe021eae": {
-    "entity": "Poloniex: STORJ",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: STORJ",
+    "role": "STORJ wallet"
   },
   "0x6f803466bcd17f44fa18975bf7c509ba64bf3825": {
-    "entity": "Poloniex: USDC",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: USDC",
+    "role": "USDC wallet"
   },
   "0xead6be34ce315940264519f250d8160f369fa5cd": {
-    "entity": "Poloniex: ZRX",
+    "entity": "Poloniex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Poloniex: ZRX",
+    "role": "ZRX wallet"
   },
   "0x2a048d9a8ffdd239f063b09854976c3049ae659c": {
     "entity": "QuantaEx",
@@ -2241,10 +2419,12 @@
     "chain": "ethereum"
   },
   "0xefda0cb780a8564903285ed25df3cc024f3b2982": {
-    "entity": "XT.com Hot Wallet",
+    "entity": "XT.com",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "XT.com Hot Wallet",
+    "role": "hot wallet"
   },
   "0xf5bec430576ff1b82e44ddb5a1c93f6f9d0884f3": {
     "entity": "Yobit.net",
@@ -2277,130 +2457,172 @@
     "chain": "ethereum"
   },
   "0x5a52e96bacdabb82fd05763e25335261b270efcb": {
-    "entity": "binance reserve wallets ETH",
+    "entity": "Binance",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "binance reserve wallets ETH",
+    "role": "ETH reserve wallet"
   },
   "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503": {
-    "entity": "binance reserve wallets USDT",
+    "entity": "Binance",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "binance reserve wallets USDT",
+    "role": "USDT reserve wallet"
   },
   "0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
-    "entity": "bitfinex ETH/ERC20 hot wallet",
+    "entity": "Bitfinex",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "bitfinex ETH/ERC20 hot wallet",
+    "role": "ETH/ERC-20 hot wallet"
   },
   "0xee5b5b923ffce93a870b3104b7ca09c3db80047a": {
-    "entity": "Bybit reserve wallets",
+    "entity": "Bybit",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "Bybit reserve wallets",
+    "role": "reserve wallet"
   },
   "0x72a53cdbbcc1b9efa39c834a540550e23463aacb": {
-    "entity": "crypto.com ERC20 reserves",
+    "entity": "Crypto.com",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "crypto.com ERC20 reserves",
+    "role": "ERC-20 reserve wallet"
   },
   "0xcffad3200574698b78f32232aa9d63eabd290703": {
-    "entity": "crypto.com ERC20 reserves",
+    "entity": "Crypto.com",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "crypto.com ERC20 reserves",
+    "role": "ERC-20 reserve wallet"
   },
   "0x77021d475e36b3ab1921a0e3a8380f069d3263de": {
-    "entity": "deribit reserves",
+    "entity": "Deribit",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "deribit reserves",
+    "role": "reserve wallet"
   },
   "0x5f397b62502e255f68382791947d54c4b2d37f09": {
-    "entity": "deribit reserves",
+    "entity": "Deribit",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "deribit reserves",
+    "role": "reserve wallet"
   },
   "0x18709e89bd403f470088abdacebe86cc60dda12e": {
-    "entity": "huobi reserve wallets ETH",
+    "entity": "Huobi",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "huobi reserve wallets ETH",
+    "role": "ETH reserve wallet"
   },
   "0xc589b275e60dda57ad7e117c6dd837ab524a5666": {
-    "entity": "huobi reserve wallets SHIB",
+    "entity": "Huobi",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "huobi reserve wallets SHIB",
+    "role": "SHIB reserve wallet"
   },
   "0x30741289523c2e4d2a62c7d6722686d14e723851": {
-    "entity": "huobi reserve wallets XCN",
+    "entity": "Huobi",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "huobi reserve wallets XCN",
+    "role": "XCN reserve wallet"
   },
   "0xd89350284c7732163765b23338f2ff27449e0bf5": {
-    "entity": "kucoin reserve wallets",
+    "entity": "KuCoin",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "kucoin reserve wallets",
+    "role": "reserve wallet"
   },
   "0xec30d02f10353f8efc9601371f56e808751f396f": {
-    "entity": "kucoin USDT reserves",
+    "entity": "KuCoin",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "kucoin USDT reserves",
+    "role": "USDT reserve wallet"
   },
   "0x88bd4d3e2997371bceefe8d9386c6b5b4de60346": {
-    "entity": "kucoin USDT reserves",
+    "entity": "KuCoin",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "kucoin USDT reserves",
+    "role": "USDT reserve wallet"
   },
   "0x738cf6903e6c4e699d1c2dd9ab8b67fcdb3121ea": {
-    "entity": "kucoin USDC reserves",
+    "entity": "KuCoin",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "kucoin USDC reserves",
+    "role": "USDC reserve wallet"
   },
   "0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "0x6cf9aa65ebad7028536e353393630e2340ca6049": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "0x7153d2ef9f14a6b1bb2ed822745f65e58d836c3f": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "0xcde4c1b984f3f02f997ecff9980b06316de2577d": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "source": "graphsense-tagpacks",
-    "chain": "ethereum"
+    "chain": "ethereum",
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "0x252a8bd2319d8a555b872990601221b3a2053bce": {
     "entity": "MESRI, Behzad",
@@ -3199,7 +3421,7 @@
     }
   },
   "polygon:0x18709e89bd403f470088abdacebe86cc60dda12e": {
-    "entity": "huobi reserve wallets ETH",
+    "entity": "Huobi",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3213,7 +3435,9 @@
       "is_contract": false,
       "nonce": 34,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "huobi reserve wallets ETH",
+    "role": "ETH reserve wallet"
   },
   "polygon:0x2b49ce21ad2004cfb3d0b51b2e8ec0406d632513": {
     "entity": "Bitbee",
@@ -3318,7 +3542,7 @@
     }
   },
   "polygon:0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3332,10 +3556,12 @@
       "is_contract": false,
       "nonce": 1021,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "polygon:0x5a52e96bacdabb82fd05763e25335261b270efcb": {
-    "entity": "binance reserve wallets ETH",
+    "entity": "Binance",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3349,10 +3575,12 @@
       "is_contract": false,
       "nonce": 162,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "binance reserve wallets ETH",
+    "role": "ETH reserve wallet"
   },
   "polygon:0x6cf9aa65ebad7028536e353393630e2340ca6049": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3366,7 +3594,9 @@
       "is_contract": false,
       "nonce": 2103,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "polygon:0x6dcd15a0dbefd0700063a4445382d3506391a41a": {
     "entity": "BitBase",
@@ -3386,7 +3616,7 @@
     }
   },
   "polygon:0x7153d2ef9f14a6b1bb2ed822745f65e58d836c3f": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3400,10 +3630,12 @@
       "is_contract": false,
       "nonce": 92,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "polygon:0x72a53cdbbcc1b9efa39c834a540550e23463aacb": {
-    "entity": "crypto.com ERC20 reserves",
+    "entity": "Crypto.com",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3417,7 +3649,9 @@
       "is_contract": false,
       "nonce": 1303,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "crypto.com ERC20 reserves",
+    "role": "ERC-20 reserve wallet"
   },
   "polygon:0x7a56f645dcb513d0326cbaa048e9106ff6d4cd5f": {
     "entity": "Catex Exchange",
@@ -3437,7 +3671,7 @@
     }
   },
   "polygon:0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3451,7 +3685,9 @@
       "is_contract": false,
       "nonce": 33213,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "polygon:0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe": {
     "entity": "Binance",
@@ -3471,7 +3707,7 @@
     }
   },
   "polygon:0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3485,7 +3721,9 @@
       "is_contract": false,
       "nonce": 209,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "polygon:0x94fe3ad91dacba8ec4b82f56ff7c122181f1535d": {
     "entity": "Faa.st",
@@ -3539,7 +3777,7 @@
     }
   },
   "polygon:0xcde4c1b984f3f02f997ecff9980b06316de2577d": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "polygon",
     "source": "inferred_cross_chain_same_address",
@@ -3553,7 +3791,9 @@
       "is_contract": false,
       "nonce": 176,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "polygon:0xd24400ae8bfebb18ca49be86258a3c749cf46853": {
     "entity": "Gemini",
@@ -3641,7 +3881,7 @@
     }
   },
   "arbitrum:0x18709e89bd403f470088abdacebe86cc60dda12e": {
-    "entity": "huobi reserve wallets ETH",
+    "entity": "Huobi",
     "type": "exchange",
     "chain": "arbitrum",
     "source": "inferred_cross_chain_same_address",
@@ -3655,7 +3895,9 @@
       "is_contract": false,
       "nonce": 28,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "huobi reserve wallets ETH",
+    "role": "ETH reserve wallet"
   },
   "arbitrum:0x2b49ce21ad2004cfb3d0b51b2e8ec0406d632513": {
     "entity": "Bitbee",
@@ -3726,7 +3968,7 @@
     }
   },
   "arbitrum:0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "arbitrum",
     "source": "inferred_cross_chain_same_address",
@@ -3740,10 +3982,12 @@
       "is_contract": false,
       "nonce": 906,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "arbitrum:0x5a52e96bacdabb82fd05763e25335261b270efcb": {
-    "entity": "binance reserve wallets ETH",
+    "entity": "Binance",
     "type": "exchange",
     "chain": "arbitrum",
     "source": "inferred_cross_chain_same_address",
@@ -3757,10 +4001,12 @@
       "is_contract": false,
       "nonce": 246,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "binance reserve wallets ETH",
+    "role": "ETH reserve wallet"
   },
   "arbitrum:0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
-    "entity": "bitfinex ETH/ERC20 hot wallet",
+    "entity": "Bitfinex",
     "type": "exchange",
     "chain": "arbitrum",
     "source": "inferred_cross_chain_same_address",
@@ -3774,10 +4020,12 @@
       "is_contract": false,
       "nonce": 8212,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "bitfinex ETH/ERC20 hot wallet",
+    "role": "ETH/ERC-20 hot wallet"
   },
   "arbitrum:0x87cbc48075d7aa1760ac71c41e8bc289b6a31f56": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "arbitrum",
     "source": "inferred_cross_chain_same_address",
@@ -3791,7 +4039,9 @@
       "is_contract": false,
       "nonce": 5778,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "arbitrum:0x892e9e24aea3f27f4c6e9360e312cce93cc98ebe": {
     "entity": "Binance",
@@ -3811,7 +4061,7 @@
     }
   },
   "arbitrum:0x94596096320a6b4eab43556ad1ed8c4c3d51c9aa": {
-    "entity": "swisborg reserve wallets",
+    "entity": "SwissBorg",
     "type": "exchange",
     "chain": "arbitrum",
     "source": "inferred_cross_chain_same_address",
@@ -3825,7 +4075,9 @@
       "is_contract": false,
       "nonce": 95,
       "checked": "2026-10-04"
-    }
+    },
+    "source_name": "swisborg reserve wallets",
+    "role": "reserve wallet"
   },
   "arbitrum:0xb3f923eabaf178fc1bd8e13902fc5c61d3ddef5b": {
     "entity": "Wintermute: Binance Deposit",

@@ -117,6 +117,7 @@ async def infer(chains: list[str]) -> tuple[dict, dict]:
                     continue
                 additions[f"{slug}:{address}"] = {
                     "entity": meta.get("entity", ""),
+                    **({"role": meta["role"]} if meta.get("role") else {}),
                     "type": "exchange",
                     "chain": slug,
                     "source": SOURCE,

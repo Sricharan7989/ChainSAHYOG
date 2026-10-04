@@ -210,7 +210,7 @@ async def main():
     check("mixer marked", r2.graph.nodes[TORNADO]["is_mixer"], True)
     s2 = tracer.summarize(r2)
     check("no exchange -> found False", s2["found"], False)
-    check("mixer listed in summary", s2["mixers_or_bridges_crossed"], ["Tornado Cash (100 ETH pool)"])
+    check("mixer listed in summary", s2["mixers_or_bridges_crossed"], ["Tornado Cash"])
 
     # nearest exchange wins when two are reachable
     book3 = {
@@ -274,6 +274,37 @@ async def main():
     check("inferred scores below a direct label", score("inferred_label") < score("known_label"), True)
     check("and above the fan-in pattern", score("inferred_label") > score("consolidation"), True)
     check("best case for an inferred label is 80", score("inferred_label"), 80)
+
+    print("\n--- label names: the company as entity, the wallet's role kept apart ---")
+    from core import label_names
+    import json as _json
+    from app import config as _config
+
+    def norm(name, type_="exchange"):
+        row = {"entity": name, "type": type_}
+        label_names.apply(row)
+        return row
+
+    row = norm("binance reserve wallets ETH")
+    check("a GraphSense role suffix becomes the company", row["entity"], "Binance")
+    check("with the role kept as metadata", row.get("role"), "ETH reserve wallet")
+    check("and the original string preserved", row.get("source_name"), "binance reserve wallets ETH")
+    check("a misspelt company is corrected", norm("swisborg reserve wallets")["entity"], "SwissBorg")
+    check("casing is normalised", norm("Kucoin")["entity"], "KuCoin")
+    check("an Etherscan 'Company: role' label is split", norm("Coinbase: Miscellaneous")["entity"], "Coinbase")
+    check("a token wallet keeps its token as the role", norm("Poloniex: BAT").get("role"), "BAT wallet")
+    check("an ambiguous name is left exactly as it is",
+          norm("Wintermute: Binance Deposit")["entity"], "Wintermute: Binance Deposit")
+    check("a separate legal entity is not merged", norm("Binance US")["entity"], "Binance US")
+    check("OFAC SDN names are never rewritten",
+          norm("LAZARUS GROUP", "sanctioned")["entity"], "LAZARUS GROUP")
+    check("applying twice changes nothing more", label_names.apply(row), False)
+    raw = _json.loads(_config.LABELS_PATH.read_text(encoding="utf-8"))
+    leftovers = [
+        m["entity"] for k, m in raw.items()
+        if not k.startswith("_") and isinstance(m, dict) and label_names.normalise(m.get("entity", "")) is not None
+    ]
+    check("labels.json holds no name the rules would still rewrite", leftovers, [])
 
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail

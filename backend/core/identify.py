@@ -240,6 +240,7 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
             ),
         )
 
+    role = meta.get("role")
     return Identification(
         address=address.strip().lower(),
         entity=entity,
@@ -247,7 +248,9 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
         method="known_label",
         confidence=LABEL_CONFIDENCE,
         evidence=(
-            f"Exact match in labels.json: {entity} ({entity_type}) on {chain_name}."
+            f"Exact match in labels.json: {entity} ({entity_type}"
+            + (f", {role}" if role else "")
+            + f") on {chain_name}."
         ),
     )
 

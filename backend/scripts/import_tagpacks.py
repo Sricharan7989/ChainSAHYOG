@@ -66,6 +66,7 @@ import httpx
 import yaml
 
 from app import config
+from core import label_names
 
 GITHUB_API = (
     "https://api.github.com/repos/graphsense/graphsense-tagpacks/contents/packs/"
@@ -251,15 +252,17 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
         category = str(tag.get("category", header_category) or "")
         entity_type = CATEGORY_MAP.get(category, default_type)
 
-        rows.append(
-            {
-                "address": address.lower(),
-                "entity": clean_entity(label, actor),
-                "type": entity_type,
-                "chain": chain_slug,
-                "source": filename,
-            }
-        )
+        row = {
+            "address": address.lower(),
+            "entity": clean_entity(label, actor),
+            "type": entity_type,
+            "chain": chain_slug,
+            "source": filename,
+        }
+        # Same company/role split as scripts/normalize_label_names, so a fresh
+        # import cannot reintroduce names like "binance reserve wallets ETH".
+        label_names.apply(row)
+        rows.append(row)
 
     return rows, rejected
 
@@ -417,6 +420,7 @@ def merge(rows: list[dict], dry_run: bool) -> dict:
             "type": row["type"],
             "chain": chain,
             "source": "graphsense-tagpacks",
+            **{k: row[k] for k in ("role", "source_name", "name_note") if row.get(k)},
         }
         stats["added"] += 1
 
