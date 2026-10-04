@@ -145,6 +145,15 @@ def main():
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
 
+def test_suite():
+    """
+    The pytest entry point. Each suite is a script of named checks that prints
+    PASS/FAIL per check and returns its failure count; pytest runs the whole
+    script once and fails if any check failed. Run it directly for the per-check
+    listing:  python -m tests.test_report
+    """
+    assert main() == 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

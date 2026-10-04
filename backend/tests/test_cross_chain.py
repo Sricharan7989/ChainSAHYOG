@@ -76,7 +76,7 @@ TEST_REGISTRY = {
 
 
 @contextlib.contextmanager
-def test_world(extra_labels=None, bare=False):
+def world_with_test_registry(extra_labels=None, bare=False):
     """Inject the test registry, plus labels for the synthetic bridges."""
     real_registry = config.BRIDGE_REGISTRY
     real_load = identify.load_labels
@@ -156,7 +156,7 @@ class ChainClient:
 
 def traced(books, depth=4):
     client = ChainClient(books)
-    with test_world():
+    with world_with_test_registry():
         return asyncio.run(tracer.trace(SUSPECT, max_depth=depth, client=client)), client
 
 
@@ -292,7 +292,7 @@ def matched_tests():
           all(a["node_id"] for a in payload["attributions"]), True)
 
     print("\n--- 7. labels: a chain with none cannot yield a finding, and says so ---")
-    with test_world(bare=True):
+    with world_with_test_registry(bare=True):
         bare = asyncio.run(
             tracer.trace(
                 SUSPECT,
@@ -309,7 +309,7 @@ def matched_tests():
 
     print("\n--- 7b. a SPARSE label set counts as no coverage ---")
     few = {("arbitrum", "0x" + f"{i:040x}"): {"entity": f"Ex{i}", "type": "exchange"} for i in range(1, 5)}
-    with test_world(few, bare=True):
+    with world_with_test_registry(few, bare=True):
         sparse = asyncio.run(
             tracer.trace(
                 SUSPECT,
@@ -565,7 +565,7 @@ def cap_tests():
 
     print("\n--- 14. a bridge we hold no route for is reported as a gap, not a dead end ---")
     unlisted = "0x" + "e" * 40
-    with test_world({("ethereum", unlisted): {"entity": "Some Bridge", "type": "bridge"}}):
+    with world_with_test_registry({("ethereum", unlisted): {"entity": "Some Bridge", "type": "bridge"}}):
         result = asyncio.run(
             tracer.trace(
                 SUSPECT,
@@ -595,6 +595,15 @@ def run_all():
     real_registry_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
+
+def test_suite():
+    """
+    The pytest entry point. Each suite is a script of named checks that prints
+    PASS/FAIL per check and returns its failure count; pytest runs the whole
+    script once and fails if any check failed. Run it directly for the per-check
+    listing:  python -m tests.test_cross_chain
+    """
+    assert run_all() == 0
 
 
 if __name__ == "__main__":
