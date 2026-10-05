@@ -114,6 +114,36 @@ def resourcing_tests():
           [k for k, v in rows.items() if v.get("resourced") and not v.get("citation", "").count("Earlier source:")], [])
 
 
+def step4_label_tests():
+    print("\n--- 7. Step 4: exchange-published additions; KuCoin excluded; Tornado status ---")
+    rows = committed_rows()
+    added = [v for v in rows.values() if v.get("source") == "self_published"]
+    by_entity = {}
+    for v in added:
+        by_entity[v["entity"]] = by_entity.get(v["entity"], 0) + 1
+    check("Binance 29, Huobi 20, Bitfinex 6 added as self-published",
+          by_entity, {"Binance": 29, "Huobi": 20, "Bitfinex": 6})
+    check("all of them at the self-published tier",
+          {v["evidence_tier"] for v in added}, {"self_published"})
+    check("no KuCoin address was harvested from its page",
+          [v for v in added if v["entity"] == "KuCoin"], [])
+    tornado = [v for v in rows.values() if v.get("sanctions_status")]
+    check("Tornado Cash rows carry a plain status sentence", len(tornado) >= 50, True)
+    sample = next(v for v in tornado if v["sanctions_status"]["status"] == "delisted")
+    check("which says designated 2022, delisted 21 March 2025, not a current sanction",
+          ("2022" in sample["sanctions_status"]["text"],
+           "21 March 2025" in sample["sanctions_status"]["text"],
+           sample["sanctions_status"]["text"].endswith("Not a current sanction.")),
+          (True, True, True))
+
+    from core import tracer as _tracer
+    identify.load_labels(force_reload=True)
+    status = _tracer._sanctions_status("ethereum", "0x722122df12d4e14e13ac3b6895a86e84145b6967")
+    check("a risk flag on that mixer reads the status", (status or "").endswith("Not a current sanction."), True)
+    current = _tracer._sanctions_status("ethereum", "0x098b716b8aaf21512996dc57eb0615e2383e2f96")
+    check("a current SDN listing says so", (current or "").endswith("A current sanction."), True)
+
+
 def loader_tests():
     print("\n--- 4. the loader merges labels.local.json; a committed row wins a clash ---")
     a, b = "0x" + "1" * 40, "0x" + "2" * 40
@@ -146,6 +176,7 @@ def run_all():
     file_tests()
     sdn_tests()
     resourcing_tests()
+    step4_label_tests()
     loader_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail

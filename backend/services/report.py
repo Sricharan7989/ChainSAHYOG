@@ -521,7 +521,12 @@ def _risk_section(payload: dict, styles: dict) -> list:
                 f'<font color="{_hex(colour)}"><b>{severity.upper()}</b></font>',
                 styles["small"],
             ),
-            Paragraph(str(flag.get("entity", "")), styles["body"]),
+            Paragraph(
+                str(flag.get("entity", ""))
+                + (f'<br/><font size="7">{flag["sanctions_status"]}</font>'
+                   if flag.get("sanctions_status") else ""),
+                styles["body"],
+            ),
             Paragraph("Yes" if flag.get("on_primary_path") else "No", styles["small"]),
             Paragraph(str(flag.get("hop_distance", "")), styles["small"]),
             Paragraph(_fmt_assets(flag.get("value_received"),

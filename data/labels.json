@@ -809,7 +809,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936": {
     "entity": "Tornado Cash",
@@ -859,7 +868,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf": {
     "entity": "Tornado Cash",
@@ -909,7 +927,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xa160cdab225685da1d56aa342ad8841c3b53f291": {
     "entity": "Tornado Cash",
@@ -959,7 +986,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b": {
     "entity": "Tornado Cash",
@@ -1002,7 +1038,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x722122df12d4e14e13ac3b6895a86e84145b6967": {
     "entity": "Tornado Cash",
@@ -1045,7 +1090,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xa0c68c638235ee32657e8f720a23cec1bfc77c77": {
     "entity": "Polygon Bridge",
@@ -1173,7 +1227,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x610b717796ad172b316836ac95a2ffad065ceab4": {
     "entity": "Tornado Cash",
@@ -1217,7 +1280,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x4736dcf1b7a3d580672cce6e7c65cd5cc9cfba9d": {
     "entity": "Tornado Cash",
@@ -1268,7 +1340,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xfd8610d20aa15b7b2e3be39b396a1bc3516c7144": {
     "entity": "Tornado Cash",
@@ -1319,7 +1400,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xd96f2b1c14db8458374d9aca76e26c3d18364307": {
     "entity": "Tornado Cash",
@@ -1370,7 +1460,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x0836222f2b2b24a3f36f98668ed8f0b38d1a872f": {
     "entity": "Tornado Cash",
@@ -1421,7 +1520,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xbb93e510bbcd0b7beb5a853875f9ec60275cf498": {
     "entity": "Tornado Cash",
@@ -1465,7 +1573,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xf60dd140cff0706bae9cd734ac3ae76ad9ebc32a": {
     "entity": "Tornado Cash",
@@ -1516,7 +1633,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x07687e702b410fa43f4cb4af7fa097918ffd2730": {
     "entity": "Tornado Cash",
@@ -1560,7 +1686,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xd691f27f38b395864ea86cfc7253969b409c362d": {
     "entity": "Tornado Cash",
@@ -1611,7 +1746,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xf67721a2d8f736e75a49fdd7fad2e31d8676542a": {
     "entity": "Tornado Cash",
@@ -1662,7 +1806,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xd4b88df4d29f5cedd6857912842cff3b20c8cfa3": {
     "entity": "Tornado Cash",
@@ -1713,7 +1866,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x169ad27a470d064dede56a2d3ff727986b15d52b": {
     "entity": "Tornado Cash",
@@ -1764,7 +1926,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x23773e65ed146a459791799d01336db287f25334": {
     "entity": "Tornado Cash",
@@ -1808,7 +1979,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x9ad122c22b14202b4490edaf288fdb3c7cb3ff5e": {
     "entity": "Tornado Cash",
@@ -1859,7 +2039,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x22aaa7720ddd5388a3c0a3333430953c68f1849b": {
     "entity": "Tornado Cash",
@@ -1910,7 +2099,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xaeaac358560e11f52454d997aaff2c5731b6f8a6": {
     "entity": "Tornado Cash",
@@ -1961,7 +2159,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xd21be7248e0197ee08e0c20d4a96debdac3d20af": {
     "entity": "Tornado Cash",
@@ -2005,7 +2212,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xba214c1c1928a32bffe790263e38b4af9bfcd659": {
     "entity": "Tornado Cash",
@@ -2056,7 +2272,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x1356c899d8c9467c7f71c195612f8a395abf2f0a": {
     "entity": "Tornado Cash",
@@ -2107,7 +2332,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xb1c8094b234dce6e03f10a5b673c1d8c69739a00": {
     "entity": "Tornado Cash",
@@ -2158,7 +2392,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x2717c5e28cf931547b621a5dddb772ab6a35b701": {
     "entity": "Tornado Cash",
@@ -2202,7 +2445,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xa60c772958a3ed56c1f15dd055ba37ac8e523a0d": {
     "entity": "Tornado Cash",
@@ -2253,7 +2505,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xb04e030140b30c27bcdfaafffa98c57d80eda7b4": {
     "entity": "Tornado Cash",
@@ -2289,7 +2550,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x8589427373d6d84e98730d7795d8f6f8731fda16": {
     "entity": "Tornado Cash",
@@ -2340,7 +2609,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x756c4628e57f7e7f8a459ec2752968360cf4d1aa": {
     "entity": "Tornado Cash",
@@ -2376,7 +2654,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x5f6c97c6ad7bdd0ae7e0dd4ca33a4ed3fdabd4d7": {
     "entity": "Tornado Cash",
@@ -2412,7 +2698,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xfa4c1f3f7d5dd7c12a9adb82cd7dda542e3d59ef": {
     "entity": "Tornado Cash",
@@ -2468,7 +2762,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xffbac21a641dcfe4552920138d90f3638b3c9fba": {
     "entity": "Tornado Cash",
@@ -2504,7 +2806,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x2fc93484614a34f26f7970cbb94615ba109bb4bf": {
     "entity": "Tornado Cash",
@@ -2540,7 +2850,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x2f50508a8a3d323b91336fa3ea6ae50e55f32185": {
     "entity": "Tornado Cash",
@@ -2576,7 +2894,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x179f48c78f57a3a78f0608cc9197b8972921d1d2": {
     "entity": "Tornado Cash",
@@ -2612,7 +2938,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xb20c66c4de72433f3ce747b58b86830c459ca911": {
     "entity": "Tornado Cash",
@@ -2648,7 +2982,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xca0840578f57fe71599d29375e16783424023357": {
     "entity": "Tornado Cash",
@@ -2692,7 +3034,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x746aebc06d2ae31b71ac51429a19d54e797878e9": {
     "entity": "Tornado Cash",
@@ -2728,7 +3079,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x94a1b5cdb22c43faab4abeb5c74999895464ddaf": {
     "entity": "Tornado Cash",
@@ -2779,7 +3138,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xb541fc07bc7619fd4062a54d96268525cbc6ffef": {
     "entity": "Tornado Cash",
@@ -2830,7 +3198,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x94c92f096437ab9958fc0a37f09348f30389ae79": {
     "entity": "Tornado Cash",
@@ -2866,7 +3243,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0xd82ed8786d7c69dc7e052f7a542ab047971e73d2": {
     "entity": "Tornado Cash",
@@ -2902,7 +3287,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x58e8dcc13be9780fc42e8723d8ead4cf46943df2": {
     "entity": "Tornado Cash",
@@ -2946,7 +3339,16 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x5cab7692d4e94096462119ab7bf57319726eed2a": {
     "entity": "Tornado Cash",
@@ -2982,7 +3384,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x88fd245fedec4a936e700f9173454d1931b4c307": {
     "entity": "Tornado Cash",
@@ -3018,7 +3428,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x5f48c2a71b2cc96e3f0ccae4e39318ff0dc375b2": {
     "entity": "Tornado Cash",
@@ -3189,7 +3607,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x09193888b3f38c82dedfda55259a82c0e7de875e": {
     "entity": "Tornado Cash",
@@ -3225,7 +3651,15 @@
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x527653ea119f3e6a1f5bd18fbf4714081d7b31ce": {
     "entity": "Tornado Cash",
@@ -3261,7 +3695,16 @@
         "upstream_url": "https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x905b63fff465b9ffbf41dea908ceb12478ec7601": {
     "entity": "Tornado Cash",
@@ -3290,7 +3733,16 @@
         "upstream_url": "https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "not_currently_listed",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": null,
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; not on the current SDN list (removal date not established). Not a current sanction."
+    }
   },
   "0x03893a7c7463ae47d46bc7f091665f1893656003": {
     "entity": "Tornado Cash",
@@ -3326,7 +3778,16 @@
         "upstream_url": "https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808"
       }
     ],
-    "resourced": true
+    "resourced": true,
+    "sanctions_status": {
+      "status": "delisted",
+      "designated": [
+        "2022-08-08",
+        "2022-11-08"
+      ],
+      "delisted": "2025-03-21",
+      "text": "Designated by US Treasury OFAC on 8 August 2022 and 8 November 2022; removed from the SDN list on 21 March 2025. Not a current sanction."
+    }
   },
   "0x05f51aab068caa6ab7eeb672f88c180f67f17ec7": {
     "entity": "ABCC",
@@ -25044,7 +25505,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0x7ff9cfad3877f21d41da833e2f775db0569ee3d9": {
     "entity": "GARANTEX EUROPE OU",
@@ -25078,7 +25542,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "bitcoin:3E6ZCKRrsdPc35chA9Eftp1h3DLW18NFNV": {
     "entity": "GARANTEX EUROPE OU",
@@ -25112,7 +25579,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0x8dce2aac0de82bdcaf6b4373b79f94331b8e4995": {
     "entity": "GARANTEX EUROPE OU",
@@ -25146,7 +25616,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0xf4377eda661e04b6dda78969796ed31658d602d4": {
     "entity": "GARANTEX EUROPE OU",
@@ -25180,7 +25653,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0xb338962b92cd818d6aef0a32a9ecd01212a71f33": {
     "entity": "GARANTEX EUROPE OU",
@@ -25214,7 +25690,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0x57ec89a0c056163a0314e413320f9b3abe761259": {
     "entity": "GARANTEX EUROPE OU",
@@ -25248,7 +25727,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0xd8500c631dc32fa18645b7436344a99e4825e10e": {
     "entity": "GARANTEX EUROPE OU",
@@ -25282,7 +25764,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "0x7ced75026204ac29c34bea98905d4c949f27361e": {
     "entity": "GARANTEX EUROPE OU",
@@ -25316,7 +25801,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "tron:TFwjPScaJRCbSWVAywE1S1WgaUgSnyYUbD": {
     "entity": "GARANTEX EUROPE OU",
@@ -25350,7 +25838,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "tron:TJkBr9TZ1xBeJoF7RNWqyEMbYqVJ6fXXHR": {
     "entity": "GARANTEX EUROPE OU",
@@ -25384,7 +25875,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "tron:TNDjh6WGLYyWmkh8vfu42bXVHUqFNQ3rDq": {
     "entity": "GARANTEX EUROPE OU",
@@ -25418,7 +25912,10 @@
         "publication": "2026-10-02",
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
-    ]
+    ],
+    "actionable": false,
+    "actionable_reason": "OFAC-sanctioned (April 2022) and its domains seized by US authorities in March 2025; not an operating exchange",
+    "jurisdiction": "foreign"
   },
   "bitcoin:3K4rjdh8A5yi6LWvft2rbmyZvqEbPSSSX4": {
     "entity": "Hydra Market",
@@ -45786,5 +46283,1270 @@
         "url": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
       }
     ]
+  },
+  "0xa344c7ada83113b3b56941f6e85bf2eb425949f3": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "ethereum",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xf977814e90da44bfa03b6295a0616a897441acec": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xbe0eb53f46cd790cd13851d5eff43d12404d33e8": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x5a52e96bacdabb82fd05763e25335261b270efcb": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x3c783c21a0383057d128bae431894a5c19f9cf06": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xdccf3b77da55107280bd850ea519df3705d1a75a": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x8894e0a0c962cb723c1976a4421c95949be2d4e3": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x515b72ed8a97f42c568d6a143232775018f133c8": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xbd612a3f30dca67bf60a39fd0d35e39b7ab80774": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x01c952174c24e1210d26961d456a77a39e1f0bb0": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x29bdfbf7d27462a2d115748ace2bd71a2646946c": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xe2fc31f816a9b94326492132018c3aecc4a93ae1": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x73f5ebe90f27b46ea12e5795d16c4b408b19cc6f": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x161ba15a5f335c9f06bb5bbb0a9ce14076fbb645": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0x1fbe2acee135d991592f167ac371f3dd893a508b": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xeb2d2f1b8c558a40207669291fda468e50c8a0bb": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bnb:0xa180fe01b906a1be37be6c534a3300785b20d947": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bnb",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bnb",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bnb"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TV6MuMXfmLbBqPZvBHdwFsDnQeVfnmiuSi": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TMuA6YqfCeX8EhbfYEg5y7S4DqzSJireY9": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TWd4WrZ9wn84f5x1hZhL4DHvk738ns5jwb": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TJDENsfBJs4RFETt1X1W8wMDc8M5XnJhCe": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TAzsQ9Gx8eqFNFSKbeXrbi45CuVPHzA8wr": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TQrY8tryqsYVCYS3MFbtffiPp2ccyn4STm": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bitcoin:34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bitcoin:3LYJfcfHPXYJreMsASk2jkn69LWEYKzexb": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bitcoin:3M219KR5vEneNb47ewrPfWyb5jQ2DjxRP6": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "bitcoin:bc1qm34lsc65zpw79lxes69zkqmk6ee3ewf0j77s3h": {
+    "entity": "Binance",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "0xa929022c9107643515f5c777ce9a910f0d1e490c": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "ethereum",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "0x0511509a39377f1c6c78db4330fbfcc16d8a602f": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "ethereum",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "0x1205e4f0d2f02262e667fd72f95a68913b4f7462": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "ethereum",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "0xe4818f8fde0c977a01da4fa467365b8bf22b071e": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "ethereum",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TYh6mgoMNZTCsgpYHBz7gttEfrQmDMABub": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TKgD8Qnx9Zw3DNvG6o83PkufnMbtEXis4T": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TCQQjfccKdMi4CnPAzmZW5TALH4HbwceVb": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TNaRAoLUyYEV2uF7GUrzSjRQTU8v5ZJ5VR": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TDToUxX8sH4z6moQpK3ZLAN24eupu2ivA4": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TCiRCBNFrL6bFKWL94yWQi5hNMGNp1Nu27": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TGn1uvntAVntT1pG8o7qoKkbViiYfeg6Gj": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TAuUCiH4JVNBZmDnEDZkXEUXDARdGpXTmX": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TUJGLHo3rq4EAUY1LHRhNkHPX8qmrv9WFs": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TF2fmSbg5HAD34KPUH7WtWCxxvgXHohzYM": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:THZovMcKoZaV9zzFTWteQYd2f3NEvnzxAM": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TZ1SsapyhKNWaVLca6P2qgVzkHTdk6nkXa": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TRSXRWudzfzY4jH7AaMowdMNUXDkHisbcd": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "bitcoin:143gLvWYUojXaWZRrxquRKpVNTkhmr415B": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "bitcoin:12qTdZHx6f77aQ74CPCZGSY47VaRwYjVD8": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "bitcoin:14XKsv8tT6tt8P8mfDQZgNF8wtN5erNu5D": {
+    "entity": "Huobi",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "0xc61b9bb3a7a0767e3179713f3a5c7a9aedce193c": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "ethereum",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on ethereum. Earlier source: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on ethereum",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TXFBqBbqJommqZf7BV8NNYzePh97UmJodJ": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on tron. Earlier source: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "tron:TMhJviFWiaxvqKLdng9dmsi1H5H5yTGEeu": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on tron. Earlier source: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on tron",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "tron"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "bitcoin:1Kr6QSydW9bFQG1mXiPNNu6WpJGmUa9i1g": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "bitcoin:3JZq4atUahhuA9rLhXLMhhTo133J9rF97j": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
+  },
+  "bitcoin:bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97": {
+    "entity": "Bitfinex",
+    "type": "exchange",
+    "chain": "bitcoin",
+    "source": "self_published",
+    "evidence_tier": "self_published",
+    "redistributable": true,
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on bitcoin. Earlier source: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on bitcoin",
+    "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "bitcoin"
+      }
+    ],
+    "resourced": true,
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign"
   }
 }

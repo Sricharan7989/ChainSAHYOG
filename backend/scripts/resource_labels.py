@@ -20,10 +20,15 @@ them. It never adds a new address and never renames an entity:
      self-published. A page that lists an address on Ethereum says nothing
      about the same address on Polygon.
 
-Why only upgrades: the exchanges' terms were not all readable, and KuCoin's
-forbid compiling their content into databases. Upgrading a row we already
-ship from an MIT pack adds a citation, not their content. Addresses on those
-pages that we do NOT already hold are counted and reported, not added.
+  c. New addresses from the exchanges' own lists, for the exchanges in
+     ADD_NEW only (approved 2026-10-05): Binance, Huobi, Bitfinex. Self-published
+     tier, same citation form as the upgrades.
+
+KUCOIN IS DELIBERATELY EXCLUDED FROM (c) - DO NOT ADD IT. KuCoin's Terms of
+Use, Articles 90-92, forbid copying its content and systematically compiling
+it into a database. Harvesting new addresses from its page is exactly that.
+Upgrading the citation on rows we already held from an MIT pack (b) is not, and
+stays. Decided by the project lead in Step 4; reversing it needs their sign-off.
 
 Rows it touches carry `resourced: true`, which scripts/apply_provenance leaves
 alone. Idempotent.
@@ -38,6 +43,11 @@ from app import config
 from core import addresses, provenance
 
 TORNADO = config.DATA_DIR / "sources" / "ofac_tornado_cash.json"
+
+# Exchanges whose own published lists may ADD addresses we do not hold (c).
+# KuCoin is not here on purpose - see the module docstring.
+ADD_NEW = {"Binance", "Huobi", "Bitfinex"}
+NEVER_ADD = {"KuCoin": "KuCoin Terms of Use Arts. 90-92 forbid compiling its content into a database"}
 SELF_PUBLISHED = config.DATA_DIR / ".sources-cache" / "self_published.json"
 
 
@@ -84,17 +94,35 @@ def mixers(labels: dict, index: dict, stats: collections.Counter) -> None:
                       "removed. A government record that the address belonged to Tornado Cash, "
                       "not a current sanction")
         before = _strip(meta.get("citation", ""))
+        designated = " and ".join(_human(e["date"]) for e in events)
         meta.update({
             "evidence_tier": "government_list",
             "citation": (f"US Treasury OFAC designation of TORNADO CASH, listing this address: {when}; "
                          f"{status}. Earlier source: {before}"),
             "resourced": True,
+            # The status in one plain sentence, for the finding panel and the PDF.
+            "sanctions_status": {
+                "status": "delisted" if addr in removed else "not_currently_listed",
+                "designated": [e["date"] for e in events],
+                "delisted": record["removal"]["date"] if addr in removed else None,
+                "text": (f"Designated by US Treasury OFAC on {designated}; "
+                         + (f"removed from the SDN list on {_human(record['removal']['date'])}. "
+                            if addr in removed else "not on the current SDN list (removal date not established). ")
+                         + "Not a current sanction."),
+            },
         })
         prov = [p for p in meta.get("provenance") or [] if p.get("kind") != "government_record"]
         meta["provenance"] = [{"kind": "government_record", "list": "OFAC SDN (designation record)",
                                "designated": [e["date"] for e in events],
                                "removed": record["removal"]["date"] if addr in removed else None}] + prov
         stats["mixers_upgraded"] += 1
+
+
+def _human(iso: str) -> str:
+    """2025-03-21 -> 21 March 2025."""
+    import datetime as dt
+
+    return dt.date.fromisoformat(iso).strftime("%d %B %Y").lstrip("0")
 
 
 def exchanges(labels: dict, index: dict, stats: collections.Counter, unheld: dict) -> None:
@@ -114,6 +142,27 @@ def exchanges(labels: dict, index: dict, stats: collections.Counter, unheld: dic
                 key = index.get((chain, canon))
                 if key is None:
                     unheld[src["entity"]][chain] += 1
+                    if src["entity"] in ADD_NEW:
+                        new_key = canon if chain == "ethereum" else f"{chain}:{canon}"
+                        labels[new_key] = {
+                            "entity": src["entity"],
+                            "type": "exchange",
+                            "chain": chain,
+                            "source": "self_published",
+                            "evidence_tier": "self_published",
+                            "redistributable": True,
+                            "citation": (f"{src['entity']}'s own published wallet list: {src['title']}, "
+                                         f"{src['published']} ({src['url']}), retrieved {src['retrieved']}; "
+                                         f"lists this address on {chain}"),
+                            "provenance": [{"kind": "self_published", "publisher": src["entity"],
+                                            "url": src["url"], "published": src["published"],
+                                            "retrieved": src["retrieved"], "chain": chain}],
+                            "resourced": True,
+                        }
+                        index[(chain, canon)] = new_key
+                        stats[f"added:{src['entity']}:{chain}"] += 1
+                    elif src["entity"] in NEVER_ADD:
+                        stats[f"not added (terms):{src['entity']}"] += 1
                     continue
                 meta = labels[key]
                 if meta.get("type") != "exchange" or meta.get("entity") != src["entity"]:
@@ -150,9 +199,10 @@ def main() -> int:
 
     for k, v in sorted(stats.items()):
         print(f"  {k:45} {v}")
-    print("  on the exchanges' own pages but NOT held by us (not added):")
+    print("  on the exchanges' own pages and not previously held:")
     for entity, by_chain in unheld.items():
-        print(f"    {entity:10} {dict(by_chain)}")
+        verdict = "added" if entity in ADD_NEW else f"NOT added - {NEVER_ADD.get(entity, 'not approved')}"
+        print(f"    {entity:10} {dict(by_chain)}  -> {verdict}")
     if not args.dry_run:
         config.LABELS_PATH.write_text(json.dumps(labels, indent=2) + "\n", encoding="utf-8")
         print(f"wrote {config.LABELS_PATH.name}")

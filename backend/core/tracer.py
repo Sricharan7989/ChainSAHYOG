@@ -311,11 +311,16 @@ class RiskFlag:
     value_received: dict
     value_received_eth: float
     note: str
+    # One plain sentence on the address's sanctions status, from the label:
+    # "Designated ... 2022; removed ... 21 March 2025. Not a current sanction."
+    # or "On the OFAC SDN list ... A current sanction." None when not relevant.
+    sanctions_status: str | None = None
 
     def to_dict(self) -> dict:
         return {
             "address": self.address,
             "entity": self.entity,
+            "sanctions_status": self.sanctions_status,
             "risk_type": self.risk_type,
             "severity": self.severity,
             "hop_distance": self.hop_distance,
@@ -2023,6 +2028,20 @@ def _primary_attribution(attributions: list[Attribution]) -> Attribution | None:
     return attributions[0] if attributions else None
 
 
+def _sanctions_status(chain: str | None, address: str) -> str | None:
+    """The label's sanctions status as one sentence, current or historical."""
+    meta = identify.load_labels().get((chain or "ethereum", address)) or {}
+    status = meta.get("sanctions_status") or {}
+    if status.get("text"):
+        return status["text"]
+    sdn = meta.get("sdn") or {}
+    if meta.get("source") == "ofac_sdn" and sdn:
+        progs = ", ".join(sdn.get("programmes") or []) or "programme not stated"
+        return (f"On the US Treasury OFAC SDN list: {sdn.get('name')}, programme {progs}, "
+                f"listed {sdn.get('listed') or 'date not stated'}. A current sanction.")
+    return None
+
+
 def _collect_risk_flags(store, start: str, attributions: list[Attribution]) -> list[RiskFlag]:
     """
     Every labelled wallet in the trace that is a risk in its own right.
@@ -2060,6 +2079,7 @@ def _collect_risk_flags(store, start: str, attributions: list[Attribution]) -> l
                 value_received=totals,
                 value_received_eth=_native_total(totals, None),
                 note=scoring.risk_note(entity_type, entity),
+                sanctions_status=_sanctions_status(data.get("chain"), address),
             )
         )
 

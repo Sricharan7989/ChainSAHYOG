@@ -129,6 +129,20 @@ export default function RiskFlagsCard({ riskFlags, explorerBase, labelCoverage }
                 </span>
               </div>
 
+              {/* Sanctions status, in one plain sentence: a current SDN listing, or
+                  a past designation since removed ("... Not a current sanction."). */}
+              {flag.sanctions_status && (
+                <p
+                  className={`text-[11px] leading-snug font-sans font-semibold px-1.5 py-1 border ${
+                    flag.sanctions_status.includes('Not a current sanction')
+                      ? 'border-amber-500/40 text-amber-700 dark:text-amber-400'
+                      : 'border-red-500/40 text-red-700 dark:text-red-400'
+                  }`}
+                >
+                  {flag.sanctions_status}
+                </p>
+              )}
+
               {/* Note */}
               {flag.note && (
                 <p className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] leading-snug pt-0.5 font-sans">
