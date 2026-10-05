@@ -339,9 +339,13 @@ def main() -> int:
           f" ({s['listed_under_several_parties']} listed under more than one party)")
     print(f"  imported by chain                      : {dict(r['by_chain'])}")
     print(f"  not imported, no address format here   : {dict(r['unsupported'])}")
-    print(f"  REFUSED by the format guard            : {len(r['refused'])}")
+    print(f"  REFUSED by the format guard (deliberate): {len(r['refused'])}")
     for code, addr, name in r["refused"]:
-        print(f"      {code:5} {addr!r:60} {name}")
+        fams = sorted(addresses.families_for(addr))
+        print(f"      {code:5} {addr!r} ({name})")
+        print(f"            OFAC lists it as {code}, but it parses only as {', '.join(fams) or 'nothing'}."
+              " OFAC's own entry is miscoded; the address is not imported under a chain it")
+        print("            does not belong to, and the format guard is NOT loosened to admit it.")
     print(f"  labels before / after                  : {r['before']} / {r['after']}")
     if args.dry_run:
         print("\n(dry run - data/labels.json was not modified)")
