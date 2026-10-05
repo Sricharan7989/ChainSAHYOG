@@ -7,7 +7,7 @@ An exchange does not have "an address". Binance has thousands: hot wallets,
 reserve wallets, and one deposit address per customer. Until now the tool matched
 each address on its own, so a trace touching five Binance wallets produced five
 separate findings that happened to share a name. That is not how an investigator
-thinks, and it is not what gets served: a SAHYOG request goes to **Binance**, once,
+thinks, and it is not what gets served: a VASP request goes to **Binance**, once,
 citing every address involved. This module produces that single object.
 
 TWO KINDS OF CLUSTER
@@ -142,7 +142,11 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
     suspected: dict[str, Cluster] = {}
 
     for attribution in attributions:
-        address = attribution.address
+        # The graph key, which is the bare address on the chain the trace started
+        # on and a chain-qualified one elsewhere. Once a trace crosses a chain the
+        # same address exists as two separate wallets, and cluster membership has
+        # to be decided per wallet, not per string.
+        address = attribution.node_id or attribution.address
         depth = attribution.hop_distance
 
         if attribution.method == "consolidation":
@@ -183,11 +187,15 @@ def build_clusters(store, attributions, chain: str | None = None) -> list[Cluste
                 cluster_id=cluster_id,
                 entity=attribution.entity,
                 entity_type=attribution.entity_type,
-                method="known_label",
+                # Carried from the attribution: a cluster named only by
+                # inferred labels must not present as a direct label match.
+                method=attribution.method,
                 named=True,
                 confidence_score=attribution.confidence_score,
             ),
         )
+        if attribution.method == "known_label":
+            cluster.method = "known_label"  # one direct label is enough to name it directly
         if address not in cluster.members:
             cluster.members.append(address)
             cluster.member_hops[address] = depth

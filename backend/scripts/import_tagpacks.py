@@ -7,8 +7,8 @@ Import address labels from the GraphSense TagPacks into data/labels.json.
 
 WHY THIS IS NOT A STRAIGHT COPY
 -------------------------------
-A label file is the ground truth for method (a), so a wrong entry here does not
-produce a small error - it produces a CONFIDENT, FALSE attribution at 88%
+A label file is the ground truth for method (a), so a wrong entry here does
+not produce a small error - it produces a CONFIDENT, FALSE attribution at 88%
 confidence, with a recommendation to serve a legal request on whoever it names.
 That is the worst thing this tool can do. Bulk-importing a third-party list
 without inspecting it would trade a small, trustworthy label set for a large,
@@ -34,6 +34,22 @@ So every candidate passes two filters:
 Mixers are deliberately NOT held to filter 2: a mixer pool is SUPPOSED to be a
 contract, so requiring an EOA there would reject every genuine entry.
 
+MULTI-CHAIN
+-----------
+The exchange packs are NOT Ethereum-only: `exchange-wallets-binance.yaml`
+also lists the same reserve wallets as BEP20 (BNB Chain) addresses, and
+`exchange-wallets-bitfinexcom.yaml` lists Polygon (MATIC) ones. The TagPack
+`currency` field says which chain each address lives on, and the same 0x
+address can be a Binance wallet on BOTH Ethereum and BNB Chain - so labels
+are imported per (chain, address), never per address alone. Only currencies
+that map to a chain this tool can actually trace are kept; BTC, TRX and the
+rest are counted and refused, because a label for a chain we cannot walk
+would let the report claim a finding it can never corroborate.
+
+Every imported row is verified on ITS OWN chain (eth_getCode and
+eth_getTransactionCount with that chain's chainid), so a wallet that is live
+on Ethereum but idle on Polygon cannot slide through as a Polygon label.
+
 Existing entries in labels.json always win. They were verified by hand, and an
 import must never silently overwrite a checked fact with a scraped one.
 """
@@ -50,6 +66,8 @@ import httpx
 import yaml
 
 from app import config
+from core import addresses, label_names
+from scripts import apply_provenance
 
 GITHUB_API = (
     "https://api.github.com/repos/graphsense/graphsense-tagpacks/contents/packs/"
@@ -79,6 +97,40 @@ CATEGORY_MAP = {
     "bridge": "bridge",
 }
 
+# TagPack currency -> the chain slug this tool traces. A TagPack address
+# is only importable when we can actually WALK the chain it lives on:
+# a label for a chain we cannot read would let the report name an
+# exchange on a trail it never verified. BTC, TRX, BEP2 (Binance Chain
+# native) and every other currency here are deliberately refused and
+# counted, so the refusal is visible rather than silent.
+#
+# Every value must be a key of config.CHAIN_BY_SLUG, or the import
+# refuses it - the mapping is checked at startup, not trusted by luck.
+CURRENCY_MAP = {
+    "ETH": "ethereum",
+    "BEP20": "bnb",
+    "MATIC": "polygon",
+    "POLYGON": "polygon",
+    "ARB": "arbitrum",
+    "ARBITRUM": "arbitrum",
+}
+
+# The TagPack `actor` field names the entity the pack is about
+# ("binance", "bitfinex"), which is a cleaner entity name than the
+# per-tag label ("binance reserve wallets BNB"). An investigator serves
+# a request on the COMPANY, not on "reserve wallet #3".
+ACTOR_NAMES = {
+    "binance": "Binance",
+    "bitfinex": "Bitfinex",
+    "bybit": "Bybit",
+    "cryptocom": "Crypto.com",
+    "deribit": "Deribit",
+    "huobi": "Huobi",
+    "kucoin": "KuCoin",
+    "okx": "OKX",
+    "swissborg": "SwissBorg",
+}
+
 ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 
 # A trailing "(TICKER)", or the word "token" anywhere: both say ERC-20 contract.
@@ -99,8 +151,13 @@ def looks_like_token(label: str) -> bool:
     return bool(TOKEN_RE.search(label)) or "token" in low or "voucher" in low
 
 
-def clean_entity(label: str) -> str:
+def clean_entity(label: str, actor: str = "") -> str:
     """Tidy a TagPack label into an entity name fit for an investigator's report."""
+    # The pack's actor is the entity itself: "binance reserve wallets BNB"
+    # and "bitfinex Polygon hot wallet" both name Binance and Bitfinex.
+    name = ACTOR_NAMES.get(actor.strip().lower())
+    if name:
+        return name
     name = label.strip().strip("'\"")
     name = re.sub(r"\s*:\s*", ": ", name)
     name = INDEX_RE.sub("", name)
@@ -109,24 +166,39 @@ def clean_entity(label: str) -> str:
 
 def fetch_pack(filename: str) -> str:
     """
-    Download one pack through the GitHub contents API.
+    Download one pack, through the GitHub contents API with a
+    raw.githubusercontent fallback.
 
-    The API rather than raw.githubusercontent.com on purpose: the raw host
-    returns empty bodies from some networks (including this one), which would
-    look like an empty pack rather than a failed download.
+    The contents API rather than the raw host on purpose: the raw host
+    returns empty bodies from some networks (including the one this was
+    first written on), which would look like an empty pack rather than a
+    failed download. But the contents API allows only 60 unauthenticated
+    calls an hour, and a pack set is a dozen of them - so a 403 rate
+    limit falls back to the raw host, which has none. Either way the
+    bytes come from the same repository, so the source is identical.
     """
-    request = urllib.request.Request(
-        GITHUB_API + filename,
-        headers={"User-Agent": "vasp-attribution-engine", "Accept": "application/vnd.github+json"},
-    )
-    with urllib.request.urlopen(request, timeout=90) as response:
-        body = json.load(response)
-
-    if body.get("encoding") != "base64" or not body.get("content"):
-        raise RuntimeError(
-            f"{filename}: no inline content (file may exceed the API's 1 MB limit)"
+    headers = {"User-Agent": "vasp-attribution-engine", "Accept": "application/vnd.github+json"}
+    try:
+        request = urllib.request.Request(
+            GITHUB_API + filename, headers=headers
         )
-    return base64.b64decode(body["content"]).decode("utf-8", "replace")
+        with urllib.request.urlopen(request, timeout=90) as response:
+            body = json.load(response)
+        if body.get("encoding") == "base64" and body.get("content"):
+            return base64.b64decode(body["content"]).decode("utf-8", "replace")
+        raise RuntimeError(f"{filename}: no inline content (file may exceed the API's 1 MB limit)")
+    except urllib.error.HTTPError as exc:
+        if exc.code != 403:
+            raise
+    # Rate-limited (or otherwise refused) by the contents API: the raw
+    # host serves the identical file without a call budget.
+    raw_url = (
+        "https://raw.githubusercontent.com/graphsense/graphsense-tagpacks/"
+        "master/packs/" + filename
+    )
+    request = urllib.request.Request(raw_url, headers={"User-Agent": "vasp-attribution-engine"})
+    with urllib.request.urlopen(request, timeout=90) as response:
+        return response.read().decode("utf-8", "replace")
 
 
 def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict], dict]:
@@ -134,15 +206,22 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
     Turn one pack's YAML into candidate label rows, with a rejection tally.
 
     TagPack fields cascade: a tag inherits `currency`, `label` and `category`
-    from the pack header unless it overrides them. Ethereum-only is enforced
-    here, since several packs mix BTC and ETH addresses in one file.
+    from the pack header unless it overrides them.
+
+    The `currency` field decides which chain the address belongs to. Only
+    currencies in CURRENCY_MAP survive - everything else is counted under
+    `unsupported_chain` so the refusal is visible. An Ethereum pack and a
+    BNB Chain pack can list the SAME 0x address; both rows are kept, because
+    they are two different wallets on two different ledgers and the label
+    store is keyed by (chain, address).
     """
     document = yaml.safe_load(text) or {}
     header_currency = str(document.get("currency", "") or "").upper()
     header_label = str(document.get("label") or document.get("title") or "").strip()
     header_category = str(document.get("category", "") or "")
+    actor = str(document.get("actor") or "").strip()
 
-    rejected = {"not_eth": 0, "bad_address": 0, "token_like": 0, "no_label": 0}
+    rejected = {"not_supported_chain": 0, "bad_address": 0, "token_like": 0, "no_label": 0}
     rows: list[dict] = []
 
     for tag in document.get("tags") or []:
@@ -152,11 +231,16 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
         address = str(tag.get("address", "")).strip().strip("'\"")
         currency = str(tag.get("currency", header_currency) or "").upper()
 
-        if currency != "ETH":
-            rejected["not_eth"] += 1
+        # Only chains this tool can trace. Anything else (BTC, TRX, BEP2,
+        # SOL, ...) is a dataset we knowingly do not use yet.
+        chain_slug = CURRENCY_MAP.get(currency)
+        if chain_slug is None or chain_slug not in config.CHAIN_BY_SLUG:
+            rejected["not_supported_chain"] += 1
             continue
-        if not ADDRESS_RE.match(address):
-            # Non-Ethereum address shapes (BTC, bech32) land here too.
+        canonical = addresses.try_normalize(address, chain_slug)
+        if canonical is None:
+            # Not a valid address for the chain the pack files it under - an
+            # Ethereum-shaped string on a Tron row, a bad checksum, and so on.
             rejected["bad_address"] += 1
             continue
 
@@ -171,26 +255,48 @@ def parse_pack(text: str, filename: str, default_type: str) -> tuple[list[dict],
         category = str(tag.get("category", header_category) or "")
         entity_type = CATEGORY_MAP.get(category, default_type)
 
-        rows.append(
-            {
-                "address": address.lower(),
-                "entity": clean_entity(label),
-                "type": entity_type,
-                "source": filename,
-            }
-        )
+        row = {
+            # The chain's own canonical form - never lowercased where case matters.
+            "address": canonical,
+            "entity": clean_entity(label, actor),
+            "type": entity_type,
+            "chain": chain_slug,
+            "source": filename,
+            # The tag's own upstream link, for the provenance chain.
+            "source_url": str(tag.get("source") or document.get("source") or ""),
+        }
+        # Same company/role split as scripts/normalize_label_names, so a fresh
+        # import cannot reintroduce names like "binance reserve wallets ETH".
+        label_names.apply(row)
+        rows.append(row)
 
     return rows, rejected
 
 
-async def verify_on_chain(rows: list[dict]) -> tuple[list[dict], list[dict]]:
+async def verify_on_chain(rows: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
     """
-    Keep only exchange candidates that behave like live exchange wallets.
+    Keep only exchange candidates that behave like live exchange wallets
+    ON THE CHAIN THE LABEL CLAIMS.
 
-    One eth_getCode plus one eth_getTransactionCount per address, throttled to
-    the free tier. A contract that has never sent a transaction is a token or
-    protocol contract, not a wallet holding customer deposits - and those are
-    exactly the entries that would otherwise produce a false attribution.
+    One eth_getCode plus one eth_getTransactionCount per address, against
+    that row's own chain, throttled to the free tier. A contract that
+    has never sent a transaction is a token or protocol contract, not a
+    wallet holding customer deposits - and those are exactly the entries
+    that would otherwise produce a false attribution.
+
+    The per-chain check is what makes a multi-chain import safe: an
+    address can be a live Binance wallet on Ethereum and an idle
+    lookalike on Polygon, and only the per-chain nonce tells them
+    apart. A wallet that has never transacted on the labelled chain is
+    dropped, however famous it is elsewhere.
+
+    THREE outcomes, not two. `kept` and `dropped` are verdicts: this is a
+    real exchange wallet, or it is not. `unverified` is neither - we have
+    no explorer API for that chain at all, so the address is neither
+    confirmed nor refuted. Those rows are counted and reported but never
+    imported: an unverified label would put a 95%-confidence name on the
+    map with nothing behind it, which is the one failure this tool must
+    never produce.
 
     Mixer and bridge rows skip this: they are legitimately contracts.
     """
@@ -199,21 +305,26 @@ async def verify_on_chain(rows: list[dict]) -> tuple[list[dict], list[dict]]:
 
     if not config.has_etherscan_key():
         print("  ! ETHERSCAN_API_KEY missing - skipping on-chain verification")
-        return rows, []
+        return rows, [], []
 
-    kept, dropped = list(passthrough), []
+    kept, dropped, unverified = list(passthrough), [], []
     total = len(need_check)
     print(f"  verifying {total} exchange candidates on-chain "
           f"(~{total * 2 * config.ETHERSCAN_REQUEST_DELAY_SEC / 60:.1f} min)…")
 
     async with httpx.AsyncClient(timeout=45) as client:
-        async def rpc(action: str, address: str):
+        async def rpc(action: str, address: str, chain_id: int):
+            # Same door the tracer uses: config.chain_api picks Etherscan V2 or a
+            # chain's own explorer. Verifying a label through a different API than
+            # the trace would use would verify it against a different ledger.
+            base_url, api_key, send_chainid = config.chain_api(chain_id)
             params = {
-                "chainid": config.ETHERSCAN_CHAIN_ID, "module": "proxy",
-                "action": action, "address": address, "tag": "latest",
-                "apikey": config.ETHERSCAN_API_KEY,
+                "module": "proxy", "action": action, "address": address,
+                "tag": "latest", "apikey": api_key,
             }
-            response = await client.get(config.ETHERSCAN_BASE_URL, params=params)
+            if send_chainid:
+                params["chainid"] = chain_id
+            response = await client.get(base_url, params=params)
             await asyncio.sleep(config.ETHERSCAN_REQUEST_DELAY_SEC)
             body = response.json()
             if str(body.get("status", "")) == "0":
@@ -223,9 +334,29 @@ async def verify_on_chain(rows: list[dict]) -> tuple[list[dict], list[dict]]:
         for index, row in enumerate(need_check, 1):
             if index % 50 == 0:
                 print(f"    {index}/{total} checked…")
+            # Verify against the row's OWN chain. The chainid comes from
+            # the project's chain table, not from the pack, so a pack
+            # cannot make us query a chain we do not know.
+            chain = config.chain_by_slug(row["chain"])
+            if chain is None:  # defensive: parse_pack already enforced this
+                row["reason"] = f"unknown chain {row['chain']}"
+                dropped.append(row)
+                continue
+            chain_id = chain["chain_id"]
+            if not config.chain_readable(chain_id):
+                # Said plainly rather than as a lookup failure: the data is
+                # probably fine, our API plan simply cannot reach this chain.
+                # That is a different problem from a wrong address, and it has a
+                # different fix (a key for that chain's own explorer).
+                row["reason"] = (
+                    f"no explorer API configured for {row['chain']} "
+                    f"(chainid {chain_id}) - unverified"
+                )
+                unverified.append(row)
+                continue
             try:
-                code = await rpc("eth_getCode", row["address"])
-                nonce_hex = await rpc("eth_getTransactionCount", row["address"])
+                code = await rpc("eth_getCode", row["address"], chain_id)
+                nonce_hex = await rpc("eth_getTransactionCount", row["address"], chain_id)
                 nonce = int(nonce_hex, 16)
             except Exception as exc:  # noqa: BLE001 - a lookup failure is not a verdict
                 row["reason"] = f"lookup failed ({exc})"
@@ -237,45 +368,74 @@ async def verify_on_chain(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 row["reason"] = "contract that has never sent a transaction (token/protocol)"
                 dropped.append(row)
             elif nonce < MIN_NONCE_FOR_EXCHANGE:
-                row["reason"] = f"only {nonce} outgoing txs - not exchange-scale"
+                row["reason"] = f"only {nonce} outgoing txs on {row['chain']} - not exchange-scale"
                 dropped.append(row)
             else:
                 row["nonce"] = nonce
                 kept.append(row)
 
-    return kept, dropped
+    return kept, dropped, unverified
 
 
 def merge(rows: list[dict], dry_run: bool) -> dict:
     """
     Fold accepted rows into labels.json, leaving hand-verified entries untouched.
 
-    Deduplication is on the lowercased address. An address already present is
-    left exactly as it is - the existing file was checked on-chain by hand, and
-    a scraped label must never quietly replace a verified one.
+    Deduplication is on the lowercased address WITHIN one chain. An address
+    already present on that chain is left exactly as it is - the existing file
+    was checked on-chain by hand, and a scraped label must never quietly
+    replace a verified one. The same address on ANOTHER chain is a separate
+    entry, because it is a separate wallet.
+
+    Every new entry carries the chain it was verified on, which is what
+    makes the label store chain-aware: the same 0x address can be Binance
+    on Ethereum and Binance on BNB Chain, and neither claim bleeds into
+    the other.
     """
     raw = json.loads(config.LABELS_PATH.read_text(encoding="utf-8"))
-    existing_keys = {k.lower() for k in raw if not k.startswith("_")}
+    existing_keys = {k for k in raw if not k.startswith("_")}
+
+    # (chain, address) of what the file already holds, so an import can
+    # add the same wallet on a new chain without duplicating or clashing.
+    from core import identify as _identify
+    indexed = _identify.load_labels(force_reload=True)
 
     stats = {"before": len(existing_keys), "added": 0, "already_present": 0, "dupes_in_feed": 0}
-    seen: set[str] = set()
-    # Count each already-known address once, however many packs mention it.
-    hit_existing: set[str] = set()
+    seen: set[tuple[str, str]] = set()
+    # Count each already-known (chain, address) once, however many packs mention it.
+    hit_existing: set[tuple[str, str]] = set()
     additions: dict[str, dict] = {}
 
     for row in rows:
         address = row["address"]
-        if address in existing_keys:
-            hit_existing.add(address)
+        chain = row["chain"]
+        if (chain, address) in indexed:
+            hit_existing.add((chain, address))
             continue
-        if address in seen:
+        if (chain, address) in seen:
             stats["dupes_in_feed"] += 1
             continue
-        seen.add(address)
-        additions[address] = {
+        seen.add((chain, address))
+        # File keying convention (see core/identify.load_labels): a bare
+        # address means Ethereum; anything on another chain is keyed
+        # "<chain>:<address>" so the same wallet on two chains is two
+        # entries, not one overwriting the other.
+        key = address if chain == "ethereum" else f"{chain}:{address}"
+        # Provenance chain stated on the row itself: the pack (MIT) AND the
+        # pack's own upstream source - never collapsed to a tidier origin.
+        entries = apply_provenance.pack_entries(
+            [{"pack": row["source"].rsplit(".", 1)[0], "source_url": row.get("source_url", "")}]
+        )
+        additions[key] = {
             "entity": row["entity"],
             "type": row["type"],
+            "chain": chain,
             "source": "graphsense-tagpacks",
+            **{k: row[k] for k in ("role", "source_name", "name_note") if row.get(k)},
+            "evidence_tier": "third_party_pack",
+            "redistributable": True,
+            "citation": apply_provenance.pack_citation(entries),
+            "provenance": entries,
         }
         stats["added"] += 1
 
@@ -311,8 +471,8 @@ async def main() -> int:
         packs = {p: PACKS[p] for p in args.packs}
 
     print(f"Fetching {len(PACKS)} packs from graphsense-tagpacks…\n")
-    print(f"{'pack':<42} {'kept':>6} {'non-ETH':>8} {'token-like':>11}")
-    print("-" * 71)
+    print(f"{'pack':<42} {'kept':>6} {'unsupported':>12} {'token-like':>11}")
+    print("-" * 75)
 
     candidates: list[dict] = []
     for filename, default_type in packs.items():
@@ -323,10 +483,10 @@ async def main() -> int:
             continue
         rows, rejected = parse_pack(text, filename, default_type)
         candidates.extend(rows)
-        print(f"{filename:<42} {len(rows):>6} {rejected['not_eth'] + rejected['bad_address']:>8} "
+        print(f"{filename:<42} {len(rows):>6} {rejected['not_supported_chain']:>12} "
               f"{rejected['token_like']:>11}")
 
-    print("-" * 71)
+    print("-" * 75)
     print(f"{'candidates after label filter':<42} {len(candidates):>6}\n")
 
     if not candidates:
@@ -334,13 +494,29 @@ async def main() -> int:
         return 1
 
     dropped: list[dict] = []
+    unverified: list[dict] = []
     if not args.no_verify:
-        candidates, dropped = await verify_on_chain(candidates)
-        print(f"\n  on-chain check: kept {len(candidates)}, dropped {len(dropped)}")
+        candidates, dropped, unverified = await verify_on_chain(candidates)
+        print(f"\n  on-chain check: kept {len(candidates)}, dropped {len(dropped)}, "
+              f"unverifiable {len(unverified)}")
         for row in dropped[:8]:
             print(f"    - {row['entity'][:34]:<34} {row.get('reason', '')}")
         if len(dropped) > 8:
             print(f"    … and {len(dropped) - 8} more")
+        for row in unverified[:8]:
+            print(f"    ? {row['entity'][:34]:<34} {row.get('reason', '')}")
+        if len(unverified) > 8:
+            print(f"    … and {len(unverified) - 8} more")
+        if unverified:
+            # Stated as a gap rather than a rejection: these rows are refused
+            # because we cannot look, not because they are wrong.
+            chains = sorted({r["chain"] for r in unverified})
+            print(f"\n  NOT imported: {len(unverified)} exchange addresses on "
+                  f"{', '.join(chains)} could not be verified because no explorer API\n"
+                  f"  covers those chains on the current plan. This is a coverage gap on "
+                  f"our side, not evidence the addresses are wrong.\n"
+                  f"  Add a key for that chain's own explorer (e.g. BSCSCAN_API_KEY for "
+                  f"BNB Chain) and re-run to verify them.")
 
     stats = merge(candidates, args.dry_run)
 
@@ -351,6 +527,13 @@ async def main() -> int:
     print(f"  already present    : {stats['already_present']} (kept the existing entry)")
     print(f"  duplicate in feed  : {stats['dupes_in_feed']}")
     print(f"  LABELS NOW         : {stats['after']}")
+    # The per-chain count is the honest one: a Polygon trace is not helped
+    # by Ethereum labels, so this is what says whether the import actually
+    # closed the multi-chain gap.
+    from core import identify as _identify
+    _identify.load_labels(force_reload=not args.dry_run)
+    for slug in ("ethereum", "bnb", "polygon", "arbitrum"):
+        print(f"    labels on {slug:<10}: {_identify.label_count(slug)}")
     print("=" * 71)
     if args.dry_run:
         print("\n(dry run - data/labels.json was not modified)")
@@ -369,9 +552,13 @@ async def main() -> int:
 #   them as type "bridge" would be simply wrong, and it would also label our
 #   own demo start address.
 # blender_io.yaml, sinbad_io.yaml, samourai.yaml, wasabi_collector.yaml -
-#   Bitcoin mixers. This project is Ethereum-only.
+#   Bitcoin mixers. Bitcoin is a future pipeline (Phase 10), not a chain this
+#   build traces, so its labels would be inert - and unverified.
 # exchange-wallets-bitmex_*.yaml - 2.3 MB each and overwhelmingly BTC; they
 #   also exceed the GitHub contents API's inline size limit.
+# Every pack's BTC/TRX/BEP2 tags - counted under "unsupported" above. The
+#   tool cannot walk those chains yet, so a label there could never be
+#   corroborated by a trace.
 
 if __name__ == "__main__":
     sys.exit(asyncio.run(main()))

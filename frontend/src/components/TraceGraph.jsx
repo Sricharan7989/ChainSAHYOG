@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { CYTOSCAPE_STYLES, LAYOUT_CONFIG } from '../utils/graphStyle';
 import { findPath, extractPathNodes } from '../utils/pathfinder';
-import { shortAddress } from '../utils/formatters';
+import { shortAddress, splitNodeId } from '../utils/formatters';
+import { addrKey } from '../utils/address';
 
 /**
  * Interactive Background Matrix: Subtle forensic grid dots that gently displace
@@ -241,18 +242,18 @@ export default function TraceGraph({
       };
     }
 
-    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => n.toLowerCase()));
+    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => addrKey(n)));
 
     // 1. Gather all primary path edges
     const highSignalEdges = [...primaryPathEdges];
     const addedEdgeKeys = new Set(
-      primaryPathEdges.map((e) => `${e.source.toLowerCase()}->${e.target.toLowerCase()}`)
+      primaryPathEdges.map((e) => `${addrKey(e.source)}->${addrKey(e.target)}`)
     );
 
     // 2. Gather branch edges that directly connect to a primary path node
     data.edges.forEach((e) => {
-      const src = e.source.toLowerCase();
-      const dst = e.target.toLowerCase();
+      const src = addrKey(e.source);
+      const dst = addrKey(e.target);
       const key = `${src}->${dst}`;
       if (addedEdgeKeys.has(key)) return;
 
@@ -265,12 +266,12 @@ export default function TraceGraph({
     // 3. Keep ONLY nodes that have at least one connected edge (No orphan/floating nodes!)
     const connectedNodeIds = new Set();
     highSignalEdges.forEach((e) => {
-      connectedNodeIds.add(e.source.toLowerCase());
-      connectedNodeIds.add(e.target.toLowerCase());
+      connectedNodeIds.add(addrKey(e.source));
+      connectedNodeIds.add(addrKey(e.target));
     });
-    if (startAddress) connectedNodeIds.add(startAddress.toLowerCase());
+    if (startAddress) connectedNodeIds.add(addrKey(startAddress));
 
-    const activeNodes = data.nodes.filter((n) => connectedNodeIds.has(n.id.toLowerCase()));
+    const activeNodes = data.nodes.filter((n) => connectedNodeIds.has(addrKey(n.id)));
     const hiddenCount = data.nodes.length - activeNodes.length;
 
     return {
@@ -279,6 +280,13 @@ export default function TraceGraph({
       hiddenCount: Math.max(0, hiddenCount),
     };
   }, [data, focusHighSignal, primaryPathNodes, primaryPathEdges, startAddress]);
+
+  // The chain the investigation started on. The first chain traced is the one the
+  // investigator entered on; anything off it was reached by a bridge crossing, and
+  // has to be marked as such. Computed here, outside the layout memo, so the memo
+  // can depend on it properly.
+  const tracedChains = data?.cross_chain?.chains_traced || [];
+  const primaryChainSlug = tracedChains[0] || data?.chain?.slug || '';
 
   // Compute Vertical Layout coordinates and simplified elements
   const elements = useMemo(() => {
@@ -289,9 +297,9 @@ export default function TraceGraph({
     const SPINE_X = 260;
 
     const primaryEdgeKeys = new Set(
-      primaryPathEdges.map((e) => `${e.source.toLowerCase()}->${e.target.toLowerCase()}`)
+      primaryPathEdges.map((e) => `${addrKey(e.source)}->${addrKey(e.target)}`)
     );
-    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => n.toLowerCase()));
+    const primaryNodeKeys = new Set(primaryPathNodes.map((n) => addrKey(n)));
 
     // 1. Build the Vertical Spine
     let effectiveSpine = [];
@@ -302,7 +310,7 @@ export default function TraceGraph({
       const middle = primaryPathNodes.slice(2, -2);
       const tail = primaryPathNodes.slice(-2);
 
-      middle.forEach((addr) => foldedMiddleIds.add(addr.toLowerCase()));
+      middle.forEach((addr) => foldedMiddleIds.add(addrKey(addr)));
 
       effectiveSpine = [
         ...head.map((addr) => ({ type: 'wallet', address: addr })),
@@ -327,7 +335,7 @@ export default function TraceGraph({
         spinePositions.set(item.id, { x: SPINE_X, y });
         spineRowMap.set(item.id, idx);
       } else {
-        const addrLower = item.address.toLowerCase();
+        const addrLower = addrKey(item.address);
         spinePositions.set(addrLower, { x: SPINE_X, y });
         spineRowMap.set(addrLower, idx);
       }
@@ -339,10 +347,10 @@ export default function TraceGraph({
     const rowBranchCounters = new Map();
 
     displayNodes.forEach((n) => {
-      const idLower = n.id.toLowerCase();
+      const idLower = addrKey(n.id);
       if (foldedMiddleIds.has(idLower)) return;
 
-      const isStart = n.is_start || idLower === startAddress?.toLowerCase();
+      const isStart = n.is_start || idLower === addrKey(startAddress);
       const onPath = primaryNodeKeys.has(idLower);
       const isVasp = Boolean(n.is_vasp || n.entity_type === 'exchange');
       const isObfuscator = Boolean(
@@ -351,6 +359,13 @@ export default function TraceGraph({
         n.entity_type === 'suspected_exchange' ||
         n.entity_type === 'sanctioned'
       );
+
+      // A wallet reached after a chain crossing is not the same finding as one
+      // reached on the chain we started on. Marking it lets the reader see that
+      // the route left the chain they were investigating, which is the whole point
+      // of following it.
+      const nodeChain = n.chain || splitNodeId(n.id).chain || '';
+      const isOffChain = Boolean(nodeChain) && nodeChain !== primaryChainSlug;
 
       const isSilent = !isStart && !isVasp && !isObfuscator && !onPath;
 
@@ -368,6 +383,14 @@ export default function TraceGraph({
       } else {
         // "Other grey useless nodes": No address label, just clean grey dots
         displayLabel = '';
+      }
+
+      // Name the chain on anything not on the chain we started on. Without it a
+      // reader sees the same short address twice and cannot tell that the route
+      // crossed a bridge - which is the single most important thing to make
+      // visible.
+      if (isOffChain && displayLabel) {
+        displayLabel = `${nodeChain.toUpperCase()}\n${displayLabel}`;
       }
 
       let pos = spinePositions.get(idLower);
@@ -400,6 +423,8 @@ export default function TraceGraph({
           is_obfuscator: isObfuscator,
           is_silent: isSilent,
           on_primary_path: onPath,
+          is_off_chain: isOffChain,
+          chain_slug: nodeChain,
         },
         position: pos,
       });
@@ -439,7 +464,7 @@ export default function TraceGraph({
       // Edge 0: Head 0 -> Head 1
       if (primaryPathEdges[0]) {
         const pe = primaryPathEdges[0];
-        const key = `${pe.source.toLowerCase()}->${pe.target.toLowerCase()}`;
+        const key = `${addrKey(pe.source)}->${addrKey(pe.target)}`;
         edgeElements.push({
           group: 'edges',
           data: {
@@ -485,7 +510,7 @@ export default function TraceGraph({
       // Edge Tail 0 -> Tail 1
       const tailEdge = primaryPathEdges[primaryPathEdges.length - 1];
       if (tailEdge) {
-        const key = `${tailEdge.source.toLowerCase()}->${tailEdge.target.toLowerCase()}`;
+        const key = `${addrKey(tailEdge.source)}->${addrKey(tailEdge.target)}`;
         edgeElements.push({
           group: 'edges',
           data: {
@@ -502,7 +527,7 @@ export default function TraceGraph({
     } else {
       // All primary path edges intact
       primaryPathEdges.forEach((pe, idx) => {
-        const key = `${pe.source.toLowerCase()}->${pe.target.toLowerCase()}`;
+        const key = `${addrKey(pe.source)}->${addrKey(pe.target)}`;
         edgeElements.push({
           group: 'edges',
           data: {
@@ -512,6 +537,15 @@ export default function TraceGraph({
             target: pe.target,
             on_primary_path: true,
             displayAmount: formatEdgeAmount(pe),
+            // Carried through so the stylesheet can draw a chain crossing
+            // differently from a transfer. A crossing is an inference, not a
+            // transaction, and drawing it as an ordinary arrow would overstate
+            // what we actually know.
+            is_cross_chain: pe.edge_type === 'cross_chain',
+            cross_chain_label:
+              pe.edge_type === 'cross_chain'
+                ? `CROSSED TO ${(pe.to_chain || '').toUpperCase()}`
+                : null,
           },
         });
         addedEdgeKeys.add(key);
@@ -520,8 +554,8 @@ export default function TraceGraph({
 
     // Add remaining display edges (side-branches)
     displayEdges.forEach((e, idx) => {
-      const srcLower = e.source.toLowerCase();
-      const dstLower = e.target.toLowerCase();
+      const srcLower = addrKey(e.source);
+      const dstLower = addrKey(e.target);
       const key = `${srcLower}->${dstLower}`;
 
       if (addedEdgeKeys.has(key)) return;
@@ -540,7 +574,24 @@ export default function TraceGraph({
       });
     });
 
-    return [...nodeElements, ...edgeElements];
+    // Classify every edge from its OWN edge_type, in one place, after all the
+    // branches above have run. Each branch builds edges slightly differently
+    // (primary path, folded head/tail, side branch), and setting the crossing
+    // flag inside each one meant any branch that forgot it drew an INFERRED
+    // bridge arrival as an ordinary transfer - quietly overstating what we know.
+    const classifiedEdges = edgeElements.map((el) => {
+      if (el.data?.edge_type !== 'cross_chain') return el;
+      return {
+        ...el,
+        data: {
+          ...el.data,
+          is_cross_chain: true,
+          cross_chain_label: `CROSSED TO ${(el.data.to_chain || '').toUpperCase()}`,
+        },
+      };
+    });
+
+    return [...nodeElements, ...classifiedEdges];
   }, [
     displayNodes,
     displayEdges,
@@ -548,6 +599,7 @@ export default function TraceGraph({
     primaryPathEdges,
     startAddress,
     data?.summary?.exchange,
+    primaryChainSlug,
     canFold,
     isFolded,
   ]);

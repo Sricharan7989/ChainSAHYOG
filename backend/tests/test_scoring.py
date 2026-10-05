@@ -184,8 +184,47 @@ async def main():
     check("json exposes risk_flags", len(j["risk_flags"]), 1)
     check("risk_flags carry severity", j["risk_flags"][0]["severity"], "medium")
 
+    print("\n--- inferred bridge crossings are scored by their own strength ---")
+    from types import SimpleNamespace as NS
+
+    def attr(handoffs, hops=4):
+        return NS(method="known_label", hop_distance=hops, path_risk_types={"bridge"},
+                  handoff_scores=handoffs)
+
+    weak = scoring.compute_confidence(attr([62]))
+    strong = scoring.compute_confidence(attr([85]))
+    # Worked example: label match (+50), 4 hops (+9), crossing at 62 -> -10 = 49;
+    # at 85 -> -4 = 55. Neither exceeds its handoff score, so no cap applies.
+    check("a 62 handoff, label match, 4 hops", weak.score, 49)
+    check("an 85 handoff, same route", strong.score, 55)
+    check("so the two are not scored alike", weak.score < strong.score, True)
+    check("an inferred route never earns the clean-path bonus",
+          any("no mixer or bridge" in c.label for c in strong.components), False)
+    check("and is not also charged the flat bridge penalty",
+          any(c.label.startswith("bridge on path") for c in strong.components), False)
+    capped = scoring.compute_confidence(attr([62], hops=1))
+    check("a strong route after a weak crossing is held at the handoff score", capped.score, 62)
+    check("the cap is recorded", capped.handoff_cap, 62)
+    check("and the breakdown says so", "held at 62" in capped.breakdown, True)
+    check("two crossings are held at the weaker one",
+          scoring.compute_confidence(attr([85, 62], hops=1)).score, 62)
+    observed = scoring.compute_confidence(
+        NS(method="known_label", hop_distance=4, path_risk_types=set(), handoff_scores=[])
+    )
+    check("an observed same-chain route is unchanged", observed.score, 74)
+    check("and is never handoff-capped", observed.handoff_cap, None)
+
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
+
+def test_suite():
+    """
+    The pytest entry point. Each suite is a script of named checks that prints
+    PASS/FAIL per check and returns its failure count; pytest runs the whole
+    script once and fails if any check failed. Run it directly for the per-check
+    listing:  python -m tests.test_scoring
+    """
+    assert asyncio.run(main()) == 0
 
 
 if __name__ == '__main__':

@@ -204,6 +204,51 @@ export const CYTOSCAPE_STYLES = [
     },
   },
 
+  // CROSS-CHAIN EDGE (Bridge crossing) — NOT a transaction.
+  //
+  // Deliberately unlike every other edge: dashed, cyan, thicker, and labelled
+  // with the chain it crossed into. A crossing is an inference - the deposit is on
+  // record, the arrival on the other side is matched by amount and timing - so it
+  // must not look like the observed transfers around it. Drawing it as another
+  // solid arrow would quietly upgrade a judgement call into a fact.
+  {
+    selector: 'edge[?is_cross_chain]',
+    style: {
+      'width': 4.5,
+      'line-color': '#22d3ee',
+      'target-arrow-color': '#22d3ee',
+      'line-style': 'dashed',
+      'arrow-scale': 1.2,
+      'opacity': 1.0,
+      'z-index': 21,
+      'label': 'data(cross_chain_label)',
+      'font-size': '10px',
+      'font-family': 'Inter, monospace, sans-serif',
+      'font-weight': 800,
+      'color': '#a5f3fc',
+      'text-background-opacity': 1,
+      'text-background-color': '#083344',
+      'text-background-padding': '3px',
+      'text-background-shape': 'rectangle',
+      'text-border-width': 1,
+      'text-border-color': '#22d3ee',
+      'text-rotation': 'none',
+    },
+  },
+
+  // WALLET REACHED AFTER A CHAIN CROSSING.
+  // The chain name is already in the label; the border keeps it findable while
+  // the eye is scanning the spine rather than reading.
+  {
+    selector: 'node[?is_off_chain]',
+    style: {
+      'border-style': 'dashed',
+      'border-color': '#22d3ee',
+      'text-border-color': '#22d3ee',
+      'text-border-width': 1.5,
+    },
+  },
+
   // SELECTED / HOVERED EDGE
   {
     selector: 'edge:selected',

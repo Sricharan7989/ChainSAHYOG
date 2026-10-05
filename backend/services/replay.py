@@ -21,12 +21,14 @@ it is showing a cached result. A demo that quietly pretends to be live would be
 dishonest, and an investigator needs to know how fresh the data is.
 """
 
+import hashlib
 import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 from app import config
+from core import addresses
 
 CACHE_DIR = config.DATA_DIR / "cache"
 
@@ -36,14 +38,21 @@ DEFAULT_CHAIN = "ethereum"
 
 def _path_for(address: str, chain: str | None = None) -> Path:
     """
-    One file per (chain, address). Lowercased, so lookups never miss on casing.
+    One file per (chain, address), keyed by the chain's own address rule.
 
     Ethereum keeps the bare `<address>.json` filename it has always had, so every
     recording made before multi-chain support still replays. Other chains are
     prefixed. A hyphen, not a colon: colons are illegal in Windows filenames.
+
+    CASE-SENSITIVE ADDRESSES (Tron base58, legacy Bitcoin) keep their case AND get
+    a short hash of the exact address appended. Windows and macOS filesystems are
+    case-insensitive, so two addresses differing only in case would otherwise
+    share one file and one would replay as the other.
     """
     chain_name = (chain or DEFAULT_CHAIN).strip().lower()
-    stem = address.strip().lower()
+    stem = addresses.try_normalize(address, chain_name) or address.strip().lower()
+    if addresses.is_case_sensitive(chain_name):
+        stem = f"{stem}_{hashlib.sha256(stem.encode()).hexdigest()[:8]}"
     if chain_name != DEFAULT_CHAIN:
         stem = f"{chain_name}-{stem}"
     return CACHE_DIR / f"{stem}.json"

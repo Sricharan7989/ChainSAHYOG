@@ -1,5 +1,6 @@
 import { PlayCircle, ShieldCheck, AlertOctagon } from 'lucide-react';
 import { shortAddress } from '../utils/formatters';
+import { addrKey } from '../utils/address';
 
 export default function DemoChips({ demos, onSelectDemo, selectedAddress, loading }) {
   if (!demos || demos.length === 0) return null;
@@ -13,7 +14,7 @@ export default function DemoChips({ demos, onSelectDemo, selectedAddress, loadin
 
       <div className="flex flex-wrap items-center gap-2">
         {demos.map((demo) => {
-          const isSelected = selectedAddress?.toLowerCase() === demo.address?.toLowerCase();
+          const isSelected = addrKey(selectedAddress) === addrKey(demo.address);
           const exchangeName = demo.exchange || demo.summary?.exchange;
           const hopCount = demo.hop_distance ?? demo.summary?.hop_distance;
           const isSanctioned =

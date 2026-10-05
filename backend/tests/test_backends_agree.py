@@ -9,8 +9,10 @@ Runs the same deterministic fake trace through both stores and diffs the full
 JSON payload, field by field.
 """
 import asyncio
+import inspect
 import itertools
 import json
+import re
 import sys
 
 
@@ -118,6 +120,36 @@ def normalise(payload):
     return p
 
 
+def edge_prop_parity(payload):
+    """
+    Does the Neo4j write keep what the in-memory store keeps?
+
+    The two backends do not share a serializer: the in-memory store keeps every
+    attribute it is handed, while Neo4j is written with an explicit list of
+    properties in a Cypher SET clause. That list was written when a trace could
+    not cross a bridge, so it never grew the chain fields - and because the
+    agreement check below needs a live database, the divergence sat there
+    unnoticed and only surfaced when a crossing vanished from a Neo4j backed
+    trace. This compares the two without needing Neo4j at all.
+    """
+    source = inspect.getsource(graph_store.Neo4jStore.flush)
+    written = set(re.findall(r"\br\.(\w+)\s*=", source))
+    # assets is stored as assets_json; every other attribute the tracer passes
+    # must appear in the SET clause by name.
+    rename = {"assets_json": "assets"}
+    kept = {rename.get(w, w) for w in written}
+
+    in_memory = payload["memory"]
+    missed = set()
+    for edge in in_memory["edges"]:
+        for field in edge:
+            if field in ("source", "target", "handoff"):
+                continue  # not a relationship property
+            if field not in kept:
+                missed.add(field)
+    return sorted(missed), sorted(kept)
+
+
 async def main():
     print("--- in-memory backend ---")
     mem, mem_backend = await run("memory")
@@ -125,6 +157,12 @@ async def main():
     print(f"  {mem['summary']['headline']}")
     print(f"  {mem['stats']['nodes']} nodes, {mem['stats']['edges']} edges, "
           f"{mem['stats']['identified']} identified, {len(mem['risk_flags'])} risk flags")
+
+    print("\n--- do the two backends keep the same facts? ---")
+    missed, kept = edge_prop_parity({"memory": mem})
+    check("every edge field the tracer produces is persisted by Neo4j",
+          missed, [])
+    print(f"  Neo4j persists: {', '.join(kept)}")
 
     print("\n--- neo4j backend ---")
     store = graph_store.get_store()
@@ -179,6 +217,15 @@ async def main():
 
     print("\n" + ("BOTH BACKENDS AGREE" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
+
+def test_suite():
+    """
+    The pytest entry point. Each suite is a script of named checks that prints
+    PASS/FAIL per check and returns its failure count; pytest runs the whole
+    script once and fails if any check failed. Run it directly for the per-check
+    listing:  python -m tests.test_backends_agree
+    """
+    assert asyncio.run(main()) == 0
 
 
 if __name__ == '__main__':
