@@ -39,3 +39,6 @@ data/.tagpacks-cache/
 
 # Downloaded OFAC SDN_ADVANCED.XML (~130 MB), a cache for scripts/import_ofac.
 data/.ofac-cache/
+
+# Snapshots of exchanges' own wallet pages, used to verify rows we already hold.
+data/.sources-cache/

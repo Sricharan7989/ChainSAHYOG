@@ -141,10 +141,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -159,7 +167,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x21a31ee1afc51d94c2efccaa2092ad1028285549": {
     "entity": "Binance",
@@ -168,10 +177,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -186,7 +203,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xdfd5293d8e347dfe59e90efd55b2956a1343963d": {
     "entity": "Binance",
@@ -195,10 +213,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -213,7 +239,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x56eddb7aa87536c09ccc2793473599fd21a8b17f": {
     "entity": "Binance",
@@ -222,10 +249,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -240,7 +275,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x9696f59e4d72e237be84ffd425dcad154bf96976": {
     "entity": "Binance",
@@ -249,10 +285,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -267,7 +311,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x71660c4005ba85c37ccec55d0c4493e66fe775d3": {
     "entity": "Coinbase",
@@ -572,10 +617,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-bitfinexcom",
@@ -597,7 +650,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xab5c66752a9e8167967685f1450532fb96d5d24f": {
     "entity": "Huobi",
@@ -713,10 +767,19 @@
     "chain": "ethereum",
     "source_name": "Tornado Cash (0.1 ETH pool)",
     "role": "0.1 ETH pool",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -745,7 +808,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936": {
     "entity": "Tornado Cash",
@@ -753,10 +817,19 @@
     "chain": "ethereum",
     "source_name": "Tornado Cash (1 ETH pool)",
     "role": "1 ETH pool",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -785,7 +858,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf": {
     "entity": "Tornado Cash",
@@ -793,10 +867,19 @@
     "chain": "ethereum",
     "source_name": "Tornado Cash (10 ETH pool)",
     "role": "10 ETH pool",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -825,7 +908,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xa160cdab225685da1d56aa342ad8841c3b53f291": {
     "entity": "Tornado Cash",
@@ -833,10 +917,19 @@
     "chain": "ethereum",
     "source_name": "Tornado Cash (100 ETH pool)",
     "role": "100 ETH pool",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -865,7 +958,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b": {
     "entity": "Tornado Cash",
@@ -873,10 +967,19 @@
     "chain": "ethereum",
     "source_name": "Tornado Cash Router",
     "role": "router",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -898,7 +1001,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x722122df12d4e14e13ac3b6895a86e84145b6967": {
     "entity": "Tornado Cash",
@@ -906,10 +1010,19 @@
     "chain": "ethereum",
     "source_name": "Tornado Cash Proxy",
     "role": "proxy",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels. Also in this project's original hand-made seed list, which was compiled from Etherscan's public label cloud",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -931,7 +1044,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xa0c68c638235ee32657e8f720a23cec1bfc77c77": {
     "entity": "Polygon Bridge",
@@ -1024,10 +1138,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 0.1 WBTC",
     "role": "0.1 WBTC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1049,7 +1172,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x610b717796ad172b316836ac95a2ffad065ceab4": {
     "entity": "Tornado Cash",
@@ -1058,10 +1182,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 1 WBTC",
     "role": "1 WBTC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1083,7 +1216,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x4736dcf1b7a3d580672cce6e7c65cd5cc9cfba9d": {
     "entity": "Tornado Cash",
@@ -1092,10 +1226,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 1,00 USDC",
     "role": "1,00 USDC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1124,7 +1267,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xfd8610d20aa15b7b2e3be39b396a1bc3516c7144": {
     "entity": "Tornado Cash",
@@ -1133,10 +1277,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 1,000 DAI",
     "role": "1,000 DAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1165,7 +1318,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd96f2b1c14db8458374d9aca76e26c3d18364307": {
     "entity": "Tornado Cash",
@@ -1174,10 +1328,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 1,000 USDC",
     "role": "1,000 USDC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1206,7 +1369,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x0836222f2b2b24a3f36f98668ed8f0b38d1a872f": {
     "entity": "Tornado Cash",
@@ -1215,10 +1379,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 1,000 USDT",
     "role": "1,000 USDT",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1247,7 +1420,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xbb93e510bbcd0b7beb5a853875f9ec60275cf498": {
     "entity": "Tornado Cash",
@@ -1256,10 +1430,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 10 WBTC",
     "role": "10 WBTC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1281,7 +1464,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xf60dd140cff0706bae9cd734ac3ae76ad9ebc32a": {
     "entity": "Tornado Cash",
@@ -1290,10 +1474,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 10,000 DAI",
     "role": "10,000 DAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1322,7 +1515,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x07687e702b410fa43f4cb4af7fa097918ffd2730": {
     "entity": "Tornado Cash",
@@ -1331,10 +1525,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 10,000 DAI",
     "role": "10,000 DAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1356,7 +1559,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd691f27f38b395864ea86cfc7253969b409c362d": {
     "entity": "Tornado Cash",
@@ -1365,10 +1569,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 10,000 USDC",
     "role": "10,000 USDC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1397,7 +1610,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xf67721a2d8f736e75a49fdd7fad2e31d8676542a": {
     "entity": "Tornado Cash",
@@ -1406,10 +1620,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 10,000 USDT",
     "role": "10,000 USDT",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1438,7 +1661,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd4b88df4d29f5cedd6857912842cff3b20c8cfa3": {
     "entity": "Tornado Cash",
@@ -1447,10 +1671,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 100 DAI",
     "role": "100 DAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1479,7 +1712,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x169ad27a470d064dede56a2d3ff727986b15d52b": {
     "entity": "Tornado Cash",
@@ -1488,10 +1722,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 100 USDT",
     "role": "100 USDT",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1520,7 +1763,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x23773e65ed146a459791799d01336db287f25334": {
     "entity": "Tornado Cash",
@@ -1529,10 +1773,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 100,000 DAI",
     "role": "100,000 DAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1554,7 +1807,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x9ad122c22b14202b4490edaf288fdb3c7cb3ff5e": {
     "entity": "Tornado Cash",
@@ -1563,10 +1817,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 100,000 USDT",
     "role": "100,000 USDT",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1595,7 +1858,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x22aaa7720ddd5388a3c0a3333430953c68f1849b": {
     "entity": "Tornado Cash",
@@ -1604,10 +1868,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 5,000 cDAI",
     "role": "5,000 cDAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1636,7 +1909,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xaeaac358560e11f52454d997aaff2c5731b6f8a6": {
     "entity": "Tornado Cash",
@@ -1645,10 +1919,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 5,000 cUSDC",
     "role": "5,000 cUSDC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1677,7 +1960,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd21be7248e0197ee08e0c20d4a96debdac3d20af": {
     "entity": "Tornado Cash",
@@ -1686,10 +1970,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 5,000,000 cDAI",
     "role": "5,000,000 cDAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1711,7 +2004,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xba214c1c1928a32bffe790263e38b4af9bfcd659": {
     "entity": "Tornado Cash",
@@ -1720,10 +2014,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 50,000 cDAI",
     "role": "50,000 cDAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1752,7 +2055,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x1356c899d8c9467c7f71c195612f8a395abf2f0a": {
     "entity": "Tornado Cash",
@@ -1761,10 +2065,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 50,000 cUSDC",
     "role": "50,000 cUSDC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1793,7 +2106,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xb1c8094b234dce6e03f10a5b673c1d8c69739a00": {
     "entity": "Tornado Cash",
@@ -1802,10 +2116,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 500,000 cDAI",
     "role": "500,000 cDAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1834,7 +2157,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x2717c5e28cf931547b621a5dddb772ab6a35b701": {
     "entity": "Tornado Cash",
@@ -1843,10 +2167,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 500,000 cDAI",
     "role": "500,000 cDAI",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1868,7 +2201,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xa60c772958a3ed56c1f15dd055ba37ac8e523a0d": {
     "entity": "Tornado Cash",
@@ -1877,10 +2211,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: 500,000 cUSDC",
     "role": "500,000 cUSDC",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1909,7 +2252,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xb04e030140b30c27bcdfaafffa98c57d80eda7b4": {
     "entity": "Tornado Cash",
@@ -1918,10 +2262,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Community Fund",
     "role": "Community Fund",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1936,7 +2288,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x8589427373d6d84e98730d7795d8f6f8731fda16": {
     "entity": "Tornado Cash",
@@ -1945,10 +2298,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Donate",
     "role": "Donate",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -1977,7 +2339,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x756c4628e57f7e7f8a459ec2752968360cf4d1aa": {
     "entity": "Tornado Cash",
@@ -1986,10 +2349,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Echoer",
     "role": "Echoer",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2004,7 +2375,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x5f6c97c6ad7bdd0ae7e0dd4ca33a4ed3fdabd4d7": {
     "entity": "Tornado Cash",
@@ -2013,10 +2385,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Fee Manager",
     "role": "Fee Manager",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2031,7 +2411,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xfa4c1f3f7d5dd7c12a9adb82cd7dda542e3d59ef": {
     "entity": "Tornado Cash",
@@ -2060,10 +2441,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Governance",
     "role": "Governance",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2078,7 +2467,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xffbac21a641dcfe4552920138d90f3638b3c9fba": {
     "entity": "Tornado Cash",
@@ -2087,10 +2477,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Governance Impl",
     "role": "Governance Impl",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2105,7 +2503,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x2fc93484614a34f26f7970cbb94615ba109bb4bf": {
     "entity": "Tornado Cash",
@@ -2114,10 +2513,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Governance Staking",
     "role": "Governance Staking",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2132,7 +2539,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x2f50508a8a3d323b91336fa3ea6ae50e55f32185": {
     "entity": "Tornado Cash",
@@ -2141,10 +2549,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Governance Vault",
     "role": "Governance Vault",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2159,7 +2575,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x179f48c78f57a3a78f0608cc9197b8972921d1d2": {
     "entity": "Tornado Cash",
@@ -2168,10 +2585,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Governance Vesting",
     "role": "Governance Vesting",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2186,7 +2611,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xb20c66c4de72433f3ce747b58b86830c459ca911": {
     "entity": "Tornado Cash",
@@ -2195,10 +2621,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Instance Registry",
     "role": "Instance Registry",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2213,7 +2647,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xca0840578f57fe71599d29375e16783424023357": {
     "entity": "Tornado Cash",
@@ -2222,10 +2657,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: L1 Helper",
     "role": "L1 Helper",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2247,7 +2691,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x746aebc06d2ae31b71ac51429a19d54e797878e9": {
     "entity": "Tornado Cash",
@@ -2256,10 +2701,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Mining v2",
     "role": "Mining v2",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2274,7 +2727,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x94a1b5cdb22c43faab4abeb5c74999895464ddaf": {
     "entity": "Tornado Cash",
@@ -2283,10 +2737,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Mixer",
     "role": "Mixer",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2315,7 +2778,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xb541fc07bc7619fd4062a54d96268525cbc6ffef": {
     "entity": "Tornado Cash",
@@ -2324,10 +2788,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Mixer",
     "role": "Mixer",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2356,7 +2829,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x94c92f096437ab9958fc0a37f09348f30389ae79": {
     "entity": "Tornado Cash",
@@ -2365,10 +2839,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Poseidon",
     "role": "Poseidon",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2383,7 +2865,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd82ed8786d7c69dc7e052f7a542ab047971e73d2": {
     "entity": "Tornado Cash",
@@ -2392,10 +2875,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Poseidon",
     "role": "Poseidon",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2410,7 +2901,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x58e8dcc13be9780fc42e8723d8ead4cf46943df2": {
     "entity": "Tornado Cash",
@@ -2419,10 +2911,19 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Relayer Registry",
     "role": "Relayer Registry",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list; GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2444,7 +2945,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x5cab7692d4e94096462119ab7bf57319726eed2a": {
     "entity": "Tornado Cash",
@@ -2453,10 +2955,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Reward Swap",
     "role": "Reward Swap",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2471,7 +2981,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x88fd245fedec4a936e700f9173454d1931b4c307": {
     "entity": "Tornado Cash",
@@ -2480,10 +2991,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Reward Verifier",
     "role": "Reward Verifier",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2498,7 +3017,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x5f48c2a71b2cc96e3f0ccae4e39318ff0dc375b2": {
     "entity": "Tornado Cash",
@@ -2642,10 +3162,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Tree Update Verifier",
     "role": "Tree Update Verifier",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2660,7 +3188,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x09193888b3f38c82dedfda55259a82c0e7de875e": {
     "entity": "Tornado Cash",
@@ -2669,10 +3198,18 @@
     "chain": "ethereum",
     "source_name": "Tornado.Cash: Withdraw Verifier",
     "role": "Withdraw Verifier",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack etherscan-wordcloud-mixing_service (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2687,7 +3224,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/mixing_service"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x527653ea119f3e6a1f5bd18fbf4714081d7b31ce": {
     "entity": "Tornado Cash",
@@ -2695,10 +3233,19 @@
     "source": "graphsense-tagpacks",
     "chain": "ethereum",
     "source_name": "tornado.cash",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2713,7 +3260,8 @@
         "upstream": "US Treasury OFAC SDN list",
         "upstream_url": "https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x905b63fff465b9ffbf41dea908ceb12478ec7601": {
     "entity": "Tornado Cash",
@@ -2721,10 +3269,19 @@
     "source": "graphsense-tagpacks",
     "chain": "ethereum",
     "source_name": "tornado.cash",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list (https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808)",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); not on the current SDN list; this tool did not establish when it was removed. A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list (https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808)",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": null
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "tornado_cash",
@@ -2732,7 +3289,8 @@
         "upstream": "US Treasury OFAC SDN list",
         "upstream_url": "https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x03893a7c7463ae47d46bc7f091665f1893656003": {
     "entity": "Tornado Cash",
@@ -2740,10 +3298,19 @@
     "source": "graphsense-tagpacks",
     "chain": "ethereum",
     "source_name": "tornado.cash",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "government_list",
     "redistributable": true,
-    "citation": "GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list",
+    "citation": "US Treasury OFAC designation of TORNADO CASH, listing this address: 2022-08-08 (https://ofac.treasury.gov/recent-actions/20220808) and 2022-11-08 (https://ofac.treasury.gov/recent-actions/20221108); removed from the SDN list on 2025-03-21 (https://ofac.treasury.gov/recent-actions/20250321). A government record that the address belonged to Tornado Cash, not a current sanction. Earlier source: GraphSense TagPack ofac (MIT), sourced from US Treasury OFAC SDN list (https://www.treasury.gov/ofac/downloads/sdnlist.txt); also in GraphSense TagPack tornado_cash (MIT), sourced from US Treasury OFAC SDN list",
     "provenance": [
+      {
+        "kind": "government_record",
+        "list": "OFAC SDN (designation record)",
+        "designated": [
+          "2022-08-08",
+          "2022-11-08"
+        ],
+        "removed": "2025-03-21"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "ofac",
@@ -2758,7 +3325,8 @@
         "upstream": "US Treasury OFAC SDN list",
         "upstream_url": "https://home.treasury.gov/policy-issues/financial-sanctions/recent-actions/20220808"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x05f51aab068caa6ab7eeb672f88c180f67f17ec7": {
     "entity": "ABCC",
@@ -3496,10 +4064,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -3514,7 +4090,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x7dfe9a368b6cf0c0309b763bb8d16da326e8f46e": {
     "entity": "Binance",
@@ -3748,10 +4325,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -3773,7 +4358,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xf977814e90da44bfa03b6295a0616a897441acec": {
     "entity": "Binance",
@@ -3783,10 +4369,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -3808,7 +4402,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x001866ae5b3de6caa5a51543fd9fb64f524f5478": {
     "entity": "Binance",
@@ -4361,10 +4956,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-bitfinexcom",
@@ -4386,7 +4989,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x88d34944cf554e9cccf4a24292d891f620e9c94f": {
     "entity": "Bithumb",
@@ -7358,10 +7962,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-huobi",
@@ -7383,7 +7995,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x73f8fc2e74302eb2efda125a326655acf0dc2d1b": {
     "entity": "Huobi",
@@ -7505,10 +8118,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-huobi",
@@ -7530,7 +8151,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xdc76cd25977e0a5ae17155770273ad58648900d3": {
     "entity": "Huobi",
@@ -7988,10 +8610,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -8006,7 +8636,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xa1d8d972560c2f8144af871db508f0b0b10a3fbf": {
     "entity": "KuCoin",
@@ -8058,10 +8689,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -8076,7 +8715,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd6216fc19db775df9774a6e33526131da7d19a2c": {
     "entity": "KuCoin",
@@ -8086,10 +8726,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -8104,7 +8752,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x899b5d52671830f567bf43a14684eb14e1f945fe": {
     "entity": "KuCoin",
@@ -8135,10 +8784,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -8153,7 +8810,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xe59cd29be3be4461d79c0881d238cbe87d64595a": {
     "entity": "KuCoin",
@@ -10416,10 +11074,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626)",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -10427,7 +11093,8 @@
         "upstream": "Binance's own published wallet list",
         "upstream_url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503": {
     "entity": "Binance",
@@ -10439,10 +11106,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Binance",
+        "url": "https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626",
+        "published": "2022-11-10 (page last updated 2023-10-09)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-binance",
@@ -10457,7 +11132,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": {
     "entity": "Bitfinex",
@@ -10469,10 +11145,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt)",
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-bitfinexcom",
@@ -10480,7 +11164,8 @@
         "upstream": "Bitfinex's own published wallet list",
         "upstream_url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xee5b5b923ffce93a870b3104b7ca09c3db80047a": {
     "entity": "Bybit",
@@ -10607,10 +11292,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-huobi",
@@ -10618,7 +11311,8 @@
         "upstream": "Huobi's own published wallet list",
         "upstream_url": "https://www.huobi.com/support/en-us/detail/24922606430831"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xc589b275e60dda57ad7e117c6dd837ab524a5666": {
     "entity": "Huobi",
@@ -10630,10 +11324,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-huobi",
@@ -10641,7 +11343,8 @@
         "upstream": "Huobi's own published wallet list",
         "upstream_url": "https://www.huobi.com/support/en-us/detail/24922606430831"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x30741289523c2e4d2a62c7d6722686d14e723851": {
     "entity": "Huobi",
@@ -10653,10 +11356,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-huobi",
@@ -10664,7 +11375,8 @@
         "upstream": "Huobi's own published wallet list",
         "upstream_url": "https://www.huobi.com/support/en-us/detail/24922606430831"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xd89350284c7732163765b23338f2ff27449e0bf5": {
     "entity": "KuCoin",
@@ -10676,10 +11388,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -10687,7 +11407,8 @@
         "upstream": "KuCoin's own published wallet list",
         "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0xec30d02f10353f8efc9601371f56e808751f396f": {
     "entity": "KuCoin",
@@ -10699,10 +11420,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -10710,7 +11439,8 @@
         "upstream": "KuCoin's own published wallet list",
         "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x88bd4d3e2997371bceefe8d9386c6b5b4de60346": {
     "entity": "KuCoin",
@@ -10722,10 +11452,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -10733,7 +11471,8 @@
         "upstream": "KuCoin's own published wallet list",
         "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x738cf6903e6c4e699d1c2dd9ab8b67fcdb3121ea": {
     "entity": "KuCoin",
@@ -10745,10 +11484,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign_fiu_registered",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "citation": "KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "KuCoin",
+        "url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets",
+        "published": "2022-11-11",
+        "retrieved": "2026-10-05",
+        "chain": "ethereum"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-kucoin",
@@ -10756,7 +11503,8 @@
         "upstream": "KuCoin's own published wallet list",
         "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
       }
-    ]
+    ],
+    "resourced": true
   },
   "0x5770815b0c2a09a43c9e5aecb7e2f3886075b605": {
     "entity": "SwissBorg",
@@ -10904,10 +11652,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt)",
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on polygon. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "polygon"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-bitfinexcom",
@@ -10915,7 +11671,8 @@
         "upstream": "Bitfinex's own published wallet list",
         "upstream_url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt"
       }
-    ]
+    ],
+    "resourced": true
   },
   "polygon:0x742d35cc6634c0532925a3b844bc454e4438f44e": {
     "entity": "Bitfinex",
@@ -10925,10 +11682,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on polygon. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "polygon"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-bitfinexcom",
@@ -10950,7 +11715,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "polygon:0x876eabf441b2ee5b5b0554fd502a8e0600950cfa": {
     "entity": "Bitfinex",
@@ -10960,10 +11726,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on polygon. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Bitfinex",
+        "url": "https://github.com/bitfinexcom/pub/blob/main/wallets.txt",
+        "published": "2022-12-12 (last commit 83d06bdb5f)",
+        "retrieved": "2026-10-05",
+        "chain": "polygon"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-bitfinexcom",
@@ -10985,7 +11759,8 @@
         "upstream": "Etherscan public labels",
         "upstream_url": "https://etherscan.io/accounts/label/exchange"
       }
-    ]
+    ],
+    "resourced": true
   },
   "polygon:0xd70250731a72c33bfb93016e3d1f0ca160df7e42": {
     "entity": "Huobi",
@@ -10995,10 +11770,18 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign",
-    "evidence_tier": "third_party_pack",
+    "evidence_tier": "self_published",
     "redistributable": true,
-    "citation": "GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
+    "citation": "Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on polygon. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
     "provenance": [
+      {
+        "kind": "self_published",
+        "publisher": "Huobi",
+        "url": "https://www.huobi.com/support/en-us/detail/24922606430831",
+        "published": "2022-11-12",
+        "retrieved": "2026-10-05",
+        "chain": "polygon"
+      },
       {
         "kind": "graphsense_tagpack",
         "pack": "exchange-wallets-huobi",
@@ -11006,7 +11789,8 @@
         "upstream": "Huobi's own published wallet list",
         "upstream_url": "https://www.huobi.com/support/en-us/detail/24922606430831"
       }
-    ]
+    ],
+    "resourced": true
   },
   "polygon:0x03e3ff995863828554282e80870b489cc31dc8bc": {
     "entity": "OMGFIN Exchange",
@@ -11093,7 +11877,7 @@
     "jurisdiction": "foreign",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled huobi reserve wallets ETH on ethereum, and on polygon it is an ordinary account (not a contract) with 34 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled huobi reserve wallets ETH on ethereum, and on polygon it is an ordinary account (not a contract) with 34 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
     "provenance": [
       {
         "kind": "inference",
@@ -11345,7 +12129,7 @@
     "jurisdiction": "foreign_fiu_registered",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled binance reserve wallets ETH on ethereum, and on polygon it is an ordinary account (not a contract) with 162 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626)",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled binance reserve wallets ETH on ethereum, and on polygon it is an ordinary account (not a contract) with 162 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626)",
     "provenance": [
       {
         "kind": "inference",
@@ -11791,7 +12575,7 @@
     "jurisdiction": "foreign_fiu_registered",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled KuCoin on ethereum, and on polygon it is an ordinary account (not a contract) with 463 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled KuCoin on ethereum, and on polygon it is an ordinary account (not a contract) with 463 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
       {
         "kind": "inference",
@@ -11822,7 +12606,7 @@
     "jurisdiction": "foreign_fiu_registered",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled Binance on ethereum, and on polygon it is an ordinary account (not a contract) with 813 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled Binance on ethereum, and on polygon it is an ordinary account (not a contract) with 813 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
       {
         "kind": "inference",
@@ -11917,7 +12701,7 @@
     "jurisdiction": "foreign",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled huobi reserve wallets ETH on ethereum, and on arbitrum it is an ordinary account (not a contract) with 28 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled huobi reserve wallets ETH on ethereum, and on arbitrum it is an ordinary account (not a contract) with 28 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Huobi's own published wallet list: Huobi wallet address announcement (Huobi support centre), 2022-11-12 (https://www.huobi.com/support/en-us/detail/24922606430831), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-huobi (MIT), sourced from Huobi's own published wallet list (https://www.huobi.com/support/en-us/detail/24922606430831)",
     "provenance": [
       {
         "kind": "inference",
@@ -12107,7 +12891,7 @@
     "jurisdiction": "foreign_fiu_registered",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled binance reserve wallets ETH on ethereum, and on arbitrum it is an ordinary account (not a contract) with 246 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626)",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled binance reserve wallets ETH on ethereum, and on arbitrum it is an ordinary account (not a contract) with 246 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626)",
     "provenance": [
       {
         "kind": "inference",
@@ -12140,7 +12924,7 @@
     "jurisdiction": "foreign",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled bitfinex ETH/ERC20 hot wallet on ethereum, and on arbitrum it is an ordinary account (not a contract) with 8212 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt)",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled bitfinex ETH/ERC20 hot wallet on ethereum, and on arbitrum it is an ordinary account (not a contract) with 8212 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Bitfinex's own published wallet list: bitfinexcom/pub wallets.txt (Bitfinex's own GitHub repository), 2022-12-12 (last commit 83d06bdb5f) (https://github.com/bitfinexcom/pub/blob/main/wallets.txt), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-bitfinexcom (MIT), sourced from Bitfinex's own published wallet list (https://github.com/bitfinexcom/pub/blob/main/wallets.txt)",
     "provenance": [
       {
         "kind": "inference",
@@ -12330,7 +13114,7 @@
     "jurisdiction": "foreign_fiu_registered",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled KuCoin on ethereum, and on arbitrum it is an ordinary account (not a contract) with 635 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled KuCoin on ethereum, and on arbitrum it is an ordinary account (not a contract) with 635 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: KuCoin's own published wallet list: Transparency and Trust (KuCoin blog), 2022-11-11 (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets); also in GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
       {
         "kind": "inference",
@@ -12361,7 +13145,7 @@
     "jurisdiction": "foreign_fiu_registered",
     "evidence_tier": "inferred",
     "redistributable": true,
-    "citation": "Inferred by ChainSAHYOG: the same address is labelled Binance on ethereum, and on arbitrum it is an ordinary account (not a contract) with 710 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
+    "citation": "Inferred by ChainSAHYOG: the same address is labelled Binance on ethereum, and on arbitrum it is an ordinary account (not a contract) with 710 outgoing transactions (checked 2026-10-04). Provenance of the ethereum label: Binance's own published wallet list: Our Commitment To Transparency (Binance blog), 2022-11-10 (page last updated 2023-10-09) (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626), retrieved 2026-10-05; lists this address on ethereum. Earlier source: GraphSense TagPack exchange-wallets-binance (MIT), sourced from Binance's own published wallet list (https://www.binance.com/en/blog/community/our-commitment-to-transparency-2895840147147652626); also in GraphSense TagPack etherscan-label-word-cloud (MIT), sourced from Etherscan public labels; GraphSense TagPack etherscan-wordcloud-exchange (MIT), sourced from Etherscan public labels",
     "provenance": [
       {
         "kind": "inference",

@@ -94,6 +94,26 @@ def sdn_tests():
           "does not support this label" in semenov.get("citation", ""), True)
 
 
+def resourcing_tests():
+    print("\n--- 6. re-sourcing upgrades existing rows only, honestly ---")
+    rows = committed_rows()
+    binance = rows.get("0x28c6c06298d514db089934071355e5743bf21d60", {})
+    check("Binance 0x28c6 is self-published, citing Binance's own page",
+          (binance.get("evidence_tier"), "binance.com" in binance.get("citation", "")), ("self_published", True))
+    check("and keeps its earlier pack citation", "Earlier source: GraphSense TagPack" in binance.get("citation", ""), True)
+    huobi = rows.get("0x0577a79cfc63bbc0df38833ff4c4a3bf2095b404", {})
+    check("the Ronin Huobi wallet is NOT on Huobi's own list, so it stays a third-party pack",
+          huobi.get("evidence_tier"), "third_party_pack")
+    tornado = [v for v in rows.values() if v.get("type") == "mixer" and v.get("evidence_tier") == "government_list"]
+    check("Tornado Cash mixers cite OFAC's designation record", len(tornado) >= 50, True)
+    check("and say it is not a current sanction",
+          all("not a current sanction" in v["citation"] for v in tornado), True)
+    check("no re-sourced row is typed as sanctioned (delisted is not sanctioned)",
+          all(v.get("type") != "sanctioned" for v in tornado), True)
+    check("re-sourcing added no rows of its own",
+          [k for k, v in rows.items() if v.get("resourced") and not v.get("citation", "").count("Earlier source:")], [])
+
+
 def loader_tests():
     print("\n--- 4. the loader merges labels.local.json; a committed row wins a clash ---")
     a, b = "0x" + "1" * 40, "0x" + "2" * 40
@@ -125,6 +145,7 @@ def loader_tests():
 def run_all():
     file_tests()
     sdn_tests()
+    resourcing_tests()
     loader_tests()
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail

@@ -166,6 +166,8 @@ def stamp(key: str, meta: dict, packs: dict, rows_by_key: dict) -> dict | None:
         return None  # already upgraded to a stronger, first-hand source
     if meta.get("source") == "ofac_sdn":
         return None  # owned by scripts/import_ofac, which cites the official list itself
+    if meta.get("resourced"):
+        return None  # upgraded by scripts/resource_labels to a first-hand source
     chain, _, address = key.rpartition(":")
     chain = meta.get("chain") or chain or "ethereum"
     source = meta.get("source")
@@ -258,6 +260,15 @@ def main() -> int:
     for key in order:
         meta = rows[key]
         fields = stamp(key, meta, packs, rows)
+        if fields is not None and meta.get("sdn"):
+            # scripts/import_ofac attached an SDN listing to this row (under another
+            # party, or the row would have been upgraded). Keep that note and entry.
+            marker = ". Separately, this address is on the OFAC SDN list under "
+            old = meta.get("citation") or ""
+            if marker in old:
+                fields["citation"] = fields["citation"] + marker + old.split(marker, 1)[1]
+            fields["provenance"] = [p for p in meta.get("provenance") or [] if p.get("list") == "OFAC SDN"] \
+                + fields["provenance"]
         if fields is not None and any(meta.get(f) != v for f, v in fields.items()):
             meta.update(fields)
             changed += 1
