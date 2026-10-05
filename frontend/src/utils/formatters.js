@@ -71,7 +71,12 @@ const CHAIN_EXPLORERS = {
   arbitrum: 'https://arbiscan.io',
   polygon: 'https://polygonscan.com',
   bnb: 'https://bscscan.com',
+  tron: 'https://tronscan.org',
 };
+
+// Tronscan is a single-page app: its pages live under "#/", with "transaction"
+// rather than "tx". A link built the EVM way would load Tronscan's home page.
+const isTronscan = (base) => /tronscan\.org/.test(base || '');
 
 /** The explorer for a chain, falling back to the one the trace started on. */
 export function explorerForChain(chain, fallback) {
@@ -81,8 +86,9 @@ export function explorerForChain(chain, fallback) {
 
 export function getExplorerUrl(explorerBase, address) {
   const bare = bareAddress(address);
-  const base = explorerBase || 'https://etherscan.io';
-  return `${base.replace(/\/$/, '')}/address/${bare}`;
+  const base = (explorerBase || 'https://etherscan.io').replace(/\/$/, '');
+  if (isTronscan(base)) return `${base}/#/address/${bare}`;
+  return `${base}/address/${bare}`;
 }
 
 /**
@@ -95,8 +101,9 @@ export function explorerUrlForNode(explorerBase, nodeId) {
 }
 
 export function getTxUrl(explorerBase, txHash) {
-  const base = explorerBase || 'https://etherscan.io';
-  return `${base.replace(/\/$/, '')}/tx/${txHash}`;
+  const base = (explorerBase || 'https://etherscan.io').replace(/\/$/, '');
+  if (isTronscan(base)) return `${base}/#/transaction/${txHash}`;
+  return `${base}/tx/${txHash}`;
 }
 
 export function getRiskBadgeConfig(severity) {

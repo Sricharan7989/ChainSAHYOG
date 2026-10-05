@@ -182,7 +182,11 @@ export default function SearchBar({
             <div>
               <div className="flex justify-between text-xs mb-1.5 font-mono">
                 <span className="text-[#52525b] dark:text-[#a3a3a3] font-medium">Dust Floor (Native)</span>
-                <span className="text-[#627EEA] font-bold">{dustThreshold} ETH</span>
+                <span className="text-[#627EEA] font-bold">
+                  {/* The dust setting is in the EVM native coin. Tron's assets have their
+                      own floors (10 TRX, 1 USDT), set per asset in the backend. */}
+                  {chainId === 728126428 ? 'fixed per asset on Tron (10 TRX, 1 USDT)' : `${dustThreshold} native`}
+                </span>
               </div>
               <input
                 type="number"

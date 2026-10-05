@@ -9,6 +9,7 @@
 
 const FAMILY_BY_CHAIN = {
   1: 'evm', 137: 'evm', 56: 'evm', 42161: 'evm', 10: 'evm', 8453: 'evm',
+  728126428: 'tron',
   ethereum: 'evm', polygon: 'evm', bnb: 'evm', arbitrum: 'evm', optimism: 'evm', base: 'evm',
   tron: 'tron',
   bitcoin: 'bitcoin',
