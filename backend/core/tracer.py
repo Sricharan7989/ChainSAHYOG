@@ -746,11 +746,21 @@ async def _verify_hub(ctx: "_WalkContext", node: str, address: str, chain: dict,
     chain_wide, calls = None, 0
     history = ctx.fetched_by_chain.get(slug, {}).get(address)
     if history is not None:
-        senders = {t.from_addr for t in history if t.to_addr == address and t.from_addr != address}
+        # The same measure the thresholds were calibrated on: the newest rows
+        # (one page per endpoint's worth), senders of NON-DUST value, and the
+        # outgoing row count for the second condition.
+        recent = sorted(history, key=lambda t: (t.timestamp, t.hash), reverse=True)[: 2 * config.MAX_TXNS_PER_ADDRESS]
+        incoming = [t for t in recent if t.to_addr == address and t.from_addr != address]
+        senders = {t.from_addr for t in incoming}
+        value_senders = {
+            t.from_addr for t in incoming
+            if t.value >= config.dust_threshold_for(t.asset, None)
+        }
         reach = _reach_for(ctx, chain["chain_id"], address, block)
-        complete = not any(isinstance(r, dict) and r.get("truncated") for r in reach.values())
-        chain_wide = {"senders": len(senders), "complete": complete,
-                      "rows": sum(1 for t in history if t.to_addr == address)}
+        complete = not any(isinstance(r, dict) and r.get("truncated") for r in reach.values()) \
+            and len(history) <= 2 * config.MAX_TXNS_PER_ADDRESS
+        chain_wide = {"senders": len(senders), "value_senders": len(value_senders), "complete": complete,
+                      "rows": len(incoming), "out_rows": sum(1 for t in recent if t.from_addr == address)}
     else:
         count = getattr(ctx.client, "get_inbound_senders", None)
         if count is not None:
@@ -766,19 +776,31 @@ async def _verify_hub(ctx: "_WalkContext", node: str, address: str, chain: dict,
         "address": address,
         "chain": slug,
         "subgraph_senders": subgraph,
-        "chain_senders": (chain_wide or {}).get("senders"),
+        "chain_senders": (chain_wide or {}).get("value_senders", (chain_wide or {}).get("senders")),
+        "chain_senders_raw": (chain_wide or {}).get("senders"),
+        "chain_out_rows": (chain_wide or {}).get("out_rows"),
         "chain_senders_complete": (chain_wide or {}).get("complete"),
         "api_calls": calls,
         "kept": verdict is not None,
-        "reason": (
-            None if verdict is not None else
-            f"only {(chain_wide or {}).get('senders')} distinct addresses have ever sent to it "
-            f"chain-wide (minimum {identify.CONSOLIDATION_GLOBAL_MIN_SENDERS}): the trace's own "
-            "paths reconverge here; it is not a collection point"
-        ),
+        "reason": None if verdict is not None else _rejection_reason(chain_wide),
     })
     ctx.hub_verdicts[node] = verdict
     return verdict
+
+
+def _rejection_reason(chain_wide: dict | None) -> str:
+    """Why a fan-in candidate was rejected, in the calibrated terms."""
+    cw = chain_wide or {}
+    n = cw.get("value_senders", cw.get("senders"))
+    if n is not None and n < identify.CONSOLIDATION_GLOBAL_MIN_SENDERS:
+        return (f"only {n} distinct addresses have sent it non-dust value (minimum "
+                f"{identify.CONSOLIDATION_GLOBAL_MIN_SENDERS}, calibrated): the trace's own paths "
+                "reconverge here; it is not a collection point")
+    out_rows = cw.get("out_rows")
+    return (f"{n} value senders against {out_rows} outgoing transactions "
+            f"({(n or 0) / max(1, out_rows or 1):.3f} per transaction, minimum "
+            f"{identify.CONSOLIDATION_MIN_SENDERS_PER_OUT_TX}, calibrated): it fans funds out like an "
+            "attacker's pool rather than collecting deposits")
 
 
 def _reach_for(ctx: "_WalkContext", chain_id: int, address: str, block: int | None) -> dict:

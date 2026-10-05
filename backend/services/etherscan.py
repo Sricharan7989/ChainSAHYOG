@@ -314,14 +314,47 @@ class EtherscanClient:
                   "page": 1, "offset": cap, "sort": "desc"}
         native = await self._request({**common, "action": "txlist"}, chain_id=resolved) or []
         token = await self._request({**common, "action": "tokentx"}, chain_id=resolved) or []
-        senders, rows = set(), 0
-        for r in list(native) + list(token):
-            if (r.get("to") or "").strip().lower() == wallet:
-                rows += 1
+        native_symbol = config.chain(resolved)["native"]
+
+        def _value(r, is_token) -> float:
+            """Amount in a FOLLOWED asset above its dust floor, else 0. Spam is 0."""
+            try:
+                if not is_token:
+                    amount = int(r.get("value") or 0) / 1e18
+                    return amount if amount >= config.dust_threshold_for(native_symbol) else 0.0
+                entry = config.token_asset(resolved, r.get("contractAddress") or "")
+                if entry is None:  # an unverified token, e.g. address-poisoning spam
+                    return 0.0
+                amount = int(r.get("value") or 0) / (10 ** entry[1])
+                return amount if amount >= config.dust_threshold_for(entry[0]) else 0.0
+            except (TypeError, ValueError):
+                return 0.0
+
+        senders, recipients, rows, out_rows = set(), set(), 0, 0
+        v_senders, v_recipients = set(), set()
+        for is_token, page in ((False, native), (True, token)):
+            for r in page:
+                to = (r.get("to") or "").strip().lower()
                 frm = (r.get("from") or "").strip().lower()
-                if frm and frm != wallet:
-                    senders.add(frm)
+                if to == wallet:
+                    rows += 1
+                    if frm and frm != wallet:
+                        senders.add(frm)
+                        if _value(r, is_token) > 0:
+                            v_senders.add(frm)
+                elif frm == wallet:
+                    # The same two pages also say how the wallet SPENDS, at no
+                    # extra cost.
+                    out_rows += 1
+                    if to:
+                        recipients.add(to)
+                        if _value(r, is_token) > 0:
+                            v_recipients.add(to)
         out = {"senders": len(senders), "rows": rows, "calls": 2,
+               "recipients": len(recipients), "out_rows": out_rows,
+               # Counted only over non-dust transfers of assets we follow, so
+               # zero-value spam and fake tokens cannot inflate a wallet's fan-in.
+               "value_senders": len(v_senders), "value_recipients": len(v_recipients),
                "complete": len(native) < cap and len(token) < cap}
         self._window_cache[key] = out
         return out

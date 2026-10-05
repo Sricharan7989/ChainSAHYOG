@@ -76,8 +76,23 @@ CONSOLIDATION_MAX_CONFIDENCE = 0.70
 # A candidate that passes the subgraph gates is therefore checked against how
 # many distinct addresses have sent to it chain-wide. Below the minimum it is
 # not a collection point, whatever the subgraph shows.
+#
+# CALIBRATED, not chosen: see docs/fan-in-calibration.md and
+# data/calibration/fanin_sample.json (70 labelled exchange wallets, 9 known
+# attacker re-pooling wallets, measured at one pinned block). Senders are
+# counted only over NON-DUST transfers of FOLLOWED assets, because zero-value
+# "address poisoning" spam gave an OFAC-listed Lazarus wallet 204 raw senders.
+# On that measure the attacker wallets reach at most 9; a floor of 20 sits above
+# all of them with a 2x margin and keeps 44 of the 50 genuine deposit-collecting
+# exchange wallets in the sample.
 CONSOLIDATION_GLOBAL_MIN_SENDERS = 20
 CONSOLIDATION_GLOBAL_STRONG_SENDERS = 200
+# SECOND CONDITION: a collection point receives from many and pays out in
+# sweeps; an attacker's pool receives from a few and fans out. Distinct value
+# senders per outgoing transaction below this is the attacker shape (Ronin's
+# 0xee009faf: 9 senders over ~1,300 outgoing rows = 0.007). Calibrated on the
+# same sample: costs 3 of 50 genuine collecting wallets.
+CONSOLIDATION_MIN_SENDERS_PER_OUT_TX = 0.01
 # Where the chain-wide count cannot be obtained, the finding rests on subgraph
 # structure alone and its confidence is scaled by this factor.
 CONSOLIDATION_SUBGRAPH_ONLY_FACTOR = 0.5
@@ -531,9 +546,15 @@ def apply_global_fan_in(ident: Identification, chain_wide: dict | None) -> Ident
             ),
         )
 
-    n = int(chain_wide["senders"])
+    # The calibrated measure: distinct senders of non-dust value in followed
+    # assets. Older callers that only supply raw senders fall back to those.
+    n = int(chain_wide.get("value_senders", chain_wide["senders"]))
     complete = bool(chain_wide.get("complete"))
     if n < CONSOLIDATION_GLOBAL_MIN_SENDERS:
+        return None
+    out_rows = chain_wide.get("out_rows")
+    per_out = (n / out_rows) if out_rows else None
+    if per_out is not None and per_out < CONSOLIDATION_MIN_SENDERS_PER_OUT_TX:
         return None
     span = CONSOLIDATION_GLOBAL_STRONG_SENDERS - CONSOLIDATION_GLOBAL_MIN_SENDERS
     strength = min(1.0, max(0.0, (n - CONSOLIDATION_GLOBAL_MIN_SENDERS) / span))
@@ -542,10 +563,12 @@ def apply_global_fan_in(ident: Identification, chain_wide: dict | None) -> Ident
         ident,
         confidence=round(CONSOLIDATION_MAX_CONFIDENCE * max(strength, 0.5), 4),
         fan_in={**(ident.fan_in or {}), "global_checked": True, "chain_senders": n,
+                "chain_senders_raw": chain_wide.get("senders"),
+                "chain_out_rows": out_rows, "senders_per_out_tx": None if per_out is None else round(per_out, 4),
                 "chain_senders_complete": complete, "rows_read": chain_wide.get("rows")},
         evidence=(
         f"{sub} distinct wallets in this trace and {bound} {n} distinct addresses chain-wide have "
-        f"sent to this address" + ("" if complete else
+        f"sent non-dust value to this address" + ("" if complete else
                                    " (counted from its most recent transactions before the as-of height)")
         + ", matching the deposit-consolidation pattern exchanges produce when sweeping customer "
         "deposits. UNCONFIRMED - no label names it."

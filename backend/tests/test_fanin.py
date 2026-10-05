@@ -65,9 +65,14 @@ class Client:
 
 
 class CountingClient(Client):
+    def __init__(self, chain_senders=None, complete=True, out_rows=100):
+        super().__init__(chain_senders, complete)
+        self.out_rows = out_rows
+
     async def get_inbound_senders(self, address, chain_id, as_of_block=None):
         self.sender_queries += 1
-        return {"senders": self.chain_senders, "complete": self.complete, "rows": 1000, "calls": 2}
+        return {"senders": self.chain_senders, "value_senders": self.chain_senders,
+                "complete": self.complete, "rows": 1000, "calls": 2, "out_rows": self.out_rows}
 
 
 def run(client):
@@ -99,6 +104,12 @@ def trace_tests():
     check("the score credits the chain-wide count",
           any("at least 350 distinct senders chain-wide" in c["label"] for c in s["confidence_components"]),
           True)
+
+    print("\n--- 2b. the second condition: a pool that fans out is rejected ---")
+    p = run(CountingClient(chain_senders=30, complete=True, out_rows=5000))
+    check("30 value senders but 5,000 outgoing transactions: no lead", p["summary"].get("lead"), False)
+    check("rejected for fanning out, in calibrated terms",
+          "fans funds out like an attacker's pool" in (p["consolidation_checks"][0]["reason"] or ""), True)
 
     print("\n--- 3. without a chain-wide count, it says so and loses confidence ---")
     blind = run(Client())["summary"]
