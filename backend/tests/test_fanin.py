@@ -76,7 +76,9 @@ class CountingClient(Client):
 
 
 def run(client):
-    return tracer.to_json(asyncio.run(tracer.trace(SUSPECT, max_depth=4, client=client)))
+    # Depth 2: the hub sits at the depth limit, so it is checked by the
+    # client's two-call sender count rather than from its own fetched history.
+    return tracer.to_json(asyncio.run(tracer.trace(SUSPECT, max_depth=2, client=client)))
 
 
 def trace_tests():

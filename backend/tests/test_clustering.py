@@ -127,6 +127,11 @@ async def main():
     book2 = {A(0): [tx(A(0), A(i), 10.0) for i in range(10, 17)]}
     for i in range(10, 17):
         book2[A(i)] = [tx(A(i), HUB, 9.0)]
+    # A real collection point is paid by many outside depositors too. Without
+    # them the hub has 7 senders chain-wide, which the calibrated rule
+    # (docs/fan-in-calibration.md) correctly refuses to call an exchange.
+    for k in range(25):
+        book2[A(300 + k)] = [tx(A(300 + k), HUB, 5.0)]
     result2 = await run(book2, A(0))
 
     suspected = [c for c in result2.clusters if c.method == "consolidation"]

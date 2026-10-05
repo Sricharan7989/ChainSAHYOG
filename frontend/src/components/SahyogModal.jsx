@@ -139,7 +139,7 @@ A4. Analytical confidence score: ${confidence} out of 100
 ${components.length ? components.map((c) => `   ${c.points >= 0 ? '+' : ''}${c.points}  ${c.label}`).join('\n') : '   (components not recorded in this result)'}
 
 A5. Point in time
-   ${data.as_of?.statement || 'The block height this trace describes was not recorded.'}${summary.history_truncation_note ? `\n   ${summary.history_truncation_note}` : ''}
+   ${data.as_of?.statement || 'The block height this trace describes was not recorded.'}${summary.walk_cap_note ? `\n   ${summary.walk_cap_note}` : ''}${summary.history_truncation_note ? `\n   ${summary.history_truncation_note}` : ''}
 
 A6. Limits
    - Only public blockchain records were used. No private or exchange data was accessed.

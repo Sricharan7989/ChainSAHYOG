@@ -279,6 +279,11 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
               : 'not pinned to a block height'}
           </div>
           <p className="leading-snug font-sans">{summary.as_of.statement}</p>
+          {summary.walk_cap_note && (
+            <p className="leading-snug font-sans font-semibold text-red-700 dark:text-red-400">
+              Graph partial: {summary.walk_cap_note}
+            </p>
+          )}
           {summary.history_truncation_note && (
             <p className="leading-snug font-sans text-amber-700 dark:text-amber-400">
               {summary.history_truncation_note}

@@ -231,6 +231,11 @@ async def main():
     book4 = {A(0): [tx(A(0), A(i), 10.0) for i in range(1, 7)]}
     for i in range(1, 7):
         book4[A(i)] = [tx(A(i), sink, 9.0)]
+    # Outside depositors: a collection point is paid by many wallets the trace
+    # never visits. With only the 6 traced senders the calibrated chain-wide
+    # rule would correctly refuse it (docs/fan-in-calibration.md).
+    for k in range(25):
+        book4[A(300 + k)] = [tx(A(300 + k), sink, 5.0)]
     c4 = FakeClient(book4)
     r4 = await tracer.trace(A(0), max_depth=4, dust_threshold=0.001, client=c4)
     check("sink fan-in detected", r4.graph.nodes[sink].get("is_vasp"), True)

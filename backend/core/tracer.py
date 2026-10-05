@@ -79,6 +79,7 @@ forwarded funds through a contract call looks like it still holds them. Taint do
 not cross assets: a swap from ETH to USDT breaks the chain of attribution.
 """
 
+import heapq
 import inspect
 import time
 from collections import deque
@@ -408,6 +409,7 @@ class TraceResult:
     as_of_requested: bool = False
     history_truncation: list = field(default_factory=list)
     consolidation_checks: list = field(default_factory=list)
+    walk_cap: dict | None = None
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -546,6 +548,13 @@ class _WalkContext:
     # node -> the verified identification (or None), so a candidate rejected
     # mid-walk is not checked again, or charged again, by the end-of-leg sweep.
     hub_verdicts: dict = field(default_factory=dict)
+    # BEST-FIRST EXPANSION. node -> {asset: estimated suspect value received},
+    # and asset -> the suspect's own outflow in that asset (the yardstick that
+    # makes estimates in different assets comparable). See _walk_leg.
+    taint_est: dict = field(default_factory=dict)
+    suspect_outflow: dict = field(default_factory=dict)
+    # Set when MAX_NODES_PER_TRACE stopped a walk: how much was left unexpanded.
+    walk_cap: dict | None = None
 
     async def block_for(self, chain: dict) -> int | None:
         """The as-of height on one chain, derived from the trace's moment on first use."""
@@ -704,6 +713,81 @@ class _WalkContext:
                 "note": note,
             }
         return out
+
+
+def _node_depth(ctx: "_WalkContext", node: str) -> int | None:
+    """The hop distance a wallet currently carries in the graph, if it is there."""
+    if not ctx.store.has(node):
+        return None
+    return (ctx.store.wallet(node) or {}).get("depth")
+
+
+def _taint_fraction(ctx, node, address, history, slug, is_leg_start) -> dict:
+    """
+    The share of each asset this wallet receives that is estimated to be the suspect's.
+
+    The leg's starting wallet passes on everything it sends (on the primary leg
+    that is the suspect, whose outflows are the premise of the investigation).
+    Any other wallet passes on the estimated suspect value it received divided
+    by everything it received in that asset, capped at 1. Used ONLY to order
+    the walk; the report's figures come from the FIFO replay.
+    """
+    outgoing = {}
+    incoming = {}
+    for t in history:
+        if t.value < config.dust_threshold_for(t.asset, ctx.dust_threshold):
+            continue
+        if t.from_addr == address:
+            outgoing[t.asset] = outgoing.get(t.asset, 0.0) + t.value
+        if t.to_addr == address:
+            incoming[t.asset] = incoming.get(t.asset, 0.0) + t.value
+    if is_leg_start:
+        if not ctx.suspect_outflow:
+            ctx.suspect_outflow = dict(outgoing)
+        return {asset: 1.0 for asset in outgoing}
+    est = ctx.taint_est.get(node, {})
+    return {asset: min(1.0, amount / incoming[asset])
+            for asset, amount in est.items() if incoming.get(asset)}
+
+
+def _priority(ctx, node: str) -> float:
+    """
+    Unit-free expansion priority: the largest share of the suspect's own outflow,
+    in any one asset, estimated to have reached this wallet. Comparable across
+    ETH and USDT without a price feed.
+    """
+    est = ctx.taint_est.get(node, {})
+    shares = [amount / ctx.suspect_outflow[a] for a, amount in est.items() if ctx.suspect_outflow.get(a)]
+    return round(max(shares, default=0.0), 12)
+
+
+def _record_walk_cap(ctx, slug: str, left: list) -> None:
+    """What the cap left unexpanded, stated like the history-truncation caveat."""
+    seen = {}
+    for node, depth in left:
+        seen.setdefault(node, depth)
+    shares: dict = {}
+    for node in seen:
+        for asset, amount in ctx.taint_est.get(node, {}).items():
+            shares[asset] = shares.get(asset, 0.0) + amount
+    share_text = ", ".join(
+        f"{min(1.0, amount / ctx.suspect_outflow[a]):.1%} of the suspect's {a} outflow"
+        for a, amount in sorted(shares.items(), key=lambda kv: -kv[1]) if ctx.suspect_outflow.get(a)
+    )
+    ctx.walk_cap = {
+        "cap": config.MAX_NODES_PER_TRACE,
+        "chain": slug,
+        "unexpanded_wallets": len(seen),
+        "unexpanded_estimated_share": {a: round(min(1.0, v / ctx.suspect_outflow[a]), 4)
+                                       for a, v in shares.items() if ctx.suspect_outflow.get(a)},
+        "caveat": (
+            f"The walk stopped at the {config.MAX_NODES_PER_TRACE}-wallet cap, so the graph is partial: "
+            f"{len(seen)} wallet{'s were' if len(seen) != 1 else ' was'} left unexpanded"
+            + (f", estimated to carry up to {share_text}" if share_text else "")
+            + ". Wallets are expanded in order of the suspect value they carry, so these are the "
+            "branches carrying the least of it; a larger cap may attribute more value."
+        ),
+    }
 
 
 def _accepts(fn, name: str) -> bool:
@@ -881,7 +965,29 @@ async def _walk_leg(
     slug = chain["slug"]
     start_node = ctx.node(start_address, slug)
     fetched = ctx.chain_fetched(slug)
-    queue: deque[tuple[str, int]] = deque([(start_node, start_depth)])
+    # BEST-FIRST, NOT BREADTH-FIRST. The frontier is a heap ordered by the share
+    # of the suspect's money each wallet is estimated to hold, highest first,
+    # then by hop distance, then by node id. Two consequences:
+    #   * DETERMINISTIC: the order never depends on discovery order, dict order
+    #     or API row order, so the same input at the same height gives the same
+    #     graph whatever the cap.
+    #   * WHEN THE CAP BINDS, the wallets left unexpanded are the ones carrying
+    #     the least of the stolen money, so the cap is a sensible stopping rule
+    #     rather than a source of arbitrary answers.
+    # The estimate is proportional (a wallet passes on the suspect share of its
+    # inflow pro rata); it orders the walk only. Every figure the report prints
+    # comes from the FIFO replay after the walk.
+    heap: list = []
+    pushed: dict = {}
+
+    def push(node_id: str, depth: int) -> None:
+        prio = _priority(ctx, node_id) if node_id != start_node else float("inf")
+        if pushed.get(node_id, (None, None)) == (prio, depth):
+            return
+        pushed[node_id] = (prio, depth)
+        heapq.heappush(heap, (-prio, depth, node_id))
+
+    push(start_node, start_depth)
 
     ctx.store.add_wallet(
         start_node, depth=start_depth, is_start=is_start, chain=slug
@@ -898,8 +1004,10 @@ async def _walk_leg(
             f"tracing onward from it anyway."
         )
 
-    while queue:
-        node, depth = queue.popleft()
+    while heap:
+        neg_prio, depth, node = heapq.heappop(heap)
+        if pushed.get(node) != (-neg_prio, depth):
+            continue  # a stale entry: this wallet was re-queued with a newer estimate
         address = _bare_address(node)
 
         if node in ctx.expanded:
@@ -911,6 +1019,8 @@ async def _walk_leg(
             continue
         if ctx.store.wallet_count() >= config.MAX_NODES_PER_TRACE:
             ctx.truncated = True
+            _record_walk_cap(ctx, slug, [(n, d) for _, d, n in heap if n not in ctx.expanded
+                                         and d < depth_budget] + [(node, depth)])
             ctx.notes.append(
                 f"Stopped expanding at {config.MAX_NODES_PER_TRACE} wallets "
                 f"(MAX_NODES_PER_TRACE). The graph is partial."
@@ -963,6 +1073,10 @@ async def _walk_leg(
         # to a single larger one-off, even though it received far more overall.
         flows = _aggregate_by_recipient(transfers, ctx.dust_threshold)
         ranked = sorted(flows.values(), key=_flow_rank, reverse=True)
+        # Stable among equal ranks: never left to dict or API row order.
+        ranked.sort(key=lambda f: (_flow_rank(f), f["to"]), reverse=True)
+        fraction = _taint_fraction(ctx, node, address, fetched_transfers, slug,
+                                   is_leg_start=(node == start_node))
 
         if node == ctx.node(ctx.suspect, slug) and not ranked:
             # Distinguishing "sent nothing" from "sent only dust" matters: the
@@ -988,6 +1102,17 @@ async def _walk_leg(
                 ctx.store.add_wallet(
                     child_node, depth=child_depth, is_start=False, chain=slug
                 )
+            elif child_depth < (_node_depth(ctx, child_node) or child_depth):
+                # Best-first can meet a wallet by a longer route first; the depth
+                # it carries must stay the SHORTEST distance from the suspect.
+                ctx.store.update_wallet(child_node, depth=child_depth)
+
+            # Carry the suspect share forward, per asset, pro rata.
+            est = ctx.taint_est.setdefault(child_node, {})
+            for symbol, entry in flow["assets"].items():
+                share = fraction.get(symbol, 0.0)
+                if share > 0:
+                    est[symbol] = est.get(symbol, 0.0) + share * entry["value"]
 
             assets = {
                 symbol: {k: v for k, v in entry.items() if not k.startswith("_")}
@@ -1042,7 +1167,7 @@ async def _walk_leg(
                     continue
 
             if child_node not in ctx.expanded and child_depth < depth_budget:
-                queue.append((child_node, child_depth))
+                push(child_node, min(child_depth, _node_depth(ctx, child_node) or child_depth))
 
     # Final consolidation sweep for this leg. Fan-in is only fully known once the
     # walk is over, so a wallet where several branches converged may become
@@ -1649,6 +1774,10 @@ async def trace(
 
     for attribution in attributions.values():
         attribution.path = store.shortest_path(start, attribution.node_id or attribution.address)
+        if attribution.path:
+            # The walk is best-first, so the depth a wallet was first met at can
+            # exceed its true distance; the graph's shortest path is the truth.
+            attribution.hop_distance = len(attribution.path) - 1
         attribution.path_risk_types = _risk_types_on_path(store, attribution.path)
         attribution.handoff_scores = [
             crossing_scores[leg]
@@ -1768,6 +1897,7 @@ async def trace(
         as_of_requested=ctx.as_of_requested,
         history_truncation=list(ctx.history_truncation),
         consolidation_checks=list(ctx.consolidation_checks),
+        walk_cap=ctx.walk_cap,
     )
 
 
@@ -2845,6 +2975,10 @@ def _reproducibility(result: TraceResult) -> dict:
         )
     return {
         "as_of": _as_of_payload(result),
+        # The node cap, if it bound: as loud as the truncation caveat.
+        "walk_capped": result.walk_cap is not None,
+        "walk_cap": result.walk_cap,
+        "walk_cap_note": (result.walk_cap or {}).get("caveat"),
         "history_truncated_count": len(truncated),
         "history_truncated_on_route": on_route,
         "history_truncation_note": note,

@@ -777,6 +777,8 @@ def build_report(payload: dict) -> bytes:
     ], styles))
     if as_of.get("statement"):
         story.append(Paragraph(f'<b>Reproducibility.</b> {as_of["statement"]}', styles["small"]))
+    if summary.get("walk_cap_note"):
+        story.append(Paragraph(f'<b>Graph partial.</b> {summary["walk_cap_note"]}', styles["small"]))
     if summary.get("history_truncation_note"):
         story.append(Paragraph(
             f'<b>History not fully read.</b> {summary["history_truncation_note"]}', styles["small"],
