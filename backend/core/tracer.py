@@ -79,6 +79,7 @@ forwarded funds through a contract call looks like it still holds them. Taint do
 not cross assets: a swap from ETH to USDT breaks the chain of attribution.
 """
 
+import inspect
 import time
 from collections import deque
 from dataclasses import dataclass, field
@@ -390,6 +391,13 @@ class TraceResult:
     # has to be reported as such rather than looking like an absence of activity.
     chains_traced: list = field(default_factory=list)
     label_coverage: dict = field(default_factory=dict)
+    # The point in time this trace describes, per chain, and the wallets whose
+    # history could not be read back that far. Together they are what lets a
+    # second investigator reproduce the result - or see why they cannot.
+    as_of: dict = field(default_factory=dict)
+    as_of_ts: int | None = None
+    as_of_requested: bool = False
+    history_truncation: list = field(default_factory=list)
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -512,6 +520,34 @@ class _WalkContext:
     depth_capped: int = 0
     start_had_no_transfers: bool = False
     start_had_only_dust: bool = False
+    # THE AS-OF HEIGHT. slug -> block. The starting chain's height is captured
+    # once when the trace begins (or given by the caller); every other chain's is
+    # the block at that same moment, so a cross-chain trace describes one point
+    # in time. No transfer after these heights enters the graph.
+    as_of: dict = field(default_factory=dict)
+    as_of_ts: int | None = None
+    as_of_requested: bool = False
+    # Wallets whose history could not be read back to its start: the caveat a
+    # reader needs instead of silence. See _record_truncation.
+    history_truncation: list = field(default_factory=list)
+
+    async def block_for(self, chain: dict) -> int | None:
+        """The as-of height on one chain, derived from the trace's moment on first use."""
+        slug = chain["slug"]
+        if slug in self.as_of:
+            return self.as_of[slug]
+        block = None
+        block_at = getattr(self.client, "block_at", None)
+        if self.as_of_ts is not None and block_at is not None:
+            try:
+                block = await block_at(self.as_of_ts, chain["chain_id"], "before")
+            except Exception as exc:  # noqa: BLE001 - reported, not fatal
+                self.notes.append(
+                    f"Could not resolve the as-of height on {slug}: {exc}. Transfers on that "
+                    "chain are not pinned to the trace's point in time."
+                )
+        self.as_of[slug] = block
+        return block
 
     def node(self, address: str, slug: str) -> str:
         return _node_id(address, slug, self.primary_slug)
@@ -650,6 +686,84 @@ class _WalkContext:
         return out
 
 
+def _accepts(fn, name: str) -> bool:
+    """Whether a client method takes a keyword (test doubles may predate it)."""
+    try:
+        return name in inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+
+
+async def _fetch_pinned(ctx: "_WalkContext", address: str, chain: dict) -> list:
+    """
+    One wallet's history on one chain, AS OF the trace's height.
+
+    The client is asked for history up to the height where it supports that, and
+    the result is filtered here as well, so no transfer after the height can
+    enter the graph whichever client answered. This is what makes a trace
+    reproducible: the same address at the same height sees the same history.
+    """
+    block = await ctx.block_for(chain)
+    fetch = ctx.client.get_wallet_transfers
+    if block is not None and _accepts(fetch, "as_of_block"):
+        rows = await fetch(address, chain_id=chain["chain_id"], as_of_block=block)
+    else:
+        rows = await fetch(address, chain_id=chain["chain_id"])
+    if block is not None:
+        rows = [t for t in rows if int(getattr(t, "block", 0) or 0) <= block]
+    return rows
+
+
+def _reach_for(ctx: "_WalkContext", chain_id: int, address: str, block: int | None) -> dict:
+    """How far back a wallet's fetched history reached, at this trace's height."""
+    reach = getattr(ctx.client, "history_reach", {}) or {}
+    return reach.get((chain_id, address, block)) or reach.get((chain_id, address)) or {}
+
+
+def _record_truncation(ctx: "_WalkContext") -> None:
+    """
+    Every wallet whose history was cut short, said per wallet.
+
+    A wallet that filled every page back from the as-of height still has older
+    history we did not read: a transfer before the oldest block reached would not
+    be seen. That is stated on the wallet and in the summary, never left silent.
+    """
+    seen = set()
+    for slug, wallets in ctx.fetched_by_chain.items():
+        meta = config.chain_by_slug(slug) or {}
+        chain_id = meta.get("chain_id")
+        block = ctx.as_of.get(slug)
+        for address in wallets:
+            reach = _reach_for(ctx, chain_id, address, block)
+            cut = [
+                (kind, r) for kind, r in reach.items()
+                if isinstance(r, dict) and r.get("truncated")
+            ]
+            if not cut or (slug, address) in seen:
+                continue
+            seen.add((slug, address))
+            oldest_block = max(r.get("oldest_block") or 0 for _, r in cut) or None
+            oldest_ts = max(r.get("oldest") or 0 for _, r in cut) or None
+            node = ctx.node(address, slug)
+            entry = {
+                "node_id": node,
+                "address": address,
+                "chain": slug,
+                "truncated_at_block": oldest_block,
+                "truncated_at_timestamp": oldest_ts,
+                "truncated_at_utc": _utc_ist(oldest_ts)[0] if oldest_ts else None,
+                "kinds": sorted(kind for kind, _ in cut),
+                "rows_read": sum(r.get("rows", 0) for _, r in cut),
+                "caveat": (
+                    f"This wallet's history was truncated at block {oldest_block} on {slug}"
+                    + (f" ({_utc_ist(oldest_ts)[0]})" if oldest_ts else "")
+                    + ", so a transfer before that point would not be seen."
+                ),
+            }
+            ctx.history_truncation.append(entry)
+            ctx.store.update_wallet(node, history_truncated_at_block=oldest_block)
+
+
 async def _walk_leg(
     ctx: _WalkContext,
     chain: dict,
@@ -731,9 +845,7 @@ async def _walk_leg(
             # walk itself uses only the outgoing half; the incoming half is what
             # lets the taint pass order each wallet's balance. Fetching it here
             # rather than in a second sweep is what keeps taint free.
-            fetched_transfers = await ctx.client.get_wallet_transfers(
-                address, chain_id=chain["chain_id"]
-            )
+            fetched_transfers = await _fetch_pinned(ctx, address, chain)
             # Merge rather than overwrite: a bridge handoff may already have added
             # an older credit transfer to this wallet's history (found by a
             # block-range query), and the taint replay needs it.
@@ -1001,9 +1113,7 @@ async def _follow_bridges(
         # also what the destination leg's taint replay needs, so this is not an
         # extra call the leg would have made anyway.
         try:
-            dest_transfers = await ctx.client.get_wallet_transfers(
-                hop.from_addr, chain_id=dest_chain["chain_id"]
-            )
+            dest_transfers = await _fetch_pinned(ctx, hop.from_addr, dest_chain)
         except Exception as exc:  # noqa: BLE001 - one unreachable chain is not fatal
             ctx.notes.append(
                 f"Could not read {dest_slug} history for {hop.from_addr} "
@@ -1029,12 +1139,19 @@ async def _follow_bridges(
         windowed = getattr(ctx.client, "get_wallet_transfers_window", None)
         if windowed is not None:
             try:
-                in_window, window_reach = await windowed(
+                dest_block = await ctx.block_for(dest_chain)
+                window_args = (
                     hop.from_addr,
                     dest_chain["chain_id"],
                     deposit.timestamp - 600,
                     deposit.timestamp + int(spec.get("window_sec") or config.BRIDGE_TIME_WINDOW_SEC),
                 )
+                if dest_block is not None and _accepts(windowed, "as_of_block"):
+                    in_window, window_reach = await windowed(*window_args, as_of_block=dest_block)
+                else:
+                    in_window, window_reach = await windowed(*window_args)
+                if dest_block is not None:
+                    in_window = [t for t in in_window if int(getattr(t, "block", 0) or 0) <= dest_block]
                 seen = {(t.hash, t.from_addr, t.to_addr, t.asset, t.value) for t in match_transfers}
                 for t in in_window:
                     k = (t.hash, t.from_addr, t.to_addr, t.asset, t.value)
@@ -1059,8 +1176,8 @@ async def _follow_bridges(
             # An empty result only means "no match" if the fetched history reaches
             # back to the deposit. The credit arrives as a token (e.g. a WETH mint)
             # or as a native transfer, and each comes from its own capped fetch.
-            reach_all = getattr(ctx.client, "history_reach", {}).get(
-                (dest_chain["chain_id"], hop.from_addr), {}
+            reach_all = _reach_for(
+                ctx, dest_chain["chain_id"], hop.from_addr, ctx.as_of.get(dest_slug)
             )
             kind = "native" if deposit.dest_asset == dest_chain.get("native") else "token"
             reach = reach_all.get(kind) or {}
@@ -1252,6 +1369,7 @@ async def trace(
     dust_threshold: float = 0.001,
     client: EtherscanClient | None = None,
     chain_id: int | None = None,
+    as_of_block: int | None = None,
 ) -> TraceResult:
     """
     Walk the money forward from `start_address` until it reaches a known entity.
@@ -1274,6 +1392,10 @@ async def trace(
         max_depth: how many hops forward to follow. See the fan-out note above.
         dust_threshold: ignore transfers below this many ETH.
         client: injectable Etherscan client, for tests and replay mode.
+        as_of_block: the height to pin the trace to on the starting chain. None
+            means the chain head when the trace starts, captured once and used
+            for the whole walk. Re-running at the same height reproduces the
+            result; see _WalkContext.as_of.
 
     Returns:
         TraceResult - `.graph`, `.hops`, and `.attributions` (recognised
@@ -1311,6 +1433,23 @@ async def trace(
     attributions = ctx.attributions
 
     ctx.suspect = start
+
+    # PIN THE INVESTIGATION TO A HEIGHT, once, before the first fetch.
+    ctx.as_of_requested = as_of_block is not None
+    head = as_of_block
+    if head is None and getattr(client, "latest_block", None) is not None:
+        try:
+            head = await client.latest_block(chain["chain_id"])
+        except Exception as exc:  # noqa: BLE001 - an unpinned trace is still a trace, said so
+            notes.append(f"Could not read the {chain['name']} head: {exc}. This trace is not pinned.")
+    if head is not None:
+        ctx.as_of[chain["slug"]] = int(head)
+        if getattr(client, "block_timestamp", None) is not None:
+            try:
+                ctx.as_of_ts = await client.block_timestamp(int(head), chain["chain_id"])
+            except Exception as exc:  # noqa: BLE001
+                notes.append(f"Could not read the timestamp of block {head}: {exc}.")
+
     # The suspect wallet itself is depth 0. If the start address is ITSELF a known
     # entity that is still worth reporting - and we still expand it, because
     # stopping at depth 0 would return an empty graph and say nothing about where
@@ -1329,6 +1468,8 @@ async def trace(
     # number that corresponds to nothing.
     taint = ctx.taint_for(chain["slug"])
     await _follow_bridges(ctx, chain, start, depth_budget=max_depth)
+
+    _record_truncation(ctx)
 
     # FINALISE every chain's replay now that all crossings are known. A seed that
     # arrived late (a second deposit into a chain already replayed, or a round
@@ -1525,6 +1666,10 @@ async def trace(
         taint_chains=ctx.taint,
         chains_traced=list(ctx.chains_traced),
         label_coverage=ctx.label_coverage(),
+        as_of=dict(ctx.as_of),
+        as_of_ts=ctx.as_of_ts,
+        as_of_requested=ctx.as_of_requested,
+        history_truncation=list(ctx.history_truncation),
     )
 
 
@@ -2517,6 +2662,68 @@ def _crossing_handoff(result: TraceResult, src: str, dst: str) -> dict | None:
     return None
 
 
+def _as_of_payload(result: TraceResult) -> dict:
+    """The point in time a trace describes, in a form a reader can re-run."""
+    slug = result.chain.get("slug", "")
+    block = result.as_of.get(slug)
+    name = result.chain.get("name", slug)
+    utc = _utc_ist(result.as_of_ts)[0] if result.as_of_ts else None
+    if block is None:
+        statement = (
+            "This trace is NOT pinned to a block height: the chain head could not be read, so "
+            "a re-run may see later transfers and give a different result."
+        )
+    else:
+        statement = (
+            f"As of block {block} on {name}" + (f" ({utc})" if utc else "") + ". Re-running this "
+            "trace at that height, with the same parameters and label set, reproduces this result."
+        )
+    return {
+        "pinned": block is not None,
+        "requested": result.as_of_requested,
+        "chain": slug,
+        "chain_name": name,
+        "block": block,
+        "timestamp": result.as_of_ts,
+        "time_utc": utc,
+        "per_chain": {k: v for k, v in result.as_of.items()},
+        "statement": statement,
+    }
+
+
+def _reproducibility(result: TraceResult) -> dict:
+    """The as-of height and the truncation caveat, as the summary states them."""
+    truncated = result.history_truncation
+    route: set = set()
+    for a in result.attributions:
+        if a.entity_type in ("exchange", "suspected_exchange"):
+            route.update(a.path or [])
+            break
+    on_route = [t for t in truncated if t["node_id"] in route]
+    if not truncated:
+        note = None
+    elif on_route:
+        note = (
+            f"{len(on_route)} wallet{'s' if len(on_route) != 1 else ''} on the route to this finding "
+            "had history longer than could be read: "
+            + " ".join(t["caveat"] for t in on_route)
+            + (f" {len(truncated) - len(on_route)} other wallet(s) in the trace were also truncated."
+               if len(truncated) > len(on_route) else "")
+        )
+    else:
+        note = (
+            f"{len(truncated)} wallet{'s' if len(truncated) != 1 else ''} in this trace had history "
+            "longer than could be read, none of them on the route to this finding. Each is marked "
+            "with the block its history was truncated at."
+        )
+    return {
+        "as_of": _as_of_payload(result),
+        "history_truncated_count": len(truncated),
+        "history_truncated_on_route": on_route,
+        "history_truncation_note": note,
+    }
+
+
 def to_json(result: TraceResult) -> dict:
     """
     Flatten a TraceResult into the frontend's JSON shape.
@@ -2543,6 +2750,8 @@ def to_json(result: TraceResult) -> dict:
             # The bare address, so a consumer can paste it into an explorer without
             # having to strip the chain prefix from the node id itself.
             "address": _bare_address(address),
+            # Set when this wallet's history could not be read back to its start.
+            "history_truncated_at_block": data.get("history_truncated_at_block"),
             # Per-asset value attributable to the suspect that reached this
             # wallet. Lets the graph show WHERE the money went, not just what
             # is connected to what. Read from THIS node's chain replay - the
@@ -2651,8 +2860,13 @@ def to_json(result: TraceResult) -> dict:
             "chain_name": result.chain.get("name"),
             "native_symbol": result.chain.get("native"),
             "explorer": result.chain.get("explorer"),
+            # The height the caller pinned the trace to, or None for "the head
+            # when the trace started" (which is still recorded under `as_of`).
+            "as_of_block": result.as_of.get(result.chain.get("slug")) if result.as_of_requested else None,
         },
-        "summary": summarize(result),
+        "summary": {**summarize(result), **_reproducibility(result)},
+        "as_of": _as_of_payload(result),
+        "history_truncation": list(result.history_truncation),
         "attributions": [a.to_dict() for a in result.attributions],
         "clusters": [c.to_dict() for c in result.clusters],
         "exchanges": [a.to_dict() for a in result.exchanges],

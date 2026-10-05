@@ -126,8 +126,11 @@ class EtherscanClient:
         # Wallets already counted into this trace, so revisiting one cannot
         # double its contribution.
         self._tallied: set[tuple[int, str]] = set()
-        # (chain_id, address) -> how far back each fetch actually reached:
-        # {"native": {"rows": n, "truncated": bool, "oldest": ts}, "token": {...}}.
+        # (chain_id, address, as_of_block) -> how far back each fetch actually reached:
+        # {"native": {"rows": n, "truncated": bool, "oldest": ts,
+        #             "oldest_block": n, "pages": n}, "token": {...}}.
+        # Keyed by the as-of height too: the same wallet pinned at two heights is
+        # two different slices of history.
         #
         # WHY. Each fetch returns only the most recent MAX_TXNS_PER_ADDRESS rows.
         # For a busy wallet that window can end long AFTER an event we need to
@@ -228,8 +231,81 @@ class EtherscanClient:
         # result field usually carries the human-readable reason.
         raise EtherscanError(f"Etherscan error: {message or 'unknown'} / {result}")
 
+    async def _history(self, action: str, wallet: str, chain_id: int, end_block: int | None) -> tuple[list, dict]:
+        """
+        One endpoint's rows for a wallet, newest first, paged BACK from `end_block`.
+
+        WHY PAGED. A single call returns at most MAX_TXNS_PER_ADDRESS rows. Taking
+        the newest window and stopping made the answer depend on WHEN a trace ran:
+        as a busy wallet kept transacting, older transfers fell out of the window
+        and a finding could vanish. Each further page asks for the window ending
+        at the oldest block already seen (inclusive, so a block split across the
+        boundary is read whole; duplicates are dropped). It stops when a page is
+        not full - the history is exhausted - or after MAX_HISTORY_PAGES, in which
+        case the wallet is reported as truncated at the oldest block reached.
+        """
+        cap = config.MAX_TXNS_PER_ADDRESS
+        top = 99999999 if end_block is None else int(end_block)
+        rows, seen, pages, truncated = [], set(), 0, False
+        while True:
+            page = await self._request(
+                {
+                    "module": "account",
+                    "action": action,
+                    "address": wallet,
+                    "startblock": 0,
+                    "endblock": top,
+                    "page": 1,
+                    "offset": cap,
+                    "sort": "desc",
+                },
+                chain_id=chain_id,
+            )
+            page = page if isinstance(page, list) else []
+            pages += 1
+            fresh = 0
+            for r in page:
+                k = (r.get("hash"), r.get("from"), r.get("to"), r.get("contractAddress"),
+                     r.get("value"), r.get("logIndex"), r.get("tokenID"))
+                if k not in seen:
+                    seen.add(k)
+                    rows.append(r)
+                    fresh += 1
+            if len(page) < cap:
+                break  # the history before `top` is exhausted
+            oldest = min(int(r.get("blockNumber", 0) or 0) for r in page)
+            if fresh == 0 or pages >= config.MAX_HISTORY_PAGES or oldest <= 0:
+                truncated = True
+                break
+            top = oldest
+        stamps = [int(r.get("timeStamp", 0) or 0) for r in rows]
+        blocks = [int(r.get("blockNumber", 0) or 0) for r in rows]
+        return rows, {
+            "rows": len(rows),
+            "pages": pages,
+            "truncated": truncated,
+            "oldest": min(stamps) if stamps else None,
+            "oldest_block": min(blocks) if blocks else None,
+            "end_block": end_block,
+        }
+
+    async def latest_block(self, chain_id: int) -> int:
+        """The chain head now: the last block at or before the current time."""
+        return await self.block_at(int(time.time()), chain_id, "before")
+
+    async def block_timestamp(self, block: int, chain_id: int) -> int | None:
+        """The unix timestamp of one block (Etherscan getblockreward)."""
+        result = await self._request(
+            {"module": "block", "action": "getblockreward", "blockno": int(block)},
+            chain_id=chain_id,
+        )
+        try:
+            return int(result.get("timeStamp"))
+        except (AttributeError, TypeError, ValueError):
+            return None
+
     async def get_wallet_transfers(
-        self, address: str, chain_id: int | None = None
+        self, address: str, chain_id: int | None = None, as_of_block: int | None = None
     ) -> list[Transfer]:
         """
         Every ETH transfer SENT BY `address`, most recent first.
@@ -259,25 +335,16 @@ class EtherscanClient:
         chain = config.chain(chain_id)
         resolved = chain["chain_id"]
         native_symbol = chain["native"]
-        key = (resolved, normalize_address(address))
+        # PINNED TO A HEIGHT. Nothing after `as_of_block` is fetched, so a trace
+        # re-run at the same height sees the same history. The height is part of
+        # the cache key: one wallet at two heights is two different answers.
+        key = (resolved, normalize_address(address), as_of_block)
         if key in self._cache:
             self.cache_hits += 1
             self._count_skipped(key)
             return self._cache[key]
 
-        raw = await self._request(
-            {
-                "module": "account",
-                "action": "txlist",
-                "address": key[1],
-                "startblock": 0,
-                "endblock": 99999999,
-                "page": 1,
-                "offset": config.MAX_TXNS_PER_ADDRESS,
-                "sort": "desc",
-            },
-            chain_id=resolved,
-        )
+        raw, native_reach = await self._history("txlist", key[1], resolved, as_of_block)
 
         transfers: list[Transfer] = []
         if isinstance(raw, list):
@@ -286,22 +353,10 @@ class EtherscanClient:
                 if transfer is not None:
                     transfers.append(transfer)
 
-        # Second call: ERC-20 movements out of the same wallet. This doubles the
+        # Second endpoint: ERC-20 movements of the same wallet. This doubles the
         # calls per wallet, which the throttle already covers - it serialises on
         # elapsed time, not on call count, so the 5/sec ceiling still holds.
-        token_raw = await self._request(
-            {
-                "module": "account",
-                "action": "tokentx",
-                "address": key[1],
-                "startblock": 0,
-                "endblock": 99999999,
-                "page": 1,
-                "offset": config.MAX_TXNS_PER_ADDRESS,
-                "sort": "desc",
-            },
-            chain_id=resolved,
-        )
+        token_raw, token_reach = await self._history("tokentx", key[1], resolved, as_of_block)
 
         if isinstance(token_raw, list):
             for tx in token_raw:
@@ -319,16 +374,7 @@ class EtherscanClient:
                     wallet_tally = self._skipped_by_wallet.setdefault(key, {})
                     wallet_tally[skipped_symbol] = wallet_tally.get(skipped_symbol, 0) + 1
 
-        def _reach(rows) -> dict:
-            rows = rows if isinstance(rows, list) else []
-            stamps = [int(r.get("timeStamp", 0) or 0) for r in rows if isinstance(r, dict)]
-            return {
-                "rows": len(rows),
-                "truncated": len(rows) >= config.MAX_TXNS_PER_ADDRESS,
-                "oldest": min(stamps) if stamps else None,
-            }
-
-        self.history_reach[key] = {"native": _reach(raw), "token": _reach(token_raw)}
+        self.history_reach[key] = {"native": native_reach, "token": token_reach}
         self._cache[key] = transfers
         self._count_skipped(key)
         return transfers
@@ -347,7 +393,8 @@ class EtherscanClient:
         return int(result)
 
     async def get_wallet_transfers_window(
-        self, address: str, chain_id: int, start_ts: int, end_ts: int
+        self, address: str, chain_id: int, start_ts: int, end_ts: int,
+        as_of_block: int | None = None,
     ) -> tuple[list[Transfer], dict]:
         """
         One wallet's transfers within a TIME WINDOW, both directions, oldest first.
@@ -369,6 +416,9 @@ class EtherscanClient:
         wallet = normalize_address(address)
         start_block = await self.block_at(start_ts, resolved, "before")
         end_block = await self.block_at(end_ts, resolved, "after")
+        if as_of_block is not None:
+            # The window never reaches past the investigation's as-of height.
+            end_block = min(end_block, int(as_of_block))
         key = (resolved, wallet, start_block, end_block)
         cached = self._window_cache.get(key)
         if cached is not None:
@@ -423,7 +473,7 @@ class EtherscanClient:
             self.skipped_tokens[tally_key] = self.skipped_tokens.get(tally_key, 0) + count
 
     async def get_outgoing_transfers(
-        self, address: str, chain_id: int | None = None
+        self, address: str, chain_id: int | None = None, as_of_block: int | None = None
     ) -> list[Transfer]:
         """
         Only the transfers this wallet SENT - what the forward walk expands on.
@@ -431,7 +481,7 @@ class EtherscanClient:
         A filtered view of `get_wallet_transfers`, so it costs no extra API call
         and cannot disagree with the data the taint pass replays.
         """
-        transfers = await self.get_wallet_transfers(address, chain_id=chain_id)
+        transfers = await self.get_wallet_transfers(address, chain_id=chain_id, as_of_block=as_of_block)
         wallet = normalize_address(address)
         return [t for t in transfers if t.from_addr == wallet]
 

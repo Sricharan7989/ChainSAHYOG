@@ -770,6 +770,12 @@ ETHERSCAN_REQUEST_DELAY_SEC = 0.25
 # page, but a trace does not need a hot wallet's entire history to see where the
 # money went next — and asking for it would blow both latency and the quota.
 MAX_TXNS_PER_ADDRESS = 1000
+# How many windows of MAX_TXNS_PER_ADDRESS rows to page back from the as-of
+# height before a wallet's history is declared truncated. Each extra page is one
+# more call per endpoint (txlist, tokentx), spent only on wallets that fill a
+# whole window. A wallet still not exhausted after this is reported, per wallet,
+# as "history truncated at block N" - never silently cut.
+MAX_HISTORY_PAGES = 5
 
 # Hard ceiling on wallets expanded in one trace. Last line of defence against a
 # pathological fan-out; the depth cap normally bites long before this does.

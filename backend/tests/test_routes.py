@@ -43,7 +43,8 @@ def main():
     real_has_key = config.has_etherscan_key
     tracer.trace = must_not_run
     config.has_etherscan_key = lambda: True
-    routes._RECENT[("ethereum", ADDR)] = payload
+    # Keyed by (chain, address, as-of height); None = the default, head-pinned trace.
+    routes._RECENT[("ethereum", ADDR, None)] = payload
     client = TestClient(app_pkg.create_app(), raise_server_exceptions=False)
     try:
         print("--- the report reuses the on-screen trace in every mode ---")

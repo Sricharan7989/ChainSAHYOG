@@ -36,7 +36,7 @@ CACHE_DIR = config.DATA_DIR / "cache"
 DEFAULT_CHAIN = "ethereum"
 
 
-def _path_for(address: str, chain: str | None = None) -> Path:
+def _path_for(address: str, chain: str | None = None, as_of_block: int | None = None) -> Path:
     """
     One file per (chain, address), keyed by the chain's own address rule.
 
@@ -55,7 +55,29 @@ def _path_for(address: str, chain: str | None = None) -> Path:
         stem = f"{stem}_{hashlib.sha256(stem.encode()).hexdigest()[:8]}"
     if chain_name != DEFAULT_CHAIN:
         stem = f"{chain_name}-{stem}"
+    # A recording made at a REQUESTED height is a different trace from the
+    # default one, so it gets its own file: the same address at two heights can
+    # be replayed side by side, each reproducing its own answer.
+    if as_of_block is not None:
+        stem = f"{stem}@{int(as_of_block)}"
     return CACHE_DIR / f"{stem}.json"
+
+
+def replay_note(payload: dict) -> str:
+    """What a replay must say about the point in time it shows."""
+    as_of = payload.get("as_of") or {}
+    when = payload.get("recorded_at") or "an unrecorded time"
+    if as_of.get("pinned"):
+        return (
+            f"Replayed from a recording captured at {when}, pinned at block {as_of['block']} on "
+            f"{as_of.get('chain_name') or as_of.get('chain')}"
+            + (f" ({as_of['time_utc']})" if as_of.get("time_utc") else "")
+            + ". Re-running the trace live at that height reproduces it."
+        )
+    return (
+        f"Replayed from a recording captured at {when}, made before traces were pinned to a "
+        "block height. Its height is not known, so a live re-run may differ."
+    )
 
 
 def _chain_of(payload: dict) -> str:
@@ -83,14 +105,18 @@ def save_trace(payload: dict) -> Path:
     recorded["recorded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     recorded["recorded_epoch"] = int(time.time())
 
-    path = _path_for(address, chain)
+    # A trace pinned at a height the caller ASKED for is stored under that
+    # height; a default trace (pinned at the head when it ran) is the address's
+    # default recording. Either way the payload itself carries `as_of`.
+    requested = (payload.get("params") or {}).get("as_of_block")
+    path = _path_for(address, chain, requested)
     path.write_text(json.dumps(recorded, indent=2), encoding="utf-8")
     return path
 
 
-def load_trace(address: str, chain: str | None = None) -> dict | None:
-    """The recorded trace for this address on this chain, or None."""
-    path = _path_for(address, chain)
+def load_trace(address: str, chain: str | None = None, as_of_block: int | None = None) -> dict | None:
+    """The recorded trace for this address on this chain (at this height, if given), or None."""
+    path = _path_for(address, chain, as_of_block)
     if not path.exists():
         return None
     try:
@@ -99,6 +125,7 @@ def load_trace(address: str, chain: str | None = None) -> dict | None:
         # A corrupt recording must not take the demo down - fall through to live.
         return None
     payload["source"] = "cache"
+    payload["replay_note"] = replay_note(payload)
     return payload
 
 
@@ -124,6 +151,11 @@ def list_cached() -> list[dict]:
                 "chain": _chain_of(payload),
                 "chain_name": (payload.get("params") or {}).get("chain_name"),
                 "recorded_at": payload.get("recorded_at"),
+                # The height the recording is pinned at, and whether it was a
+                # height the caller asked for (a "two heights" demo) or the head.
+                "as_of_block": (payload.get("as_of") or {}).get("block"),
+                "as_of_time": (payload.get("as_of") or {}).get("time_utc"),
+                "as_of_requested": (payload.get("params") or {}).get("as_of_block") is not None,
                 "headline": summary.get("headline", ""),
                 "exchange": summary.get("exchange"),
                 "hop_distance": summary.get("hop_distance"),

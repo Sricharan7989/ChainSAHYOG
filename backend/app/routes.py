@@ -73,6 +73,11 @@ async def trace_address(
         description="EVM chain to trace: 1 Ethereum, 137 Polygon, 56 BNB Chain, 42161 Arbitrum",
     ),
     save: bool = Query(False, description="Record this result for instant replay later"),
+    as_of_block: int | None = Query(
+        None, ge=0,
+        description="Pin the trace to this block height on the starting chain. Omitted: the "
+        "chain head when the trace starts. Re-running at the same height reproduces the result.",
+    ),
 ) -> dict:
     """
     Follow the money forward from a suspect wallet and return the flow graph.
@@ -98,6 +103,7 @@ async def trace_address(
         dust_threshold=dust_threshold,
         mode=mode,
         chain_id=chain_id,
+        as_of_block=as_of_block,
     )
 
     if save and payload.get("source") != "cache":
@@ -115,6 +121,7 @@ async def _run_or_replay(
     mode: str,
     chain_id: int = config.DEFAULT_CHAIN_ID,
     prefer_recent: bool = False,
+    as_of_block: int | None = None,
 ) -> dict:
     """
     Produce a trace payload, from the recording if there is one, else live.
@@ -151,7 +158,7 @@ async def _run_or_replay(
     # The in-process map is keyed by chain too: the same address on another
     # network is a different trace and must not be served from the wrong one.
     # (The on-disk cache does the same, inside replay._path_for.)
-    recent_key = (chain["slug"], key)
+    recent_key = (chain["slug"], key, as_of_block)
 
     # The exact trace that was on screen, if this process produced it. Matched on
     # depth AND dust threshold, since either changes the result.
@@ -165,14 +172,15 @@ async def _run_or_replay(
         return recent
 
     if mode in ("auto", "cache"):
-        cached = replay.load_trace(key, chain=chain["slug"])
+        cached = replay.load_trace(key, chain=chain["slug"], as_of_block=as_of_block)
         if cached is not None:
             return cached
         if mode == "cache":
             raise HTTPException(
                 status_code=404,
                 detail=(
-                    f"No recorded trace for {key} on {chain['name']}. "
+                    f"No recorded trace for {key} on {chain['name']}"
+                    + (f" at block {as_of_block}" if as_of_block is not None else "") + ". "
                     f"Run it live first, or use mode=auto."
                 ),
             )
@@ -193,6 +201,7 @@ async def _run_or_replay(
             max_depth=max_depth,
             dust_threshold=dust_threshold,
             chain_id=chain["chain_id"],
+            as_of_block=as_of_block,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -214,6 +223,7 @@ async def trace_report(
     dust_threshold: float = Query(config.DUST_THRESHOLD_ETH, ge=0.0),
     mode: str = Query("auto", pattern="^(auto|live|cache)$"),
     chain_id: int = Query(config.DEFAULT_CHAIN_ID),
+    as_of_block: int | None = Query(None, ge=0),
 ):
     """
     The same finding as /trace, rendered as an investigation-ready PDF.
@@ -229,6 +239,7 @@ async def trace_report(
         mode=mode,
         chain_id=chain_id,
         prefer_recent=True,
+        as_of_block=as_of_block,
     )
 
     pdf = report.build_report(payload)
