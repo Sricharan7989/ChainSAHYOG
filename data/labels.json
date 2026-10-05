@@ -47548,5 +47548,89 @@
     "actionable": true,
     "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
     "jurisdiction": "foreign"
+  },
+  "tron:TRYL7PKCG4b4xRCM554Q5J6o8f1UjUmfnY": {
+    "entity": "KuCoin",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "graphsense-tagpacks",
+    "evidence_tier": "third_party_pack",
+    "redistributable": true,
+    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "provenance": [
+      {
+        "kind": "graphsense_tagpack",
+        "pack": "exchange-wallets-kucoin",
+        "licence": "MIT",
+        "upstream": "KuCoin's own published wallet list",
+        "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
+      }
+    ],
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TQeNNo5zVarhdKm5EiJSekfNXg6H1tRN4n": {
+    "entity": "KuCoin",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "graphsense-tagpacks",
+    "evidence_tier": "third_party_pack",
+    "redistributable": true,
+    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "provenance": [
+      {
+        "kind": "graphsense_tagpack",
+        "pack": "exchange-wallets-kucoin",
+        "licence": "MIT",
+        "upstream": "KuCoin's own published wallet list",
+        "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
+      }
+    ],
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TUpHuDkiCCmwaTZBHZvQdwWzGNm5t8J2b9": {
+    "entity": "KuCoin",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "graphsense-tagpacks",
+    "evidence_tier": "third_party_pack",
+    "redistributable": true,
+    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "provenance": [
+      {
+        "kind": "graphsense_tagpack",
+        "pack": "exchange-wallets-kucoin",
+        "licence": "MIT",
+        "upstream": "KuCoin's own published wallet list",
+        "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
+      }
+    ],
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
+  },
+  "tron:TEWzF5ZsaWMh6sTNDPrYaPJrK8TTMGfwCC": {
+    "entity": "KuCoin",
+    "type": "exchange",
+    "chain": "tron",
+    "source": "graphsense-tagpacks",
+    "evidence_tier": "third_party_pack",
+    "redistributable": true,
+    "citation": "GraphSense TagPack exchange-wallets-kucoin (MIT), sourced from KuCoin's own published wallet list (https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets)",
+    "provenance": [
+      {
+        "kind": "graphsense_tagpack",
+        "pack": "exchange-wallets-kucoin",
+        "licence": "MIT",
+        "upstream": "KuCoin's own published wallet list",
+        "upstream_url": "https://www.kucoin.com/blog/transparency-and-trust-a-detailed-list-of-kucoin-s-wallets"
+      }
+    ],
+    "actionable": true,
+    "actionable_reason": "no insolvency, sanction or seizure is recorded for this company in our table; confirm it is operating before serving a request",
+    "jurisdiction": "foreign_fiu_registered"
   }
 }
