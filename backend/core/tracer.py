@@ -704,6 +704,8 @@ class _WalkContext:
             gap = config.COVERAGE_GAPS.get(slug)
             if gap:
                 note = f"{note} {gap}" if note else gap
+            # What no method can find, stated where the coverage note lives.
+            note = f"{note} {identify.STRUCTURAL_LIMIT}" if note else identify.STRUCTURAL_LIMIT
             out[slug] = {
                 "labels": count,
                 "inferred_labels": inferred,
@@ -2689,6 +2691,11 @@ def summarize(result: TraceResult) -> dict:
                 + ") - UNCONFIRMED."
             ),
             "fan_in": lead.fan_in,
+            # The calibration's verdict on this method, said on every lead.
+            "fan_in_caveat": identify.FAN_IN_WEAK_SIGNAL + (
+                "" if lead.chain in ("", "ethereum") else
+                " " + identify.FAN_IN_ETHEREUM_ONLY.format(chain=lead.chain.capitalize())
+            ),
             "caveat": _caveat_for(result, lead),
             **_taint_fields(lead, result),
             "termination": result.termination,

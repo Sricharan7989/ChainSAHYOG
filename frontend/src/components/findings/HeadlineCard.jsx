@@ -76,7 +76,7 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
   const METHOD_LABEL = {
     known_label: 'Published label match',
     inferred_label: 'Label inferred from Ethereum (max 80%)',
-    consolidation: 'Fan-in pattern only (max 67%)',
+    consolidation: 'Fan-in pattern only (capped at 67%)',
   };
   const hasScore = typeof summary.confidence_score === 'number';
   const scoreBasis = hasScore
@@ -290,6 +290,13 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
             </p>
           )}
         </div>
+      )}
+
+      {/* A fan-in lead says what the calibration showed: a weak signal. */}
+      {summary.fan_in_caveat && (
+        <p className="text-[11px] leading-snug border border-amber-500/40 p-2 text-amber-800 dark:text-amber-300">
+          {summary.fan_in_caveat}
+        </p>
       )}
 
       {/* WHAT THE NAME RESTS ON. The evidence tier at a glance - the entity's own

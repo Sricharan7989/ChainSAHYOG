@@ -47,6 +47,14 @@ Set at 0.01, this second condition catches exactly those two. It costs 3 of the 
 
 Both conditions keep 44 of 50 collecting positives and 0 of 9 negatives.
 
+## What this calibration does and does not show
+
+The result is weaker than the clean "0 of 9 negatives kept" figure suggests, and the tool says so itself.
+
+1. **The populations nearly overlap.** The attacker maximum is 9 value senders and the lowest genuine collecting exchange has 10. A one-sender gap is not a reliable separation. Fan-in is a weak signal, not a detector. That is why a fan-in-only identification is **capped at 67%** (`scoring.FAN_IN_MAX_SCORE`, enforced whatever the bonuses) and **never names a company**: it is reported as an unconfirmed collection point to verify before any request. Every fan-in lead carries this sentence in the finding panel and the PDF.
+2. **Fan-in can only find wallets that are currently collecting.** 20 of the 70 labelled exchange wallets in the sample are dormant or withdrawal-only. No structural method will ever find them; only a label names such a wallet. This is stated in every chain's label-coverage note.
+3. **The sample is entirely Ethereum.** Applying these thresholds to Tron, or later Bitcoin, is an assumption, not a measurement. A fan-in lead on another chain says so. Re-calibrate per chain (same script, that chain's labelled wallets) once each has enough labelled exchange wallets to sample. Tron has 27 today, too few for a separate calibration.
+
 ## Limits
 
 - **The counts are lower bounds** from each wallet's newest page of rows, not lifetime totals. Etherscan has no "count distinct senders" endpoint, and paging a hot wallet's full history is not affordable per candidate.

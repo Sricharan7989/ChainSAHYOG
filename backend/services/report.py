@@ -903,6 +903,8 @@ def build_report(payload: dict) -> bytes:
         rows.append(("Source of the label", summary.get("citation") or "Not recorded"))
         story.append(_kv_table(rows, styles))
     elif summary.get("lead"):
+        if summary.get("fan_in_caveat"):
+            story.append(Paragraph(f'<b>{summary["fan_in_caveat"]}</b>', styles["small"]))
         story.append(Paragraph(
             f'<b>No named exchange within {params.get("max_depth")} hops.</b> '
             f'A transaction path connects to a possible collection point '

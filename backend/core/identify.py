@@ -93,6 +93,24 @@ CONSOLIDATION_GLOBAL_STRONG_SENDERS = 200
 # 0xee009faf: 9 senders over ~1,300 outgoing rows = 0.007). Calibrated on the
 # same sample: costs 3 of 50 genuine collecting wallets.
 CONSOLIDATION_MIN_SENDERS_PER_OUT_TX = 0.01
+
+# What every fan-in finding must say about itself (surfaced on the lead and in
+# the PDF). The calibration is the reason, so the tool states it.
+FAN_IN_WEAK_SIGNAL = (
+    "Fan-in is a weak signal, not a reliable detector: calibrated against verified exchange "
+    "wallets, attacker pools reached 9 senders and the smallest genuine collecting exchange 10. "
+    "That near-overlap is why a fan-in-only identification is capped at 67% and never names a company."
+)
+FAN_IN_ETHEREUM_ONLY = (
+    "The fan-in thresholds were calibrated on Ethereum only; applying them on {chain} is an "
+    "assumption, not a measurement, until {chain} has enough labelled exchange wallets to re-calibrate."
+)
+# Where the label coverage note lives: what no structural method can find.
+STRUCTURAL_LIMIT = (
+    "Fan-in can only find wallets that are currently collecting deposits. In calibration, 20 of 70 "
+    "labelled exchange wallets were dormant or withdrawal-only, so no structural method would find "
+    "them; only a label names such a wallet."
+)
 # Where the chain-wide count cannot be obtained, the finding rests on subgraph
 # structure alone and its confidence is scaled by this factor.
 CONSOLIDATION_SUBGRAPH_ONLY_FACTOR = 0.5

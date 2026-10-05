@@ -53,6 +53,10 @@ METHOD_LABELS = {
     "consolidation": "consolidation pattern only",
 }
 
+# The ceiling for a fan-in-only (consolidation) identification. See
+# compute_confidence and docs/fan-in-calibration.md.
+FAN_IN_MAX_SCORE = 67
+
 # Factor 2: hop distance. Full marks at one hop, decaying by HOP_DECAY each hop.
 HOP_MAX_POINTS = 30
 HOP_DECAY = 7
@@ -220,6 +224,13 @@ def compute_confidence(attribution) -> ConfidenceScore:
     raw = sum(c.points for c in components)
     capped = raw > MAX_SCORE
     score = max(MIN_SCORE, min(MAX_SCORE, raw))
+    # A fan-in-only identification never exceeds FAN_IN_MAX_SCORE, whatever the
+    # bonuses: calibrated against verified exchange wallets, attacker pools and
+    # the smallest genuine exchanges sat one sender apart
+    # (docs/fan-in-calibration.md). It is a weak signal and is scored as one.
+    if method == "consolidation" and score > FAN_IN_MAX_SCORE:
+        score = FAN_IN_MAX_SCORE
+        capped = True
 
     # HEADLINE CAP for an inferred route: never above the weakest crossing's own
     # score. min() rather than multiplying, because the penalty above already

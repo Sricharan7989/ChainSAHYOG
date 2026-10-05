@@ -72,6 +72,17 @@ for label, stub, expected in [
     check(f"{label} = {clamped}", result.score, clamped)
     check(f"  components sum to raw total", summed, expected)
 
+print("\n--- consolidation is scored on its chain-wide fan-in, and capped at 67 ---")
+hub = scoring.compute_confidence(Stub("consolidation", 2, fan_in={
+    "global_checked": True, "chain_senders": 200, "chain_senders_complete": False}))
+check("the chain-wide count earns its +8 component",
+      any(c.label == "at least 200 distinct senders chain-wide" and c.points == 8 for c in hub.components), True)
+check("but a fan-in-only finding never exceeds 67 (22+23+15+8 = 68 is capped)", hub.score, 67)
+blind = scoring.compute_confidence(Stub("consolidation", 2, fan_in={"global_checked": False}))
+check("without a chain-wide count it is charged -10", blind.score, 22 + 23 + 15 - 10)
+check("and says it rests on subgraph structure only",
+      any("subgraph structure only" in c.label for c in blind.components), True)
+
 print("\n--- the ceiling and floor hold ---")
 best = scoring.compute_confidence(Stub("known_label", 0))
 check("best possible case never hits 100", best.score <= scoring.MAX_SCORE, True)
