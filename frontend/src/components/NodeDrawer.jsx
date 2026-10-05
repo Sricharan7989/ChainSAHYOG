@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { X, ExternalLink, Copy, Check, Coins } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { shortAddress, formatAssets, getExplorerUrl, getTxUrl } from '../utils/formatters';
+import { shortAddress, formatAssets, getTxUrl, bareAddress, explorerUrlForNode, explorerForChain, splitNodeId } from '../utils/formatters';
 
 gsap.registerPlugin(useGSAP);
 
@@ -103,6 +103,13 @@ export default function NodeDrawer({
               Hop {selectedNode.depth}
             </span>
           )}
+          {/* Which chain this wallet is on. Without it, the same address on two
+              chains is indistinguishable in the drawer. */}
+          {(selectedNode?.chain || splitNodeId(selectedNode?.id).chain) && (
+            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/40 border border-cyan-500/50 px-1.5 py-0.5 uppercase shrink-0">
+              {(selectedNode?.chain || splitNodeId(selectedNode?.id).chain)}
+            </span>
+          )}
         </div>
         <button
           type="button"
@@ -125,14 +132,14 @@ export default function NodeDrawer({
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                onClick={() => handleCopy(selectedNode.id)}
+                onClick={() => handleCopy(bareAddress(selectedNode.id))}
                 className="p-1 text-[#888888] hover:text-white hover:bg-[#1a1a1a] transition-colors cursor-pointer border border-[#262626]"
                 title="Copy Address"
               >
                 {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
               </button>
               <a
-                href={getExplorerUrl(explorerBase, selectedNode.id)}
+                href={explorerUrlForNode(explorerBase, selectedNode.id)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1 text-[#888888] hover:text-[#627EEA] hover:bg-[#1a1a1a] transition-colors cursor-pointer border border-[#262626]"
@@ -182,9 +189,43 @@ export default function NodeDrawer({
             </span>
           </div>
 
+          {/* A chain crossing is an inference, and the drawer has to say so at the
+              moment the reader is inspecting this single edge - otherwise the
+              inference is somewhere else in the report and easy to miss. */}
+          {selectedEdge.edge_type === 'cross_chain' && (
+            <div className="bg-cyan-950/30 border border-cyan-500/50 p-2 space-y-1 text-[10px]">
+              <div className="flex justify-between text-cyan-200 font-bold uppercase">
+                <span>Chain Crossing</span>
+                <span>
+                  {selectedEdge.from_chain || '?'} → {selectedEdge.to_chain || '?'}
+                </span>
+              </div>
+              {selectedEdge.handoff?.confidence_score != null && (
+                <div className="flex justify-between text-cyan-300">
+                  <span>Match score</span>
+                  <span>{selectedEdge.handoff.confidence_score}/100</span>
+                </div>
+              )}
+              <p className="text-cyan-200/80 italic leading-snug">
+                Inferred, not observed. The deposit is on record on{' '}
+                {selectedEdge.from_chain || 'the source chain'}; the arrival on{' '}
+                {selectedEdge.to_chain || 'the destination chain'} is matched by
+                amount, timing and recipient address.
+              </p>
+              {selectedEdge.handoff?.reason && (
+                <p className="text-cyan-200/70 leading-snug">
+                  {selectedEdge.handoff.reason}
+                </p>
+              )}
+            </div>
+          )}
+
           {selectedEdge.tx_hash && (
             <a
-              href={getTxUrl(explorerBase, selectedEdge.tx_hash)}
+              href={getTxUrl(
+                explorerForChain(selectedEdge.to_chain || splitNodeId(selectedEdge.target).chain, explorerBase),
+                selectedEdge.tx_hash
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className="py-1.5 px-2 bg-[#1a1a1a] hover:bg-[#222225] text-[10px] text-[#a3a3a3] hover:text-white flex items-center justify-center gap-1.5 border border-[#262626] transition-colors cursor-pointer"

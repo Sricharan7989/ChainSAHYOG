@@ -1,19 +1,20 @@
+import { addrKey } from './address';
 /**
  * Pathfinder and graph traversal utilities for highlighting primary money flows.
  */
 
 export function findPath(edges, startAddress, targetAddress) {
   if (!edges || !startAddress || !targetAddress) return [];
-  if (startAddress.toLowerCase() === targetAddress.toLowerCase()) return [];
+  if (addrKey(startAddress) === addrKey(targetAddress)) return [];
 
-  const start = startAddress.toLowerCase();
-  const target = targetAddress.toLowerCase();
+  const start = addrKey(startAddress);
+  const target = addrKey(targetAddress);
 
   // Build adjacency map: node -> [{ edge, nextNode }]
   const adj = new Map();
   for (const edge of edges) {
-    const src = edge.source?.toLowerCase();
-    const dst = edge.target?.toLowerCase();
+    const src = addrKey(edge.source);
+    const dst = addrKey(edge.target);
     if (!src || !dst) continue;
 
     if (!adj.has(src)) adj.set(src, []);

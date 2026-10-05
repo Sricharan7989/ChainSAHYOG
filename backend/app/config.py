@@ -39,6 +39,74 @@ ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY", "")
 # explicit chainid is the only thing that works.
 ETHERSCAN_BASE_URL = "https://api.etherscan.io/v2/api"
 
+# --- Per-chain explorer API overrides -----------------------------------------
+#
+# WHY THIS EXISTS. Etherscan V2 is genuinely multichain - one endpoint, one key,
+# a `chainid` parameter - but the FREE plan does not cover every chain it lists.
+# Verified 2026-10 with a free key: Ethereum (1), Polygon (137) and Arbitrum
+# (42161) answer normally, while BNB Chain (56) is refused with "Free API access
+# is not supported for this chain". The code path works; the key does not reach it.
+#
+# So BNB is served by its own explorer instead. BscScan is an Etherscan clone -
+# identical request parameters, identical response shape - and issues its own free
+# key, so the fix is one endpoint and one key rather than a paid plan. A chain
+# listed here is fetched from its own API, and the `chainid` parameter is dropped
+# because the endpoint already identifies the chain.
+#
+# WHY IT IS AN OVERRIDE AND NOT A REWRITE. Nothing about the tracer, the label
+# lookup, the taint replay or the report changes: they ask for a chain, and this
+# decides which door the request goes through. A chain with no override and no
+# plan coverage fails loudly at the API instead of quietly returning less.
+CHAIN_API_OVERRIDES: dict[int, dict] = {}
+
+_BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY", "")
+if _BSCSCAN_API_KEY:
+    CHAIN_API_OVERRIDES[56] = {
+        "base_url": os.getenv("BSCSCAN_BASE_URL", "https://api.bscscan.com/api"),
+        "api_key": _BSCSCAN_API_KEY,
+        # BscScan serves only BNB Chain, so the V2 chainid selector is meaningless
+        # here and is omitted rather than sent and ignored.
+        "send_chainid": False,
+        "label": "BscScan",
+    }
+
+
+def chain_api(chain_id: int) -> tuple[str, str, bool]:
+    """
+    Which explorer API, key and chainid-flag to use for one chain.
+
+    Returns (base_url, api_key, send_chainid). Chains with no override go to
+    Etherscan V2 with the main key and `chainid` set, which is correct for
+    every chain the free plan covers.
+
+    This is the single place that decides the door, so the tracer, the
+    identifier and the label importer can never disagree about which API a
+    chain is read from.
+    """
+    override = CHAIN_API_OVERRIDES.get(int(chain_id))
+    if override:
+        return override["base_url"], override["api_key"], override.get("send_chainid", False)
+    return ETHERSCAN_BASE_URL, ETHERSCAN_API_KEY, True
+
+
+def chain_readable(chain_id: int) -> bool:
+    """
+    Whether we can actually fetch this chain right now.
+
+    A chain we cannot read has to be reported as unreadable rather than
+    traced into an empty result: "we found no exchange there" and "we could
+    not look" are different statements, and only one of them is true.
+    """
+    override = CHAIN_API_OVERRIDES.get(int(chain_id))
+    if override:
+        return bool(override["api_key"])
+    # Etherscan V2 with a key: readable unless this chain is a known paid-plan
+    # chain AND no override has been supplied to bypass it.
+    if not ETHERSCAN_API_KEY:
+        return False
+    meta = CHAINS.get(int(chain_id)) or {}
+    return not (meta.get("requires_paid_plan") and int(chain_id) not in CHAIN_API_OVERRIDES)
+
 # --- Chains -------------------------------------------------------------------
 #
 # V2 is multichain: ONE key and ONE endpoint serve every chain, selected per
@@ -109,9 +177,24 @@ def supported_chains() -> list[dict]:
     """Every chain this build can trace, for /health and the frontend selector."""
     return [{"chain_id": cid, **meta} for cid, meta in CHAINS.items()]
 
+
+# Chain slug <-> id, so callers that have a name ("arbitrum") and callers that
+# have an id (42161, as Etherscan V2 wants it) can meet without each hand-rolling
+# the lookup. A bridge route is written as a slug because that is how a human
+# reads it; the API needs the id.
+CHAIN_BY_SLUG: dict[str, dict] = {meta["slug"]: {"chain_id": cid, **meta} for cid, meta in CHAINS.items()}
+
+
+def chain_by_slug(slug: str) -> dict | None:
+    """The chain descriptor for a slug, or None if we cannot read that chain."""
+    return CHAIN_BY_SLUG.get((slug or "").strip().lower())
+
 # address -> entity mapping (exchanges, mixers, bridges). Method (a) of
 # exchange identification — the known-label lookup — reads from here.
 LABELS_PATH = DATA_DIR / "labels.json"
+# Labels we may NOT redistribute (our own copy of an explorer name tag, say).
+# Gitignored; merged by the loader when present. See core/provenance.py.
+LABELS_LOCAL_PATH = DATA_DIR / "labels.local.json"
 
 # --- Graph store (optional) ---------------------------------------------------
 
@@ -455,6 +538,226 @@ TYPOLOGY_EXEMPT_ENTITY_TYPES = frozenset(
     {"exchange", "suspected_exchange", "mixer", "bridge"}
 )
 
+# --- Cross-chain bridge handoff (Phase 9) ------------------------------------
+#
+# WHY THIS SECTION EXISTS. A bridge used to be a wall: the tracer tagged it, the
+# walk stopped, and the report said the funds left Ethereum. Multi-chain
+# ingestion means that is no longer the end of the road - we can look on the
+# destination chain for the value arriving and carry the trace across.
+#
+# WHY IT IS SCORED SEPARATELY. Everything else this tool reports is OBSERVED: a
+# transfer on a chain we can read. A cross-chain handoff is an INFERENCE - we see
+# value that looks like the same money, arriving at about the right time, from a
+# contract that looks like a bridge. Two unrelated transfers of a similar amount
+# can look identical from outside. So a handoff never merges into the on-chain
+# confidence score, never prints an exchange name on the strength of itself, and
+# is reported with its own evidence and its own (visibly lower) score.
+#
+# WHY EVERY DEFAULT IS DELIBERATELY TIGHT. A wrong chain handoff corrupts a police
+# report far more than a stopped trace does. A stopped trace says "we could not
+# follow this"; a wrong one says "the money went to Binance on Arbitrum" and that
+# is not true. Where the settings err, they err towards stopping.
+
+# Bridges charge a fee, so the amount that lands is smaller than the amount sent.
+# Expressed as a FRACTION of the deposit: 0.02 accepts a credit worth between
+# 98% and 100% of the deposit. Wider than that and an ordinary rounding
+# difference or a second bridge in the path starts producing false matches.
+BRIDGE_FEE_TOLERANCE = _env_float("BRIDGE_FEE_TOLERANCE", 0.02)
+
+# How long after a deposit the matching credit may appear. This is the DEFAULT;
+# each registry entry may set its own, because the honest answer differs by
+# bridge: a deposit to an L2 is credited in minutes, while a withdrawal back to
+# Ethereum only settles after a ~7 day fraud-proof challenge period.
+BRIDGE_TIME_WINDOW_SEC = _env_int("BRIDGE_TIME_WINDOW_SEC", 3600)
+
+# Cross-chain hops allowed in one trace. The depth cap bounds the walk WITHIN a
+# chain; this bounds the walk ACROSS chains, so a trace cannot wander bridge ->
+# chain -> bridge -> chain indefinitely, spending API calls and producing a graph
+# nobody can read. One is usually enough to reach an exchange.
+MAX_CROSS_CHAIN_HOPS = _env_int("MAX_CROSS_CHAIN_HOPS", 2)
+
+# A candidate match below this score is not a match. The score is built from
+# value closeness, time proximity and whether the credit came from a contract the
+# registry knows to be part of the bridge - see core/bridges.py for the split.
+BRIDGE_MATCH_MIN_SCORE = _env_int("BRIDGE_MATCH_MIN_SCORE", 60)
+
+# AMBIGUITY has no tunable margin. Any second credit inside the fee tolerance and
+# the time window makes a handoff ambiguous, whatever the scores - see
+# core/bridges.resolve. An earlier score-margin rule let a credit 100 seconds
+# after the deposit "beat" an identical one 1,700 seconds after, which is not
+# evidence about which one is the same money.
+
+# Smallest deposit worth attempting to match. Bridge test transactions of a few
+# wei are everywhere; matching them would turn every bridge visit into a false
+# handoff.
+BRIDGE_MIN_DEPOSIT = _env_float("BRIDGE_MIN_DEPOSIT", 0.05)
+
+# How many distinct bridge deposits on one chain we will try to carry across,
+# largest first. A wallet that bridged out eight times in a day is possible, but
+# following all eight means eight destination-chain walks - eight times the API
+# calls, and a graph where the interesting path is buried. The cap is reported
+# when it bites, so a capped trace is never read as a complete one.
+BRIDGE_MAX_DEPOSITS_PER_CHAIN = _env_int("BRIDGE_MAX_DEPOSITS_PER_CHAIN", 2)
+
+# Ceiling on a handoff's own score. It is never allowed near 100 for the same
+# reason the on-chain score never is: this is an inference, not an observation.
+BRIDGE_MATCH_MAX_SCORE = _env_int("BRIDGE_MATCH_MAX_SCORE", 85)
+
+# ---------------------------------------------------------------------------
+# THE BRIDGE REGISTRY
+# ---------------------------------------------------------------------------
+# Keyed by (source chain slug, bridge address on that chain). One entry per
+# DIRECTION, because a bridge is not symmetric: what you deposit and what you
+# receive are different contracts on different chains with different timings.
+#
+# FIELDS
+#   entity           - how the report names the bridge.
+#   from_chain       - slug of the chain the address above lives on.
+#   to_chain         - slug of the destination chain.
+#   credit_sources   - contracts on the DESTINATION chain whose transfers are the
+#                      bridge paying out. Used to strengthen a match, never to
+#                      require one: a credit arriving from some other contract is
+#                      still reported, just with less confidence, because we do
+#                      not claim to know every path a bridge can take.
+#   asset_map        - source symbol -> destination symbol. Present because the
+#                      same money changes its ticker across some bridges: ETH
+#                      deposited to Polygon's bridge credits native POL.
+#   window_sec       - this direction's time window, overriding the default.
+#   min_amount       - smallest deposit worth matching, per asset.
+#   how_it_appears   - plain description of both legs, for the report.
+#   verified_from    - where the addresses below were checked, so a reviewer can
+#                      re-check them rather than trust this file.
+#
+# ONLY VERIFIED ADDRESSES BELONG HERE. An address that is merely plausible turns a
+# false "no match" into a false "matched" - the tool would claim the money crossed
+# a bridge that does not exist at that address. While building this, the address
+# 0x794a61358D6845594F94dc1DB02A252b5b4814aD was rejected as an Arbitrum bridge
+# address: on the explorer it is Aave: Pool V3. Every entry below was then taken
+# from the bridge's own published documentation.
+#
+# HOW TO ADD ONE: find the deposit contract on the source chain in the project's
+# docs, add the entry, then confirm by hand on BOTH explorers that a deposit and
+# its matching credit are visible as ordinary address history on each side.
+BRIDGE_REGISTRY: dict[tuple[str, str], dict] = {
+    # --- Polygon PoS ------------------------------------------------------
+    (
+        "ethereum",
+        "0xa0c68c638235ee32657e8f720a23cec1bfc77c77",
+    ): {
+        "entity": "Polygon Bridge",
+        "from_chain": "ethereum",
+        "to_chain": "polygon",
+        # The credit is a MINT of Polygon's WETH token to the depositing address,
+        # so it appears in tokentx as a transfer FROM the zero address. That is
+        # the payout path observed on every deposit checked (see verified_pairs).
+        "credit_sources": (
+            "0x0000000000000000000000000000000000000000",  # WETH mint on Polygon
+        ),
+        # Native ETH deposited through the RootChainManager is credited on Polygon
+        # as WETH (contract 0x7ceb23fd6bc0add59e62ac25578270cff1b9f619), NOT as
+        # native POL. An earlier version of this entry mapped ETH -> POL, which no
+        # real credit can ever satisfy: two recorded deposits returned no_match with
+        # zero candidates examined because of it.
+        "asset_map": {"ETH": "WETH", "WETH": "WETH"},
+        # The PoS bridge charges no fee on this route: every credit checked was the
+        # exact deposited amount, to the wei. So the tolerance is exact rather than
+        # the 2% default. This matters for honesty, not just precision: the same
+        # wallet often makes several deposits of similar size, and a 2% band
+        # would let one deposit's credit look like a rival candidate for another.
+        "fee_tolerance": 0.0,
+        # Observed lag on the verified pairs: 1,020 - 1,260 seconds.
+        "window_sec": 3600,
+        "min_amount": 0.05,
+        "how_it_appears": (
+            "The deposit is an ordinary ETH transfer from the user's address to the "
+            "RootChainManager on Ethereum. About 17-21 minutes later the same amount "
+            "is minted as WETH to the same address on Polygon (a token transfer from "
+            "the zero address)."
+        ),
+        "verified_from": "https://docs.polygon.technology/pos/how-to/bridging/ethereum-polygon/ethereum-to-matic/",
+        # Real deposit/credit pairs checked through Etherscan V2 on both chains
+        # (2026-10-04). Each is the exact amount, minted from the zero address.
+        "verified_pairs": (
+            {
+                "deposit_tx": "0xf5ff3b2e1553a2224d981450a0b8f2b6fe651b56e92caccd717ae03c448b36c4",
+                "credit_tx": "0xc933adb6d22753ce392f4a3cbd8bfe857b03dafc1b7e47adc4ffc79c6a509378",
+                "wallet": "0x02d2050481f6baa6396e629f791504f52af93817",
+                "value": 10.0,
+                "lag_sec": 1249,
+            },
+            {
+                "deposit_tx": "0x978f29f9d3c61ea3767f9f1a2cbe871461a0d8bd5bc35c000db65fb645a4bfab",
+                "credit_tx": "0x2470a4436020d97f6a1dbeb70f90079826e25c34e1e5195f0d37f007cf1ae953",
+                "wallet": "0xf30d7e22a3139b53940f68397e88958a4153b95d",
+                "value": 6.174729411420538,
+                "lag_sec": 1260,
+            },
+        ),
+    },
+}
+
+# Bridges we RECOGNISE but deliberately do not follow, with the reason. A trace
+# that reaches one stops there and says why, rather than either guessing a
+# destination or quietly treating the bridge as an unknown wallet.
+#
+# Both Arbitrum routes were removed from the registry after review: the deposit
+# route was keyed on the L1 Bridge contract, but users call the Inbox and the
+# Bridge only receives ETH by an internal transaction, which this tool does not
+# fetch; the withdrawal route was keyed on the L2 Gateway Router, which ETH
+# withdrawals do not pass through. Neither could ever produce a correct match,
+# and a route that looks registered but silently cannot fire is worse than an
+# honest "not supported".
+BRIDGE_UNSUPPORTED: dict[tuple[str, str], str] = {
+    ("ethereum", "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a"): (
+        "Arbitrum Bridge is a recognised bridge, but this tool does not follow it: "
+        "deposits reach it by an internal transaction from the Arbitrum Inbox, and "
+        "internal transactions are not fetched, so no deposit could be matched to its "
+        "Arbitrum credit with evidence. The trace stops here rather than guessing."
+    ),
+}
+
+
+def _chain_key(chain_slug: str, address: str) -> tuple[str, str]:
+    """(slug, address) keyed by that chain's own address rule; see core/addresses.py."""
+    from core import addresses
+
+    slug = (chain_slug or "").strip().lower()
+    return slug, addresses.try_normalize(address, slug) or (address or "").strip()
+
+
+def bridge_unsupported_reason(chain_slug: str, address: str) -> str | None:
+    """Why we recognise this bridge but do not follow it, or None."""
+    key = _chain_key(chain_slug, address)
+    return BRIDGE_UNSUPPORTED.get(key)
+
+
+def bridge_lookup(chain_slug: str, address: str) -> dict | None:
+    """
+    The registry entry for a bridge address on a chain, or None.
+
+    Returns None for a wallet tagged `type: bridge` in labels.json that is not in
+    this registry. That is a real state and not a failure: the tracer must still
+    flag the bridge and stop honestly there, and say that it has no route
+    recorded rather than pretending the bridge does not exist.
+    """
+    key = _chain_key(chain_slug, address)
+    return BRIDGE_REGISTRY.get(key)
+
+
+def bridge_destinations(chain_slug: str) -> set[str]:
+    """Destination chain slugs reachable from this chain in one registered hop."""
+    slug = (chain_slug or "").strip().lower()
+    return {entry["to_chain"] for (from_slug, _), entry in BRIDGE_REGISTRY.items() if from_slug == slug}
+
+
+# LABEL COVERAGE. Below this many labels on a chain, identification there is
+# treated as NOT POSSIBLE rather than merely weak. Four exchange addresses on a
+# chain with thousands of exchange wallets will almost never be the one a trace
+# reaches, so reporting that chain as "covered" would let an empty result read as
+# "no exchange was involved". The number is a judgement, stated so it can be
+# argued with.
+MIN_LABELS_FOR_COVERAGE = _env_int("MIN_LABELS_FOR_COVERAGE", 25)
+
 # Cap on outgoing transfers expanded per wallet, largest-value first. Stops one
 # hot wallet from fanning the graph out to thousands of nodes.
 MAX_EDGES_PER_NODE = 25
@@ -467,6 +770,12 @@ ETHERSCAN_REQUEST_DELAY_SEC = 0.25
 # page, but a trace does not need a hot wallet's entire history to see where the
 # money went next — and asking for it would blow both latency and the quota.
 MAX_TXNS_PER_ADDRESS = 1000
+# How many windows of MAX_TXNS_PER_ADDRESS rows to page back from the as-of
+# height before a wallet's history is declared truncated. Each extra page is one
+# more call per endpoint (txlist, tokentx), spent only on wallets that fill a
+# whole window. A wallet still not exhausted after this is reported, per wallet,
+# as "history truncated at block N" - never silently cut.
+MAX_HISTORY_PAGES = 5
 
 # Hard ceiling on wallets expanded in one trace. Last line of defence against a
 # pathological fan-out; the depth cap normally bites long before this does.

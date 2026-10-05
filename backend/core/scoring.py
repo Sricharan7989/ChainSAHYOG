@@ -41,10 +41,15 @@ from dataclasses import dataclass, field
 # Factor 1: identification method.
 METHOD_POINTS = {
     "known_label": 50,
+    # A label carried over from the same address on Ethereum (an active EOA on
+    # this chain). Below a direct label - nothing labels it on THIS chain - and
+    # above the fan-in pattern, which names nobody. Max 35 + 30 + 15 = 80.
+    "inferred_label": 35,
     "consolidation": 22,
 }
 METHOD_LABELS = {
     "known_label": "direct label match",
+    "inferred_label": "label inferred from the same address on Ethereum",
     "consolidation": "consolidation pattern only",
 }
 
@@ -56,6 +61,17 @@ HOP_DECAY = 7
 CLEAN_PATH_POINTS = 15  # awarded only when nothing obfuscating was crossed
 MIXER_PENALTY = -30
 BRIDGE_PENALTY = -12
+
+# A FOLLOWED bridge crossing is an inference with its own score (core/bridges.py).
+# Its penalty scales with how weak that inference is, instead of a flat -12:
+# a handoff matched at 62/100 and one matched at 85/100 are not equally good
+# evidence, and an attribution reached through them must not score the same.
+# Points lost = HANDOFF_PENALTY_PER_POINT x (100 - handoff score): 62 -> -10,
+# 85 -> -4. Kept small on purpose: the headline cap below does the rest. At 0.5
+# the penalty alone would always pull a valid match (score >= 60) under its own
+# handoff score, so the cap could never bind; at 0.25 a strong on-chain route
+# after a weak crossing is held at that crossing's score.
+HANDOFF_PENALTY_PER_POINT = 0.25
 
 # A score may never reach certainty, and may never fall to zero either - a
 # recognised endpoint is always worth something, even a weak one.
@@ -97,6 +113,10 @@ class ConfidenceScore:
     score: int  # 0-100
     components: list[ScoreComponent] = field(default_factory=list)
     capped: bool = False
+    # Set when the route crossed a bridge by inference and the score was held at
+    # that inference's own score: the finding cannot be stronger than the
+    # weakest link in the evidence that produced it.
+    handoff_cap: int | None = None
 
     @property
     def breakdown(self) -> str:
@@ -104,6 +124,11 @@ class ConfidenceScore:
         text = ", ".join(str(c) for c in self.components)
         if self.capped:
             text += f", capped at {MAX_SCORE} (certainty is never claimed)"
+        if self.handoff_cap is not None:
+            text += (
+                f", held at {self.handoff_cap} (the inferred bridge crossing on this "
+                "route scored no higher)"
+            )
         return text
 
     def to_dict(self) -> dict:
@@ -142,11 +167,26 @@ def compute_confidence(attribution) -> ConfidenceScore:
     method = getattr(attribution, "method", "") or ""
     hops = int(getattr(attribution, "hop_distance", 0) or 0)
     crossed = set(getattr(attribution, "path_risk_types", ()) or ())
+    # Scores of the bridge crossings this route was carried across by inference.
+    handoffs = [int(s) for s in (getattr(attribution, "handoff_scores", ()) or ())]
 
     # Factor 1 - identification method.
     method_points = METHOD_POINTS.get(method, 10)
     method_label = METHOD_LABELS.get(method, f"identified by {method or 'unknown method'}")
     components.append(ScoreComponent(method_label, method_points))
+
+    # Factor 1b - for a consolidation finding, the chain-wide fan-in decides how
+    # much the pattern is worth, and its absence is charged for.
+    if method == "consolidation":
+        fan_in = getattr(attribution, "fan_in", None) or {}
+        if fan_in.get("global_checked"):
+            n = int(fan_in.get("chain_senders") or 0)
+            bonus = min(8, max(0, (n - 20) * 8 // 180))
+            bound = "" if fan_in.get("chain_senders_complete") else "at least "
+            components.append(ScoreComponent(f"{bound}{n} distinct senders chain-wide", bonus))
+        else:
+            components.append(ScoreComponent(
+                "chain-wide sender count not obtained: rests on subgraph structure only", -10))
 
     # Factor 2 - hop distance.
     points = hop_points(hops)
@@ -157,8 +197,16 @@ def compute_confidence(attribution) -> ConfidenceScore:
     # separately because they damage the chain of custody to different degrees.
     if "mixer" in crossed:
         components.append(ScoreComponent("mixer on path (chain of custody broken)", MIXER_PENALTY))
-    if "bridge" in crossed:
-        components.append(ScoreComponent("bridge on path (funds left Ethereum)", BRIDGE_PENALTY))
+    if handoffs:
+        # Followed crossings: penalised by the strength of each inference rather
+        # than by the flat bridge penalty, which would treat a 62 and an 85 alike.
+        for handoff_score in handoffs:
+            points = -int(round(HANDOFF_PENALTY_PER_POINT * (100 - handoff_score)))
+            components.append(
+                ScoreComponent(f"inferred bridge crossing matched at {handoff_score}/100", points)
+            )
+    elif "bridge" in crossed:
+        components.append(ScoreComponent("bridge on path (funds changed chain)", BRIDGE_PENALTY))
     if "sanctioned" in crossed:
         # Not a confidence penalty: a sanctioned hop does not make the trace
         # less reliable. It is surfaced as a risk flag instead.
@@ -166,14 +214,24 @@ def compute_confidence(attribution) -> ConfidenceScore:
     # The clean-path bonus is about custody: only mixers and bridges break it.
     # Testing `not crossed` here would let a sanctioned or scam wallet silently
     # cost 15 points, turning a risk flag into a hidden confidence penalty.
-    if not crossed & {"mixer", "bridge"}:
+    if not crossed & {"mixer", "bridge"} and not handoffs:
         components.append(ScoreComponent("no mixer or bridge on path", CLEAN_PATH_POINTS))
 
     raw = sum(c.points for c in components)
     capped = raw > MAX_SCORE
     score = max(MIN_SCORE, min(MAX_SCORE, raw))
 
-    return ConfidenceScore(score=score, components=components, capped=capped)
+    # HEADLINE CAP for an inferred route: never above the weakest crossing's own
+    # score. min() rather than multiplying, because the penalty above already
+    # charged for the inference once; multiplying would charge for it twice.
+    handoff_cap = None
+    if handoffs and score > min(handoffs):
+        handoff_cap = min(handoffs)
+        score = max(MIN_SCORE, handoff_cap)
+
+    return ConfidenceScore(
+        score=score, components=components, capped=capped, handoff_cap=handoff_cap
+    )
 
 
 def risk_severity(entity_type: str) -> str | None:
@@ -192,8 +250,9 @@ def risk_note(entity_type: str, entity: str) -> str:
         )
     if kind == "bridge":
         return (
-            f"{entity} moves funds to another blockchain. The money continues "
-            f"outside Ethereum, beyond what this tool traces."
+            f"{entity} moves funds to another blockchain. The trace follows the "
+            f"crossing only where a single matching withdrawal is found on the "
+            f"destination chain; see the cross-chain section for what was found."
         )
     if kind == "sanctioned":
         return (

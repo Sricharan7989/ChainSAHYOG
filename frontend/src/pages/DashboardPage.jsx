@@ -10,9 +10,11 @@ import LoadingRadar from '../components/LoadingRadar';
 import TraceGraph from '../components/TraceGraph';
 import NodeDrawer from '../components/NodeDrawer';
 import FindingPanel from '../components/FindingPanel';
+import SourceBadge from '../components/SourceBadge';
 import SahyogModal from '../components/SahyogModal';
 import Toast from '../components/Toast';
 import { fetchHealth, fetchDemos, runTrace, getReportUrl } from '../api/client';
+import { addrKey } from '../utils/address';
 
 gsap.registerPlugin(useGSAP);
 
@@ -28,6 +30,8 @@ export default function DashboardPage() {
   const [dustThreshold, setDustThreshold] = useState(0.01);
   const [mode, setMode] = useState('auto');
   const [saveDemo, setSaveDemo] = useState(false);
+  // Optional past block height to pin the trace to; empty = the chain head.
+  const [asOfBlock, setAsOfBlock] = useState('');
 
   // Application Data & State
   const [health, setHealth] = useState(null);
@@ -103,6 +107,7 @@ export default function DashboardPage() {
         dustThreshold,
         mode,
         save: saveDemo,
+        asOfBlock: asOfBlock.trim() === '' ? null : Number(asOfBlock),
       });
       setData(result);
       setToast({ type: 'success', message: 'Forensic trace completed successfully.' });
@@ -113,7 +118,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [address, selectedChainId, maxDepth, dustThreshold, mode, saveDemo]);
+  }, [address, selectedChainId, maxDepth, dustThreshold, mode, saveDemo, asOfBlock]);
 
   // 3. Auto-trigger trace if URL search params provide an initial address
   useEffect(() => {
@@ -142,8 +147,13 @@ export default function DashboardPage() {
       address: data.start_address,
       chainId: data.params?.chain_id || selectedChainId,
       maxDepth: data.params?.max_depth || maxDepth,
-      dustThreshold: data.params?.dust_threshold_eth || dustThreshold,
-      mode,
+      dustThreshold: data.params?.dust_threshold_eth ?? dustThreshold,
+      // Describe the result on screen, not whatever the mode toggle says now: a
+      // replayed result is reported from the same recording, and a live result
+      // is served from the backend's in-memory copy of that exact trace.
+      mode: data.source === 'cache' ? 'cache' : 'live',
+      // The same height the trace on screen was pinned to, if one was requested.
+      asOfBlock: data.params?.as_of_block ?? null,
     });
     window.open(url, '_blank');
     setToast({ type: 'success', message: 'Generating forensic PDF report…' });
@@ -152,7 +162,7 @@ export default function DashboardPage() {
   // 6. Select address from timeline / list
   const handleSelectAddress = (addr) => {
     if (!data?.nodes) return;
-    const node = data.nodes.find((n) => n.id.toLowerCase() === addr.toLowerCase());
+    const node = data.nodes.find((n) => addrKey(n.id) === addrKey(addr));
     if (node) {
       setSelectedNode(node);
       setSelectedEdge(null);
@@ -187,6 +197,9 @@ export default function DashboardPage() {
             setMode={setMode}
             saveDemo={saveDemo}
             setSaveDemo={setSaveDemo}
+            chainId={selectedChainId}
+            asOfBlock={asOfBlock}
+            setAsOfBlock={setAsOfBlock}
           />
 
           <DemoChips
@@ -224,7 +237,11 @@ export default function DashboardPage() {
 
           {/* STATE 3: RESULTS LOADED (Graph + Findings Dashboard - Exact 50-50 Split) */}
           {!loading && !error && data && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 min-h-[660px]">
+            <>
+              {/* Provenance of the result above everything else, so nobody has to
+                  guess whether these figures came off the chain just now. */}
+              <SourceBadge data={data} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 min-h-[660px]">
               {/* Left Column: Cytoscape Money-Flow Visualizer (50%) */}
               <div className="flex flex-col relative h-[660px] lg:h-auto min-h-[640px]">
                 <TraceGraph
@@ -259,7 +276,8 @@ export default function DashboardPage() {
                   onSelectAddress={handleSelectAddress}
                 />
               </div>
-            </div>
+              </div>
+            </>
           )}
 
           {/* STATE 4: IDLE / WELCOME STATE */}
@@ -303,10 +321,10 @@ export default function DashboardPage() {
                 <div className="bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] hover:border-[#627EEA] hover:shadow-[3px_3px_0px_#627EEA] p-3.5 space-y-1 transition-all">
                   <span className="font-semibold text-xs text-[#09090b] dark:text-[#f5f5f5] flex items-center gap-1.5 font-mono">
                     <FileText className="w-3.5 h-3.5 text-[#627EEA]" />
-                    SAHYOG / I4C
+                    VASP Request Draft
                   </span>
                   <p className="text-[11px] text-[#71717a] dark:text-[#888888]">
-                    Generates statutory requisitions under Indian cybercrime law & IPC and court-ready dossiers.
+                    Drafts a lawful request under the applicable provisions of the Bharatiya Nagarik Suraksha Sanhita, 2023 and the Information Technology Act, 2000, with a court-ready dossier.
                   </p>
                 </div>
               </div>
