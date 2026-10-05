@@ -55,6 +55,8 @@ The result is weaker than the clean "0 of 9 negatives kept" figure suggests, and
 2. **Fan-in can only find wallets that are currently collecting.** 20 of the 70 labelled exchange wallets in the sample are dormant or withdrawal-only. No structural method will ever find them; only a label names such a wallet. This is stated in every chain's label-coverage note.
 3. **The sample is entirely Ethereum.** Applying these thresholds to Tron, or later Bitcoin, is an assumption, not a measurement. A fan-in lead on another chain says so. Re-calibrate per chain (same script, that chain's labelled wallets) once each has enough labelled exchange wallets to sample. Tron has 27 today, too few for a separate calibration.
 
+4. **Contracts are excluded before any threshold applies.** Running the calibrated rules on the 0x6242 demo flagged 56 "collection points", many of them well-known DeFi contracts: WETH, Uniswap's routers, pools and v4 PoolManager, 1inch, CoW, LI.FI. A contract has enormous fan-in from unrelated senders and passes any sender threshold, but it is not an exchange's deposit-collection wallet, which is an ordinary account. The sample above measured sender counts only, so it never tested this. Every candidate is now checked for contract code first (one call: `eth_getCode` on EVM, `getcontract` on Tron), and a contract is rejected with that reason. On Ronin this also removes the remaining lead, `0xcad001c3...`, which is a contract.
+
 ## Limits
 
 - **The counts are lower bounds** from each wallet's newest page of rows, not lifetime totals. Etherscan has no "count distinct senders" endpoint, and paging a hot wallet's full history is not affordable per candidate.

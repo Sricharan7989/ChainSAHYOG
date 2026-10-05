@@ -274,6 +274,17 @@ class TronClient:
             block=0, asset=symbol, contract=contract, decimals=decimals,
         )
 
+    async def is_contract(self, address: str, chain_id: int = TRON_CHAIN_ID) -> bool:
+        """Whether a Tron account is a smart contract (one getcontract call, cached)."""
+        wallet = addresses.normalize(address, "tron")
+        key = ("code", wallet)
+        if key not in self._misc:
+            body = await self._call("POST", "/wallet/getcontract", json={"value": wallet, "visible": True})
+            self._misc[key] = bool(body.get("bytecode") or body.get("contract_address"))
+        else:
+            self.cache_hits += 1
+        return self._misc[key]
+
     async def get_inbound_senders(
         self, address: str, chain_id: int = TRON_CHAIN_ID, as_of_block: int | None = None
     ) -> dict:

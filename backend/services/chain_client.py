@@ -43,6 +43,9 @@ class MultiChainClient:
     async def block_at(self, timestamp, chain_id, closest="before"):
         return await self._for(chain_id).block_at(timestamp, chain_id, closest)
 
+    async def is_contract(self, address, chain_id):
+        return await self._for(chain_id).is_contract(address, chain_id)
+
     async def get_inbound_senders(self, address, chain_id, as_of_block=None):
         return await self._for(chain_id).get_inbound_senders(address, chain_id, as_of_block=as_of_block)
 

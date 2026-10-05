@@ -179,6 +179,16 @@ def trace_tests():
     e = run(BOOK, as_of_block=early)
     check("before the exchange deposit, no exchange is reached", e["summary"].get("found"), False)
 
+    print("\n--- 4b. a hop cites the transfer that carried the suspect's money ---")
+    # Found verifying a real trace on Tronscan: the edge's LARGEST transfer was
+    # dated before the suspect's funds arrived, so it cannot have carried them.
+    book = dict(BOOK)
+    book[MID] = [usdt(MID, BINANCE_TRON, 10_000.0, "u0-early", T0 - 100)] + BOOK[MID]
+    edge = next(e for e in run(book)["edges"] if e["target"] == BINANCE_TRON)
+    check("the edge's largest transfer is the early one", edge["tx_hash"], "u0-early")
+    check("but the transfer cited as carrying the suspect's value is the later one",
+          edge["tainted_tx_hash"], "u2")
+
     print("\n--- 5. a sanctioned Tron address raises a risk flag ---")
     sdn = next(addr for (chain, addr), m in identify.load_labels().items()
                if chain == "tron" and m.get("type") == "sanctioned")

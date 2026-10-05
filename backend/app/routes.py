@@ -78,6 +78,11 @@ async def trace_address(
         description="Pin the trace to this block height on the starting chain. Omitted: the "
         "chain head when the trace starts. Re-running at the same height reproduces the result.",
     ),
+    max_nodes: int | None = Query(
+        None, ge=50, le=5000,
+        description="Wallet cap for this trace (default MAX_NODES_PER_TRACE). Expansion is "
+        "best-first by the suspect's value, so a binding cap drops the least-tainted branches.",
+    ),
 ) -> dict:
     """
     Follow the money forward from a suspect wallet and return the flow graph.
@@ -104,6 +109,7 @@ async def trace_address(
         mode=mode,
         chain_id=chain_id,
         as_of_block=as_of_block,
+        max_nodes=max_nodes,
     )
 
     if save and payload.get("source") != "cache":
@@ -122,6 +128,7 @@ async def _run_or_replay(
     chain_id: int = config.DEFAULT_CHAIN_ID,
     prefer_recent: bool = False,
     as_of_block: int | None = None,
+    max_nodes: int | None = None,
 ) -> dict:
     """
     Produce a trace payload, from the recording if there is one, else live.
@@ -204,6 +211,7 @@ async def _run_or_replay(
             dust_threshold=dust_threshold,
             chain_id=chain["chain_id"],
             as_of_block=as_of_block,
+            max_nodes=max_nodes,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

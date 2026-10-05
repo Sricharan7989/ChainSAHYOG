@@ -138,6 +138,10 @@ class Hop:
     # For a cross_chain hop only: the bridges.BridgeMatch behind it. Kept on the
     # hop so the evidence travels with the fact rather than being looked up.
     handoff: object | None = None
+    # The single transfer on this edge carrying the MOST of the suspect's value
+    # under FIFO. `tx_hash` is the edge's largest transfer, which can predate the
+    # suspect's money entirely and so must not be cited as the one that carried it.
+    tainted_tx_hash: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -153,6 +157,7 @@ class Hop:
             "tx_count": self.tx_count,
             "timestamp": self.timestamp,
             "tx_hash": self.tx_hash,
+            "tainted_tx_hash": self.tainted_tx_hash or None,
             # How much of this leg is the suspect's money under FIFO, and how
             # much of it rests on assuming an unobserved prior balance.
             "tainted_value": round(self.tainted_value, 8),
@@ -410,6 +415,7 @@ class TraceResult:
     history_truncation: list = field(default_factory=list)
     consolidation_checks: list = field(default_factory=list)
     walk_cap: dict | None = None
+    max_nodes: int = 0
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -553,8 +559,11 @@ class _WalkContext:
     # makes estimates in different assets comparable). See _walk_leg.
     taint_est: dict = field(default_factory=dict)
     suspect_outflow: dict = field(default_factory=dict)
-    # Set when MAX_NODES_PER_TRACE stopped a walk: how much was left unexpanded.
+    # Set when the node cap stopped a walk: how much was left unexpanded.
     walk_cap: dict | None = None
+    # The node cap for THIS trace (default config.MAX_NODES_PER_TRACE). Demo
+    # recordings use a cap that does not bind; it is recorded in the params.
+    max_nodes: int = 0
 
     async def block_for(self, chain: dict) -> int | None:
         """The as-of height on one chain, derived from the trace's moment on first use."""
@@ -717,6 +726,22 @@ class _WalkContext:
         return out
 
 
+_BEST_TX_CACHE: dict = {}
+
+
+def _best_tainted_tx(leg_taint) -> dict:
+    """(from, to, asset) -> the transfer hash carrying the most suspect value, per replay."""
+    key = id(leg_taint)
+    if key not in _BEST_TX_CACHE:
+        best: dict = {}
+        for (h, frm, to, asset), value in (getattr(leg_taint, "transfer_tainted", {}) or {}).items():
+            if value > 0 and value > best.get((frm, to, asset), (0.0, ""))[0]:
+                best[(frm, to, asset)] = (value, h)
+        _BEST_TX_CACHE.clear()
+        _BEST_TX_CACHE[key] = {k: v[1] for k, v in best.items()}
+    return _BEST_TX_CACHE[key]
+
+
 def _node_depth(ctx: "_WalkContext", node: str) -> int | None:
     """The hop distance a wallet currently carries in the graph, if it is there."""
     if not ctx.store.has(node):
@@ -777,13 +802,13 @@ def _record_walk_cap(ctx, slug: str, left: list) -> None:
         for a, amount in sorted(shares.items(), key=lambda kv: -kv[1]) if ctx.suspect_outflow.get(a)
     )
     ctx.walk_cap = {
-        "cap": config.MAX_NODES_PER_TRACE,
+        "cap": ctx.max_nodes,
         "chain": slug,
         "unexpanded_wallets": len(seen),
         "unexpanded_estimated_share": {a: round(min(1.0, v / ctx.suspect_outflow[a]), 4)
                                        for a, v in shares.items() if ctx.suspect_outflow.get(a)},
         "caveat": (
-            f"The walk stopped at the {config.MAX_NODES_PER_TRACE}-wallet cap, so the graph is partial: "
+            f"The walk stopped at the {ctx.max_nodes}-wallet cap, so the graph is partial: "
             f"{len(seen)} wallet{'s were' if len(seen) != 1 else ' was'} left unexpanded"
             + (f", estimated to carry up to {share_text}" if share_text else "")
             + ". Wallets are expanded in order of the suspect value they carry, so these are the "
@@ -834,6 +859,30 @@ async def _verify_hub(ctx: "_WalkContext", node: str, address: str, chain: dict,
     slug = chain["slug"]
     block = await ctx.block_for(chain)
     chain_wide, calls = None, 0
+
+    # A CONTRACT IS NOT A COLLECTION WALLET. DEX routers, liquidity pools and
+    # token contracts have enormous fan-in from unrelated senders and pass any
+    # sender threshold; an exchange's deposit-collection wallet is an ordinary
+    # account. The calibration sample (docs/fan-in-calibration.md) contained no
+    # contracts, so this is checked separately: one call per candidate.
+    code_check = getattr(ctx.client, "is_contract", None)
+    if code_check is not None:
+        try:
+            contract = await code_check(address, chain["chain_id"])
+            calls += 1
+        except Exception:  # noqa: BLE001 - unknown is not "contract"; say so below
+            contract = None
+        if contract:
+            ctx.consolidation_checks.append({
+                "node_id": node, "address": address, "chain": slug,
+                "subgraph_senders": (ident.fan_in or {}).get("subgraph_senders"),
+                "chain_senders": None, "chain_senders_raw": None, "chain_out_rows": None,
+                "chain_senders_complete": None, "api_calls": calls, "kept": False,
+                "reason": ("a smart contract (for example a DEX router, liquidity pool or token "
+                           "contract), not an exchange's deposit-collection wallet"),
+            })
+            ctx.hub_verdicts[node] = None
+            return None
     history = ctx.fetched_by_chain.get(slug, {}).get(address)
     if history is not None:
         # The same measure the thresholds were calibrated on: the newest rows
@@ -1019,13 +1068,13 @@ async def _walk_leg(
         if depth >= depth_budget:
             ctx.depth_capped += 1
             continue
-        if ctx.store.wallet_count() >= config.MAX_NODES_PER_TRACE:
+        if ctx.store.wallet_count() >= ctx.max_nodes:
             ctx.truncated = True
             _record_walk_cap(ctx, slug, [(n, d) for _, d, n in heap if n not in ctx.expanded
                                          and d < depth_budget] + [(node, depth)])
             ctx.notes.append(
-                f"Stopped expanding at {config.MAX_NODES_PER_TRACE} wallets "
-                f"(MAX_NODES_PER_TRACE). The graph is partial."
+                f"Stopped expanding at {ctx.max_nodes} wallets "
+                f"(node cap). The graph is partial."
             )
             break
 
@@ -1594,6 +1643,7 @@ async def trace(
     client: EtherscanClient | None = None,
     chain_id: int | None = None,
     as_of_block: int | None = None,
+    max_nodes: int | None = None,
 ) -> TraceResult:
     """
     Walk the money forward from `start_address` until it reaches a known entity.
@@ -1647,6 +1697,7 @@ async def trace(
         max_depth=max_depth,
         dust_threshold=dust_threshold,
         primary_slug=chain["slug"],
+        max_nodes=int(max_nodes or config.MAX_NODES_PER_TRACE),
     )
     # Local aliases so the post-processing below reads as it always has. The
     # context exists to carry state across a second chain leg, not to re-indent
@@ -1753,6 +1804,9 @@ async def trace(
         # hop can never claim more tainted value than it moved.
         hop.tainted_value = min(flow.tainted, hop.value)
         hop.assumed_pre_existing = min(flow.assumed_pre_existing, hop.value)
+        best = _best_tainted_tx(leg_taint).get((hop.from_addr, hop.to_addr, hop.asset))
+        if best is not None:
+            hop.tainted_tx_hash = best
 
     # The individual deposits behind each exchange finding, for the request.
     for attribution in attributions.values():
@@ -1900,6 +1954,7 @@ async def trace(
         history_truncation=list(ctx.history_truncation),
         consolidation_checks=list(ctx.consolidation_checks),
         walk_cap=ctx.walk_cap,
+        max_nodes=ctx.max_nodes,
     )
 
 
@@ -3073,6 +3128,10 @@ def to_json(result: TraceResult) -> dict:
             )
         return out
 
+    tainted_tx = {}
+    for hop in result.hops:
+        if hop.tainted_tx_hash:
+            tainted_tx.setdefault(_hop_nodes(result, hop), hop.tainted_tx_hash)
     edges = [
         {
             "source": src,
@@ -3091,6 +3150,8 @@ def to_json(result: TraceResult) -> dict:
             "tx_count": data.get("tx_count", 1),
             "timestamp": data.get("timestamp", 0),
             "tx_hash": data.get("tx_hash", ""),
+            # The transfer that carried the suspect's value, where one did.
+            "tainted_tx_hash": tainted_tx.get((src, dst)),
             "depth": data.get("depth", 0),
             # "transfer" or "cross_chain". A chain crossing is not just another
             # transfer and must not be drawn as one: it is an inference, it costs a
@@ -3130,6 +3191,8 @@ def to_json(result: TraceResult) -> dict:
             "explorer": result.chain.get("explorer"),
             # Which API the history came from, for the report header.
             "data_source": result.chain.get("data_source") or "Etherscan V2",
+            # The node cap this trace ran under; reproducing it needs the same cap.
+            "max_nodes": result.max_nodes,
             # The height the caller pinned the trace to, or None for "the head
             # when the trace started" (which is still recorded under `as_of`).
             "as_of_block": result.as_of.get(result.chain.get("slug")) if result.as_of_requested else None,

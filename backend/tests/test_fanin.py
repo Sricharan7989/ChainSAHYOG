@@ -113,6 +113,18 @@ def trace_tests():
     check("rejected for fanning out, in calibrated terms",
           "fans funds out like an attacker's pool" in (p["consolidation_checks"][0]["reason"] or ""), True)
 
+    print("\n--- 2c. a smart contract is never a collection point, whatever its fan-in ---")
+
+    class ContractHub(CountingClient):
+        async def is_contract(self, address, chain_id):
+            return address == HUB
+
+    p = run(ContractHub(chain_senders=5_000, complete=False))
+    check("a router-like contract with 5,000 senders: no lead", p["summary"].get("lead"), False)
+    check("rejected as a contract, before any sender count is spent",
+          ("smart contract" in (p["consolidation_checks"][0]["reason"] or ""), p["consolidation_checks"][0]["api_calls"]),
+          (True, 1))
+
     print("\n--- 3. without a chain-wide count, it says so and loses confidence ---")
     blind = run(Client())["summary"]
     check("still reported as a lead", blind.get("lead"), True)

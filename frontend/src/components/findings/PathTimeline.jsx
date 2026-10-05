@@ -196,11 +196,13 @@ export default function PathTimeline({ pathEdges, startAddress, summary, explore
                     >
                       {copiedAddr === bareRecipient ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                     </button>
-                    {edge.tx_hash && (
+                    {(edge.tainted_tx_hash || edge.tx_hash) && (
                       <a
                         href={getTxUrl(
                           explorerForChain(crossedTo, explorerBase),
-                          edge.tx_hash
+                          // The transfer that carried the suspect's funds, not
+                          // merely the largest on this edge (which may predate them).
+                          edge.tainted_tx_hash || edge.tx_hash
                         )}
                         target="_blank"
                         rel="noopener noreferrer"

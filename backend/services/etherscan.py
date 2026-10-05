@@ -233,6 +233,11 @@ class EtherscanClient:
         status = str(payload.get("status", ""))
         result = payload.get("result")
 
+        # The proxy module (eth_getCode and friends) answers in JSON-RPC form,
+        # with no status field.
+        if "jsonrpc" in payload and "result" in payload and "error" not in payload:
+            return result
+
         if status == "1":
             return result
 
@@ -371,6 +376,21 @@ class EtherscanClient:
                "complete": len(native) < cap and len(token) < cap}
         self._window_cache[key] = out
         return out
+
+    async def is_contract(self, address: str, chain_id: int) -> bool:
+        """Whether an address holds contract code (one eth_getCode call, cached)."""
+        resolved = config.chain(chain_id)["chain_id"]
+        wallet = normalize_address(address)
+        key = ("code", resolved, wallet)
+        if key not in self._window_cache:
+            code = await self._request(
+                {"module": "proxy", "action": "eth_getCode", "address": wallet, "tag": "latest"},
+                chain_id=resolved,
+            )
+            self._window_cache[key] = isinstance(code, str) and code not in ("0x", "0x0", "")
+        else:
+            self.cache_hits += 1
+        return self._window_cache[key]
 
     async def latest_block(self, chain_id: int) -> int:
         """The chain head now: the last block at or before the current time."""
