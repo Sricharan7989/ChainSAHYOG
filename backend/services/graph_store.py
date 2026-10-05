@@ -108,8 +108,12 @@ class MemoryStore:
             return set()
         return {p for p in self._g.predecessors(address) if p != address}
 
-    def in_degrees(self) -> list[int]:
-        return [d for _, d in self._g.in_degree()]
+    def in_degrees(self, chain: str | None = None) -> list[int]:
+        """Distinct-sender counts, for one chain's wallets only when `chain` is given."""
+        return [
+            d for n, d in self._g.in_degree()
+            if chain is None or self._g.nodes[n].get("chain") == chain
+        ]
 
     def incoming(self, address: str) -> list[dict]:
         if address not in self._g:
@@ -346,9 +350,10 @@ class Neo4jStore:
         )
         return {row["a"] for row in rows}
 
-    def in_degrees(self) -> list[int]:
+    def in_degrees(self, chain: str | None = None) -> list[int]:
         """
-        Distinct-sender count for EVERY wallet, for the adaptive fan-in floor.
+        Distinct-sender count for EVERY wallet (of one chain, if given), for the
+        adaptive fan-in floor.
 
         One row per wallet, which is what MemoryStore returns. Grouping is the
         whole point: `RETURN count(DISTINCT p)` on its own aggregates over every
@@ -361,10 +366,12 @@ class Neo4jStore:
         rows = self._run(
             """
             MATCH (w:Wallet {trace_id: $trace_id})
+            WHERE $chain IS NULL OR w.chain = $chain
             OPTIONAL MATCH (p:Wallet)-[:SENT {trace_id: $trace_id}]->(w)
             WHERE p.address <> w.address
             RETURN w.address AS address, count(DISTINCT p) AS indeg
-            """
+            """,
+            chain=chain,
         )
         return [row["indeg"] for row in rows]
 

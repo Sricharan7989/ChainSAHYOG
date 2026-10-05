@@ -37,10 +37,15 @@ def tx(frm, to, val, h="0xh"):
 
 
 class Stub:
-    def __init__(self, method, hops, crossed=()):
+    def __init__(self, method, hops, crossed=(), fan_in=None):
         self.method = method
         self.hop_distance = hops
         self.path_risk_types = set(crossed)
+        # A consolidation finding is scored on its chain-wide sender count. The
+        # arithmetic cases below declare a count at the minimum (no bonus).
+        if fan_in is None and method == "consolidation":
+            fan_in = {"global_checked": True, "chain_senders": 20, "chain_senders_complete": True}
+        self.fan_in = fan_in
 
 
 print("--- the weight table ---")

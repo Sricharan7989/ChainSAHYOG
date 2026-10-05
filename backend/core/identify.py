@@ -31,7 +31,7 @@ WHICH method produced a claim in order to weigh it. That is why `method` and
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import networkx as nx
 
@@ -70,6 +70,18 @@ LABEL_CONFIDENCE = 0.95
 # collection point", never "this is Binance".
 CONSOLIDATION_MAX_CONFIDENCE = 0.70
 
+# CHAIN-WIDE FAN-IN. The subgraph count above only sees senders this trace
+# walked, so "several of the suspect's own paths reconverge" and "an exchange
+# collects deposits from hundreds of unrelated customers" look identical to it.
+# A candidate that passes the subgraph gates is therefore checked against how
+# many distinct addresses have sent to it chain-wide. Below the minimum it is
+# not a collection point, whatever the subgraph shows.
+CONSOLIDATION_GLOBAL_MIN_SENDERS = 20
+CONSOLIDATION_GLOBAL_STRONG_SENDERS = 200
+# Where the chain-wide count cannot be obtained, the finding rests on subgraph
+# structure alone and its confidence is scaled by this factor.
+CONSOLIDATION_SUBGRAPH_ONLY_FACTOR = 0.5
+
 
 @dataclass(frozen=True)
 class Identification:
@@ -87,6 +99,9 @@ class Identification:
     method: str  # known_label | consolidation
     confidence: float
     evidence: str
+    # For a consolidation finding: senders observed in this trace and senders
+    # chain-wide (see apply_global_fan_in). None for a label match.
+    fan_in: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -412,7 +427,7 @@ def consolidation_fan_in(
     return len(store.predecessors(node))
 
 
-def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95) -> int:
+def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95, chain: str | None = None) -> int:
     """
     The fan-in a node must beat to count as UNUSUAL *for this particular graph*.
 
@@ -426,13 +441,21 @@ def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95) -> int:
     store = _as_store(graph)
     if store.wallet_count() == 0:
         return CONSOLIDATION_FLAG_SENDERS
-    degrees = sorted(store.in_degrees())
+    # PER CHAIN. Measured over the whole multi-chain graph, a large Ethereum leg
+    # set the bar for a small Polygon leg. With `chain`, only that chain's
+    # wallets define what is unusual on it.
+    try:
+        degrees = sorted(store.in_degrees(chain=chain)) if chain else sorted(store.in_degrees())
+    except TypeError:  # a store without per-chain support
+        degrees = sorted(store.in_degrees())
+    if not degrees:
+        return CONSOLIDATION_FLAG_SENDERS
     index = int(percentile * (len(degrees) - 1))
     return degrees[index]
 
 
 def consolidation_identify(
-    address: str, graph: nx.DiGraph, node: str | None = None
+    address: str, graph: nx.DiGraph, node: str | None = None, chain: str | None = None
 ) -> Identification | None:
     """
     Wrap the consolidation pattern into an Identification, or None if too weak.
@@ -452,7 +475,8 @@ def consolidation_identify(
     fan_in = consolidation_fan_in(address, graph, node=node)
     if fan_in < CONSOLIDATION_FLAG_SENDERS:
         return None
-    if fan_in < adaptive_fan_in_floor(graph):
+    floor = adaptive_fan_in_floor(graph, chain=chain)
+    if fan_in < floor:
         return None
 
     score = consolidation_score(address, graph, node=node)
@@ -470,11 +494,61 @@ def consolidation_identify(
         confidence=confidence,
         evidence=(
             f"{fan_in} distinct traced wallets funnel into this address "
-            f"(fan-in score {score:.2f}; unusual for this graph, where the 95th "
-            f"percentile is {adaptive_fan_in_floor(graph)}), matching the "
+            f"(fan-in score {score:.2f}; unusual for this chain's part of the graph, "
+            f"where the 95th percentile is {floor}), matching the "
             f"deposit-consolidation pattern exchanges produce when sweeping "
             f"customer deposits. UNCONFIRMED - a criminal re-pooling their own "
             f"split funds produces the same shape."
+        ),
+        fan_in={"subgraph_senders": fan_in, "subgraph_floor": floor},
+    )
+
+
+def apply_global_fan_in(ident: Identification, chain_wide: dict | None) -> Identification | None:
+    """
+    Decide a subgraph consolidation candidate on its CHAIN-WIDE sender count.
+
+    `chain_wide` is {"senders": n, "complete": bool, ...} from the tracer, or
+    None when the count could not be obtained. Returns:
+      * None - fewer than CONSOLIDATION_GLOBAL_MIN_SENDERS distinct senders ever
+        paid this address: it is a reconvergence point, not a collection point;
+      * the identification, scored on the chain-wide number, with both figures;
+      * where the count could not be obtained, the identification at reduced
+        confidence, saying it rests on subgraph structure only. Never the old
+        behaviour silently.
+    """
+    sub = (ident.fan_in or {}).get("subgraph_senders", 0)
+    if chain_wide is None or chain_wide.get("senders") is None:
+        reason = (chain_wide or {}).get("error") or "the client cannot count senders chain-wide"
+        return replace(
+            ident,
+            confidence=round(ident.confidence * CONSOLIDATION_SUBGRAPH_ONLY_FACTOR, 4),
+            fan_in={**(ident.fan_in or {}), "global_checked": False, "chain_senders": None,
+                    "global_note": reason},
+            evidence=ident.evidence + (
+                f" The chain-wide sender count could not be obtained ({reason}), so this rests on "
+                "subgraph structure only and its confidence is halved."
+            ),
+        )
+
+    n = int(chain_wide["senders"])
+    complete = bool(chain_wide.get("complete"))
+    if n < CONSOLIDATION_GLOBAL_MIN_SENDERS:
+        return None
+    span = CONSOLIDATION_GLOBAL_STRONG_SENDERS - CONSOLIDATION_GLOBAL_MIN_SENDERS
+    strength = min(1.0, max(0.0, (n - CONSOLIDATION_GLOBAL_MIN_SENDERS) / span))
+    bound = "exactly" if complete else "at least"
+    return replace(
+        ident,
+        confidence=round(CONSOLIDATION_MAX_CONFIDENCE * max(strength, 0.5), 4),
+        fan_in={**(ident.fan_in or {}), "global_checked": True, "chain_senders": n,
+                "chain_senders_complete": complete, "rows_read": chain_wide.get("rows")},
+        evidence=(
+        f"{sub} distinct wallets in this trace and {bound} {n} distinct addresses chain-wide have "
+        f"sent to this address" + ("" if complete else
+                                   " (counted from its most recent transactions before the as-of height)")
+        + ", matching the deposit-consolidation pattern exchanges produce when sweeping customer "
+        "deposits. UNCONFIRMED - no label names it."
         ),
     )
 
@@ -558,7 +632,7 @@ def identify(
 
     # Deliberately chain-agnostic: fan-in is a shape in the traced graph, and
     # that graph is already confined to one chain by the tracer.
-    hit = consolidation_identify(address, graph, node=node)
+    hit = consolidation_identify(address, graph, node=node, chain=chain)
     if hit is not None:
         return hit
 

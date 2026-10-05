@@ -239,6 +239,8 @@ class Attribution:
     # core/provenance.py). Empty for a consolidation lead, which has no source.
     citation: str = ""
     evidence_tier: str = ""
+    # For a consolidation lead: senders in this trace and chain-wide.
+    fan_in: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -286,6 +288,7 @@ class Attribution:
             "deposits": list(self.deposits),
             "deposits_total": self.deposits_total,
             **_provenance_fields(self),
+            "fan_in": self.fan_in,
         }
 
 
@@ -398,6 +401,7 @@ class TraceResult:
     as_of_ts: int | None = None
     as_of_requested: bool = False
     history_truncation: list = field(default_factory=list)
+    consolidation_checks: list = field(default_factory=list)
 
     def __iter__(self):
         """So `graph, hops = result` works, as the engine's contract promises."""
@@ -530,6 +534,12 @@ class _WalkContext:
     # Wallets whose history could not be read back to its start: the caveat a
     # reader needs instead of silence. See _record_truncation.
     history_truncation: list = field(default_factory=list)
+    # Every consolidation candidate checked against its chain-wide sender count,
+    # kept or rejected, so a dropped lead is visible rather than silent.
+    consolidation_checks: list = field(default_factory=list)
+    # node -> the verified identification (or None), so a candidate rejected
+    # mid-walk is not checked again, or charged again, by the end-of-leg sweep.
+    hub_verdicts: dict = field(default_factory=dict)
 
     async def block_for(self, chain: dict) -> int | None:
         """The as-of height on one chain, derived from the trace's moment on first use."""
@@ -584,6 +594,7 @@ class _WalkContext:
         # Provenance of the label behind this identification, or of the inference.
         meta = identify.load_labels().get((slug, address)) or {}
         a = self.attributions[node]
+        a.fan_in = getattr(ident, "fan_in", None)
         if ident.method == "consolidation":
             a.evidence_tier = "inferred"
             a.citation = (
@@ -714,6 +725,57 @@ async def _fetch_pinned(ctx: "_WalkContext", address: str, chain: dict) -> list:
     return rows
 
 
+async def _verify_hub(ctx: "_WalkContext", node: str, address: str, chain: dict, ident):
+    """
+    Check a subgraph consolidation candidate against its CHAIN-WIDE fan-in.
+
+    Free when the wallet's own history was already fetched by the walk; otherwise
+    the client's two-call sender count, pinned to the as-of height. Returns the
+    identification rescored on the global number, or None for a reconvergence
+    point. Every check is recorded with both figures and the call cost.
+    """
+    if node in ctx.hub_verdicts:
+        return ctx.hub_verdicts[node]
+    slug = chain["slug"]
+    block = await ctx.block_for(chain)
+    chain_wide, calls = None, 0
+    history = ctx.fetched_by_chain.get(slug, {}).get(address)
+    if history is not None:
+        senders = {t.from_addr for t in history if t.to_addr == address and t.from_addr != address}
+        reach = _reach_for(ctx, chain["chain_id"], address, block)
+        complete = not any(isinstance(r, dict) and r.get("truncated") for r in reach.values())
+        chain_wide = {"senders": len(senders), "complete": complete,
+                      "rows": sum(1 for t in history if t.to_addr == address)}
+    else:
+        count = getattr(ctx.client, "get_inbound_senders", None)
+        if count is not None:
+            try:
+                chain_wide = await count(address, chain["chain_id"], as_of_block=block)
+                calls = int(chain_wide.get("calls", 2))
+            except Exception as exc:  # noqa: BLE001 - reported on the finding
+                chain_wide = {"senders": None, "error": f"the sender count failed: {exc}"}
+    subgraph = (ident.fan_in or {}).get("subgraph_senders")
+    verdict = identify.apply_global_fan_in(ident, chain_wide)
+    ctx.consolidation_checks.append({
+        "node_id": node,
+        "address": address,
+        "chain": slug,
+        "subgraph_senders": subgraph,
+        "chain_senders": (chain_wide or {}).get("senders"),
+        "chain_senders_complete": (chain_wide or {}).get("complete"),
+        "api_calls": calls,
+        "kept": verdict is not None,
+        "reason": (
+            None if verdict is not None else
+            f"only {(chain_wide or {}).get('senders')} distinct addresses have ever sent to it "
+            f"chain-wide (minimum {identify.CONSOLIDATION_GLOBAL_MIN_SENDERS}): the trace's own "
+            "paths reconverge here; it is not a collection point"
+        ),
+    })
+    ctx.hub_verdicts[node] = verdict
+    return verdict
+
+
 def _reach_for(ctx: "_WalkContext", chain_id: int, address: str, block: int | None) -> dict:
     """How far back a wallet's fetched history reached, at this trace's height."""
     reach = getattr(ctx.client, "history_reach", {}) or {}
@@ -830,6 +892,8 @@ async def _walk_leg(
         # pointless and ruinously expensive.
         if depth > start_depth:
             ident = identify.identify(address, ctx.store, chain=slug, node=node)
+            if ident is not None and ident.method == "consolidation":
+                ident = await _verify_hub(ctx, node, address, chain, ident)
             if ident is not None:
                 ctx.record(node, address, slug, ident, depth)
                 if identify.is_terminal(ident):
@@ -960,8 +1024,10 @@ async def _walk_leg(
         if node in ctx.attributions or (is_start and node == start_node):
             continue
         late = identify.consolidation_identify(
-            _bare_address(node), ctx.store, node=node
-        )  # chain-agnostic
+            _bare_address(node), ctx.store, node=node, chain=slug
+        )  # chain-agnostic method, per-chain floor
+        if late is not None:
+            late = await _verify_hub(ctx, node, _bare_address(node), chain, late)
         if late is not None:
             ctx.record(
                 node, _bare_address(node), slug, late, data.get("depth", 0)
@@ -1670,6 +1736,7 @@ async def trace(
         as_of_ts=ctx.as_of_ts,
         as_of_requested=ctx.as_of_requested,
         history_truncation=list(ctx.history_truncation),
+        consolidation_checks=list(ctx.consolidation_checks),
     )
 
 
@@ -2441,8 +2508,11 @@ def summarize(result: TraceResult) -> dict:
             "headline": (
                 f"No named exchange within {result.max_depth} hops. A transaction "
                 f"path connects to one collection point {lead.hop_distance} hops "
-                f"away ({lead.confidence_score}% confidence) - UNCONFIRMED."
+                f"away ({lead.confidence_score}% confidence"
+                + _fan_in_phrase(lead.fan_in)
+                + ") - UNCONFIRMED."
             ),
+            "fan_in": lead.fan_in,
             "caveat": _caveat_for(result, lead),
             **_taint_fields(lead, result),
             "termination": result.termination,
@@ -2662,6 +2732,17 @@ def _crossing_handoff(result: TraceResult, src: str, dst: str) -> dict | None:
     return None
 
 
+def _fan_in_phrase(fan_in: dict | None) -> str:
+    """'; 9 senders in this trace, 340 chain-wide' - both figures, always together."""
+    if not fan_in:
+        return ""
+    sub = fan_in.get("subgraph_senders")
+    if fan_in.get("global_checked"):
+        bound = "" if fan_in.get("chain_senders_complete") else "at least "
+        return f"; {sub} senders in this trace, {bound}{fan_in.get('chain_senders')} chain-wide"
+    return f"; {sub} senders in this trace, chain-wide count not obtained"
+
+
 def _as_of_payload(result: TraceResult) -> dict:
     """The point in time a trace describes, in a form a reader can re-run."""
     slug = result.chain.get("slug", "")
@@ -2867,6 +2948,8 @@ def to_json(result: TraceResult) -> dict:
         "summary": {**summarize(result), **_reproducibility(result)},
         "as_of": _as_of_payload(result),
         "history_truncation": list(result.history_truncation),
+        # Every fan-in candidate and what its chain-wide count decided.
+        "consolidation_checks": list(result.consolidation_checks),
         "attributions": [a.to_dict() for a in result.attributions],
         "clusters": [c.to_dict() for c in result.clusters],
         "exchanges": [a.to_dict() for a in result.exchanges],

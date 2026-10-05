@@ -175,6 +175,19 @@ def compute_confidence(attribution) -> ConfidenceScore:
     method_label = METHOD_LABELS.get(method, f"identified by {method or 'unknown method'}")
     components.append(ScoreComponent(method_label, method_points))
 
+    # Factor 1b - for a consolidation finding, the chain-wide fan-in decides how
+    # much the pattern is worth, and its absence is charged for.
+    if method == "consolidation":
+        fan_in = getattr(attribution, "fan_in", None) or {}
+        if fan_in.get("global_checked"):
+            n = int(fan_in.get("chain_senders") or 0)
+            bonus = min(8, max(0, (n - 20) * 8 // 180))
+            bound = "" if fan_in.get("chain_senders_complete") else "at least "
+            components.append(ScoreComponent(f"{bound}{n} distinct senders chain-wide", bonus))
+        else:
+            components.append(ScoreComponent(
+                "chain-wide sender count not obtained: rests on subgraph structure only", -10))
+
     # Factor 2 - hop distance.
     points = hop_points(hops)
     hop_label = f"{hops} hop{'s' if hops != 1 else ''} from suspect"

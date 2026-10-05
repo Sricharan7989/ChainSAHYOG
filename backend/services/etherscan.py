@@ -289,6 +289,43 @@ class EtherscanClient:
             "end_block": end_block,
         }
 
+    async def get_inbound_senders(
+        self, address: str, chain_id: int, as_of_block: int | None = None
+    ) -> dict:
+        """
+        How many distinct addresses have sent to `address`, as of the height.
+
+        COST: two calls (one txlist page, one tokentx page, newest first, up to the
+        as-of height). Etherscan has no "count distinct senders" endpoint; this is
+        the cheapest query that separates "7 senders" from "hundreds". If both
+        pages are short, the wallet's whole history was read and the count is
+        EXACT; otherwise it is a lower bound from the most recent rows.
+        """
+        resolved = config.chain(chain_id)["chain_id"]
+        wallet = normalize_address(address)
+        key = ("senders", resolved, wallet, as_of_block)
+        cached = self._window_cache.get(key)
+        if cached is not None:
+            self.cache_hits += 1
+            return cached
+        cap = config.MAX_TXNS_PER_ADDRESS
+        common = {"module": "account", "address": wallet, "startblock": 0,
+                  "endblock": 99999999 if as_of_block is None else int(as_of_block),
+                  "page": 1, "offset": cap, "sort": "desc"}
+        native = await self._request({**common, "action": "txlist"}, chain_id=resolved) or []
+        token = await self._request({**common, "action": "tokentx"}, chain_id=resolved) or []
+        senders, rows = set(), 0
+        for r in list(native) + list(token):
+            if (r.get("to") or "").strip().lower() == wallet:
+                rows += 1
+                frm = (r.get("from") or "").strip().lower()
+                if frm and frm != wallet:
+                    senders.add(frm)
+        out = {"senders": len(senders), "rows": rows, "calls": 2,
+               "complete": len(native) < cap and len(token) < cap}
+        self._window_cache[key] = out
+        return out
+
     async def latest_block(self, chain_id: int) -> int:
         """The chain head now: the last block at or before the current time."""
         return await self.block_at(int(time.time()), chain_id, "before")
