@@ -30,6 +30,8 @@ export default function DashboardPage() {
   const [dustThreshold, setDustThreshold] = useState(0.01);
   const [mode, setMode] = useState('auto');
   const [saveDemo, setSaveDemo] = useState(false);
+  // Optional past block height to pin the trace to; empty = the chain head.
+  const [asOfBlock, setAsOfBlock] = useState('');
 
   // Application Data & State
   const [health, setHealth] = useState(null);
@@ -105,6 +107,7 @@ export default function DashboardPage() {
         dustThreshold,
         mode,
         save: saveDemo,
+        asOfBlock: asOfBlock.trim() === '' ? null : Number(asOfBlock),
       });
       setData(result);
       setToast({ type: 'success', message: 'Forensic trace completed successfully.' });
@@ -115,7 +118,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [address, selectedChainId, maxDepth, dustThreshold, mode, saveDemo]);
+  }, [address, selectedChainId, maxDepth, dustThreshold, mode, saveDemo, asOfBlock]);
 
   // 3. Auto-trigger trace if URL search params provide an initial address
   useEffect(() => {
@@ -149,6 +152,8 @@ export default function DashboardPage() {
       // replayed result is reported from the same recording, and a live result
       // is served from the backend's in-memory copy of that exact trace.
       mode: data.source === 'cache' ? 'cache' : 'live',
+      // The same height the trace on screen was pinned to, if one was requested.
+      asOfBlock: data.params?.as_of_block ?? null,
     });
     window.open(url, '_blank');
     setToast({ type: 'success', message: 'Generating forensic PDF report…' });
@@ -193,6 +198,8 @@ export default function DashboardPage() {
             saveDemo={saveDemo}
             setSaveDemo={setSaveDemo}
             chainId={selectedChainId}
+            asOfBlock={asOfBlock}
+            setAsOfBlock={setAsOfBlock}
           />
 
           <DemoChips

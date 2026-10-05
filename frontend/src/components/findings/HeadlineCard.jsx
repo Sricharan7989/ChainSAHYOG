@@ -268,6 +268,25 @@ export default function HeadlineCard({ summary, params, onOpenSahyog, onDownload
         </div>
       </div>
 
+      {/* THE POINT IN TIME. Which block this finding describes, and that a re-run
+          at that height reproduces it - or that it is not pinned. */}
+      {summary.as_of && (
+        <div className="text-[11px] font-mono text-[#52525b] dark:text-[#a3a3a3] border border-[#d4d4d8] dark:border-[#262626] p-2 space-y-1">
+          <div>
+            <span className="uppercase text-[10px] font-bold mr-2">As of</span>
+            {summary.as_of.pinned
+              ? `block ${summary.as_of.block} on ${summary.as_of.chain_name}${summary.as_of.time_utc ? ` (${summary.as_of.time_utc})` : ''}`
+              : 'not pinned to a block height'}
+          </div>
+          <p className="leading-snug font-sans">{summary.as_of.statement}</p>
+          {summary.history_truncation_note && (
+            <p className="leading-snug font-sans text-amber-700 dark:text-amber-400">
+              {summary.history_truncation_note}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* WHAT THE NAME RESTS ON. The evidence tier at a glance - the entity's own
           signed statement, a government list, a third-party pack, or our own
           inference - and the full provenance chain beneath it. */}

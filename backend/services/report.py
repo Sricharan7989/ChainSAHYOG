@@ -738,6 +738,24 @@ def build_report(payload: dict) -> bytes:
         recorded = payload.get("recorded_at", "unknown time")
         source_text = f"Recorded trace (captured {recorded})"
 
+    # THE POINT IN TIME. Stated in the header, not the small print: a re-run at a
+    # later height can legitimately see different history, and the reader must
+    # know which height this document describes and how to reproduce it.
+    as_of = payload.get("as_of") or summary.get("as_of") or {}
+    if as_of.get("pinned"):
+        as_of_text = (
+            f'Block {as_of.get("block")} on {as_of.get("chain_name") or as_of.get("chain")}'
+            + (f' ({as_of.get("time_utc")})' if as_of.get("time_utc") else "")
+            + (" - height requested by the investigator" if as_of.get("requested") else
+               " - chain head when the trace started")
+        )
+        others = {k: v for k, v in (as_of.get("per_chain") or {}).items()
+                  if k != as_of.get("chain") and v is not None}
+        if others:
+            as_of_text += "; " + ", ".join(f"{k} block {v}" for k, v in others.items())
+    else:
+        as_of_text = "NOT pinned to a block height - a re-run may see later transfers"
+
     chain_name = params.get("chain_name") or "Ethereum"
     chain_id = params.get("chain_id", 1)
     native = params.get("native_symbol") or "ETH"
@@ -750,7 +768,16 @@ def build_report(payload: dict) -> bytes:
         ("Trace depth", f'{params.get("max_depth", "?")} hops '
                         f'(dust threshold {params.get("dust_threshold_eth", "?")} {native})'),
         ("Wallets examined", f'{stats.get("nodes", 0)} wallets, {stats.get("edges", 0)} transfers'),
+        ("As of", as_of_text),
     ], styles))
+    if as_of.get("statement"):
+        story.append(Paragraph(f'<b>Reproducibility.</b> {as_of["statement"]}', styles["small"]))
+    if summary.get("history_truncation_note"):
+        story.append(Paragraph(
+            f'<b>History not fully read.</b> {summary["history_truncation_note"]}', styles["small"],
+        ))
+    if payload.get("replay_note"):
+        story.append(Paragraph(payload["replay_note"], styles["small"]))
 
     # --- Finding --------------------------------------------------------
     story.append(Paragraph("Finding", styles["h2"]))

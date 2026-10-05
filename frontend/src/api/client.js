@@ -29,6 +29,7 @@ export async function runTrace({
   dustThreshold = 0.001,
   mode = 'auto',
   save = false,
+  asOfBlock = null,
 }) {
   const params = new URLSearchParams({
     address: address.trim(),
@@ -38,6 +39,10 @@ export async function runTrace({
     mode,
     save: save.toString(),
   });
+  // Pin the trace to a past height; omitted, the backend pins it to the head.
+  if (asOfBlock !== null && asOfBlock !== '' && asOfBlock !== undefined) {
+    params.set('as_of_block', String(asOfBlock));
+  }
 
   const res = await fetch(`${API_BASE}/trace?${params.toString()}`);
   
@@ -63,6 +68,7 @@ export function getReportUrl({
   maxDepth = 4,
   dustThreshold = 0.001,
   mode = 'auto',
+  asOfBlock = null,
 }) {
   const params = new URLSearchParams({
     address: address.trim(),
@@ -71,5 +77,6 @@ export function getReportUrl({
     dust_threshold: dustThreshold.toString(),
     mode,
   });
+  if (asOfBlock !== null && asOfBlock !== undefined) params.set('as_of_block', String(asOfBlock));
   return `${API_BASE}/report?${params.toString()}`;
 }

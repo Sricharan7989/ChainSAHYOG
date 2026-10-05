@@ -63,6 +63,11 @@ export default function SourceBadge({ data }) {
           ? 'the chain may have moved on since; tick “force live” to refetch'
           : 'fetched from the chain for this request'}
       </span>
+      {(data.replay_note || data.as_of?.statement) && (
+        <span className="basis-full opacity-90 font-sans normal-case">
+          {isReplay ? data.replay_note : data.as_of.statement}
+        </span>
+      )}
     </div>
   );
 }

@@ -20,6 +20,8 @@ export default function SearchBar({
   saveDemo,
   setSaveDemo,
   chainId,
+  asOfBlock = '',
+  setAsOfBlock = () => {},
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const containerRef = useRef(null);
@@ -209,6 +211,27 @@ export default function SearchBar({
                 ))}
               </div>
               <span className="text-[10px] text-[#71717a] dark:text-[#666666] font-mono mt-0.5 block">Standard: 0.01 ETH (~₹2,500)</span>
+            </div>
+
+            {/* As-of height: pin the trace to a past block. Empty = the chain head
+                when the trace starts. The same height always reproduces the same trace. */}
+            <div>
+              <div className="flex justify-between text-xs mb-1.5 font-mono">
+                <span className="text-[#52525b] dark:text-[#a3a3a3] font-medium">As-of Block (optional)</span>
+                <span className="text-[#627EEA] font-bold">{asOfBlock ? `#${asOfBlock}` : 'chain head'}</span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="e.g. 23500000"
+                value={asOfBlock}
+                onChange={(e) => setAsOfBlock(e.target.value.replace(/[^0-9]/g, ''))}
+                className="w-full bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] px-2.5 py-1 text-xs font-mono text-[#09090b] dark:text-[#f5f5f5] focus:outline-none focus:border-[#627EEA]"
+              />
+              <span className="text-[10px] text-[#71717a] dark:text-[#666666] font-mono mt-0.5 block">
+                Re-running at the same height reproduces the result
+              </span>
             </div>
 
             {/* Execution Mode */}

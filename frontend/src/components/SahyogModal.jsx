@@ -138,7 +138,10 @@ A4. Analytical confidence score: ${confidence} out of 100
    This is the tool's internal measure of how strongly the available evidence supports the attribution in A1, built from the components below. It is not a probability that the attribution is correct, and it does not measure anything about the account holder.
 ${components.length ? components.map((c) => `   ${c.points >= 0 ? '+' : ''}${c.points}  ${c.label}`).join('\n') : '   (components not recorded in this result)'}
 
-A5. Limits
+A5. Point in time
+   ${data.as_of?.statement || 'The block height this trace describes was not recorded.'}${summary.history_truncation_note ? `\n   ${summary.history_truncation_note}` : ''}
+
+A6. Limits
    - Only public blockchain records were used. No private or exchange data was accessed.
    - Exchange attributions come from published address labels, which can be incomplete or wrong; the records sought in the request are what confirm or refute it.
    - The trace stops at the first exchange on each branch; it does not follow funds inside an exchange.`;
