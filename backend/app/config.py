@@ -798,6 +798,9 @@ ETHERSCAN_REQUEST_DELAY_SEC = 0.25
 # TronGrid, keyless: about 3 requests a second, below its throttle for
 # unauthenticated callers. A 403/429 is backed off and retried (services/tron.py).
 TRONGRID_REQUEST_DELAY_SEC = 0.35
+# Transient network failures (DNS, dropped connections) retried per request,
+# with exponential backoff, before a fetch is reported as failed.
+NETWORK_RETRIES = 4
 # Pages of 200 rows per endpoint before a Tron wallet's history is reported as
 # truncated (25 pages = 5,000 rows, the same depth as MAX_HISTORY_PAGES on EVM).
 TRON_MAX_HISTORY_PAGES = 25

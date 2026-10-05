@@ -195,19 +195,32 @@ class EtherscanClient:
         if send_chainid:
             query["chainid"] = resolved_chain_id
 
-        async with self._lock:
-            elapsed = time.monotonic() - self._last_request_at
-            if elapsed < config.ETHERSCAN_REQUEST_DELAY_SEC:
-                await asyncio.sleep(config.ETHERSCAN_REQUEST_DELAY_SEC - elapsed)
+        # A transient network failure (a DNS blip, a dropped connection) is
+        # retried with backoff before it becomes an error. Otherwise one blip on
+        # one wallet mid-trace silently shrinks the graph, and the same input at
+        # the same height would not give the same output.
+        for attempt in range(config.NETWORK_RETRIES + 1):
+            async with self._lock:
+                elapsed = time.monotonic() - self._last_request_at
+                if elapsed < config.ETHERSCAN_REQUEST_DELAY_SEC:
+                    await asyncio.sleep(config.ETHERSCAN_REQUEST_DELAY_SEC - elapsed)
 
-            client = await self._get_client()
-            try:
-                response = await client.get(base_url, params=query)
-            except httpx.HTTPError as exc:
-                raise EtherscanError(f"Network error talking to the explorer API: {exc}") from exc
-            finally:
-                self._last_request_at = time.monotonic()
-            self.api_calls += 1
+                client = await self._get_client()
+                try:
+                    response = await client.get(base_url, params=query)
+                    network_error = None
+                except httpx.HTTPError as exc:
+                    network_error = exc
+                finally:
+                    self._last_request_at = time.monotonic()
+                self.api_calls += 1
+            if network_error is None:
+                break
+            if attempt == config.NETWORK_RETRIES:
+                raise EtherscanError(
+                    f"Network error talking to the explorer API (after {attempt + 1} tries): {network_error}"
+                ) from network_error
+            await asyncio.sleep(2 ** attempt * 2)
 
         if response.status_code != 200:
             raise EtherscanError(f"Etherscan returned HTTP {response.status_code}")

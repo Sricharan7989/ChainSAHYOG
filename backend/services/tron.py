@@ -82,7 +82,8 @@ class TronClient:
 
     async def _call(self, method: str, path: str, **kwargs) -> dict:
         """One throttled TronGrid request, with backoff on the keyless throttle."""
-        for attempt in range(4):
+        network_failures = 0
+        for attempt in range(4 + config.NETWORK_RETRIES):
             async with self._lock:
                 wait = config.TRONGRID_REQUEST_DELAY_SEC - (time.monotonic() - self._last)
                 if wait > 0:
@@ -91,11 +92,21 @@ class TronClient:
                     self._client = httpx.AsyncClient(timeout=30.0)
                 try:
                     response = await self._client.request(method, BASE_URL + path, **kwargs)
+                    network_error = None
                 except httpx.HTTPError as exc:
-                    raise TronError(f"Network error talking to TronGrid: {exc}") from exc
+                    network_error = exc
                 finally:
                     self._last = time.monotonic()
                 self.api_calls += 1
+            if network_error is not None:
+                # Transient network failures are retried with backoff, as on EVM.
+                network_failures += 1
+                if network_failures > config.NETWORK_RETRIES:
+                    raise TronError(
+                        f"Network error talking to TronGrid (after {network_failures} tries): {network_error}"
+                    ) from network_error
+                await asyncio.sleep(2 ** network_failures)
+                continue
             if response.status_code in (403, 429):
                 # Keyless requests over the limit are blocked for about 30 s.
                 await asyncio.sleep(31 if attempt else 5)
