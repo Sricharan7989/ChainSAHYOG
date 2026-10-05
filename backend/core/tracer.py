@@ -99,7 +99,8 @@ from core import (
     vasp_status,
 )
 from services import graph_store
-from services.etherscan import EtherscanClient, Transfer, get_client
+from services.chain_client import get_client
+from services.etherscan import EtherscanClient, Transfer
 
 
 @dataclass
@@ -691,6 +692,9 @@ class _WalkContext:
                     "that chain would very likely not be recognised by name. A trace that "
                     "finds nothing there has not established that no exchange was involved."
                 )
+            gap = config.COVERAGE_GAPS.get(slug)
+            if gap:
+                note = f"{note} {gap}" if note else gap
             out[slug] = {
                 "labels": count,
                 "inferred_labels": inferred,
@@ -2255,7 +2259,7 @@ MAX_DEPOSITS_LISTED = 25
 # Which token standard a contract on each chain follows, for naming the asset in
 # a request. A compliance team searches by contract; "USDT" alone is ambiguous
 # across chains and across the several USDT contracts on one chain.
-TOKEN_STANDARD = {"bnb": "BEP-20"}
+TOKEN_STANDARD = {"bnb": "BEP-20", "tron": "TRC-20"}
 
 
 def _utc_ist(ts: int) -> tuple[str, str]:
@@ -2983,6 +2987,8 @@ def to_json(result: TraceResult) -> dict:
             "chain_name": result.chain.get("name"),
             "native_symbol": result.chain.get("native"),
             "explorer": result.chain.get("explorer"),
+            # Which API the history came from, for the report header.
+            "data_source": result.chain.get("data_source") or "Etherscan V2",
             # The height the caller pinned the trace to, or None for "the head
             # when the trace started" (which is still recorded under `as_of`).
             "as_of_block": result.as_of.get(result.chain.get("slug")) if result.as_of_requested else None,

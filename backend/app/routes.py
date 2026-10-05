@@ -189,7 +189,9 @@ async def _run_or_replay(
     if mode == "auto" and same_params:
         return recent
 
-    if not config.has_etherscan_key():
+    # Tron is read keyless through TronGrid; every other chain needs the
+    # Etherscan key.
+    if chain.get("family") != "tron" and not config.has_etherscan_key():
         raise HTTPException(
             status_code=503,
             detail="ETHERSCAN_API_KEY is not configured in backend/.env - cannot run a live trace.",

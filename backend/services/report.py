@@ -769,7 +769,7 @@ def build_report(payload: dict) -> bytes:
         ("Suspect address", f'<font face="Courier" size="8">{payload.get("start_address", "")}</font>'),
         ("Network", f"{chain_name} (chain id {chain_id}), native token {native}"),
         ("Report generated", generated),
-        ("Data source", f"{chain_name} via Etherscan V2 · {source_text}"),
+        ("Data source", f"{chain_name} via {params.get('data_source') or 'Etherscan V2'} · {source_text}"),
         ("Trace depth", f'{params.get("max_depth", "?")} hops '
                         f'(dust threshold {params.get("dust_threshold_eth", "?")} {native})'),
         ("Wallets examined", f'{stats.get("nodes", 0)} wallets, {stats.get("edges", 0)} transfers'),

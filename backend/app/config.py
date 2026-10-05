@@ -97,6 +97,8 @@ def chain_readable(chain_id: int) -> bool:
     traced into an empty result: "we found no exchange there" and "we could
     not look" are different statements, and only one of them is true.
     """
+    if (CHAINS.get(int(chain_id)) or {}).get("family") == "tron":
+        return True  # TronGrid is read keyless (throttled); see services/tron.py
     override = CHAIN_API_OVERRIDES.get(int(chain_id))
     if override:
         return bool(override["api_key"])
@@ -146,6 +148,18 @@ CHAINS: dict[int, dict] = {
         "name": "Arbitrum One",
         "native": "ETH",
         "explorer": "https://arbiscan.io",
+    },
+    # Tron mainnet. Its chain id (0x2b6653dc) is what TronGrid reports; it is
+    # used here only as this registry's key. Not an EVM chain: addresses are
+    # base58 (core/addresses.py), and it is read through TronGrid by
+    # services/tron.py, never through Etherscan.
+    728126428: {
+        "slug": "tron",
+        "name": "Tron",
+        "native": "TRX",
+        "explorer": "https://tronscan.org",
+        "family": "tron",
+        "data_source": "TronGrid (keyless)",
     },
 }
 
@@ -262,6 +276,11 @@ DUST_THRESHOLD_ETH = 0.01
 #
 # Keys are lowercased contract addresses; values are (display symbol, decimals).
 TOKEN_CONTRACTS: dict[int, dict[str, tuple[str, int]]] = {
+    728126428: {  # Tron
+        # Tether's TRC-20 USDT, pinned by contract address and 6 decimals. A
+        # token calling itself "USDT" from any other contract is not followed.
+        "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t": ("USDT", 6),
+    },
     1: {  # Ethereum
         "0xdac17f958d2ee523a2206206994597c13d831ec7": ("USDT", 6),
         "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": ("USDC", 6),
@@ -332,7 +351,16 @@ def token_asset(chain_id: int, contract: str | None) -> tuple[str, int] | None:
     """
     if not contract:
         return None
-    entry = TOKEN_CONTRACTS.get(chain_id, {}).get(contract.strip().lower())
+    # Keyed by the chain's own address rule: lowercasing would break a Tron
+    # (base58, case-sensitive) contract address.
+    from core import addresses
+
+    slug = (CHAINS.get(int(chain_id)) or {}).get("slug")
+    table = {
+        (addresses.try_normalize(k, slug) or k.lower()): v
+        for k, v in TOKEN_CONTRACTS.get(chain_id, {}).items()
+    }
+    entry = table.get(addresses.try_normalize(contract, slug) or contract.strip().lower())
     if entry is None:
         return None
     if TOKEN_SYMBOL_FILTER is not None and entry[0].upper() not in TOKEN_SYMBOL_FILTER:
@@ -374,6 +402,8 @@ DUST_THRESHOLDS: dict[str, float] = {
     "ETH": DUST_THRESHOLD_ETH,   # ~$2-4
     "WETH": DUST_THRESHOLD_ETH,
     "POL": 1.0,                  # Polygon gas token, worth cents
+    "TRX": 10.0,                 # ~$2-3. The request's dust parameter is in ETH and
+                                 # does not apply to TRX; see dust_threshold_for.
     "BNB": 0.002,
     "USDT": 1.0,                 # $1
     "USDC": 1.0,
@@ -765,6 +795,21 @@ MAX_EDGES_PER_NODE = 25
 # Etherscan free tier allows 5 calls/sec; we stay comfortably under it.
 ETHERSCAN_RATE_LIMIT_PER_SEC = 5
 ETHERSCAN_REQUEST_DELAY_SEC = 0.25
+# TronGrid, keyless: about 3 requests a second, below its throttle for
+# unauthenticated callers. A 403/429 is backed off and retried (services/tron.py).
+TRONGRID_REQUEST_DELAY_SEC = 0.35
+# Pages of 200 rows per endpoint before a Tron wallet's history is reported as
+# truncated (25 pages = 5,000 rows, the same depth as MAX_HISTORY_PAGES on EVM).
+TRON_MAX_HISTORY_PAGES = 25
+
+# KNOWN LABEL GAPS, named per chain so an empty result is never a silent hole.
+COVERAGE_GAPS: dict[str, str] = {
+    "tron": (
+        "Tron exchange labels cover Binance, Huobi, KuCoin and Bitfinex only (27 addresses, "
+        "against about 1,500 labels in total). OKX, a major venue for TRC-20 USDT, has no Tron "
+        "labels here, so funds reaching OKX on Tron would not be named."
+    ),
+}
 
 # Most recent transactions pulled per wallet. Etherscan allows up to 10000 per
 # page, but a trace does not need a hot wallet's entire history to see where the
