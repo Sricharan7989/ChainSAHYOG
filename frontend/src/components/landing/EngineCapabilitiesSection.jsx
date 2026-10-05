@@ -89,7 +89,7 @@ const CAPABILITIES = [
       'Neo4j provides persistent graph storage for deep queries, while NetworkX ensures zero-downtime execution. The report generator outputs court-admissible dossiers under Indian cybercrime procedure.',
     bullets: [
       'Neo4j with NetworkX fallback',
-      'Statutory Requisitions under Cyber Law & IPC',
+      'Lawful requests under BNSS, 2023 & IT Act, 2000',
       'Court-ready multi-page PDF export',
     ],
   },

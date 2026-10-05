@@ -70,20 +70,24 @@ class Transfer:
 
 
 def normalize_address(address: str) -> str:
-    """Lowercase + strip. The single source of truth for how an address is keyed."""
-    return address.strip().lower()
+    """
+    The EVM key for an address: lowercase hex. THIS CLIENT ONLY SPEAKS EVM.
+
+    Lowercasing is right here and wrong on Tron and Bitcoin, where case is part
+    of the address; per-chain keying lives in core/addresses.py, and this
+    delegates to its EVM rule. An invalid address is returned stripped and
+    lowercased as before, so a caller's own validation still sees it.
+    """
+    from core import addresses
+
+    return addresses.try_normalize(address, "ethereum") or address.strip().lower()
 
 
 def is_valid_address(address: str) -> bool:
-    """Shape check only — does not verify the address exists on chain."""
-    a = address.strip()
-    if len(a) != ADDRESS_LENGTH or not a.startswith("0x"):
-        return False
-    try:
-        int(a[2:], 16)
-    except ValueError:
-        return False
-    return True
+    """EVM shape check only - does not verify the address exists on chain."""
+    from core import addresses
+
+    return addresses.is_valid(address, "ethereum")
 
 
 class EtherscanClient:
@@ -122,6 +126,21 @@ class EtherscanClient:
         # Wallets already counted into this trace, so revisiting one cannot
         # double its contribution.
         self._tallied: set[tuple[int, str]] = set()
+        # (chain_id, address, as_of_block) -> how far back each fetch actually reached:
+        # {"native": {"rows": n, "truncated": bool, "oldest": ts,
+        #             "oldest_block": n, "pages": n}, "token": {...}}.
+        # Keyed by the as-of height too: the same wallet pinned at two heights is
+        # two different slices of history.
+        #
+        # WHY. Each fetch returns only the most recent MAX_TXNS_PER_ADDRESS rows.
+        # For a busy wallet that window can end long AFTER an event we need to
+        # look for - a bridge credit months old, say - and "we found nothing" over
+        # a window that never covered the event is a false negative. Recording
+        # the reach lets a caller say "we could not look that far back" instead.
+        self.history_reach: dict[tuple[int, str], dict[str, dict]] = {}
+        # (chain_id, address, start_block, end_block) -> (transfers, reach), for
+        # the windowed lookups used to match bridge credits.
+        self._window_cache: dict[tuple, tuple[list, dict]] = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -141,42 +160,67 @@ class EtherscanClient:
 
     def clear_cache(self) -> None:
         self._cache.clear()
+        self._window_cache.clear()
         self._skipped_by_wallet.clear()
         self._tallied.clear()
 
     async def _request(self, params: dict, chain_id: int | None = None) -> object:
         """
-        One throttled Etherscan V2 call.
+        One throttled explorer call.
 
         Etherscan signals failure with HTTP 200 and status="0", so the response
         body has to be inspected rather than trusting the status code. The one
         benign "failure" is "No transactions found" — a wallet with no outgoing
         history is a normal dead end in a trace, not an error.
+
+        WHICH API answers is decided by config.chain_api: Etherscan V2 for every
+        chain the plan covers, and a chain's own explorer for one it does not
+        (BNB Chain, via BscScan). The caller names a chain and never learns which
+        door the request went through, so a chain-specific endpoint is not
+        something every call site has to know about.
         """
         if not config.has_etherscan_key():
             raise EtherscanError(
                 "ETHERSCAN_API_KEY is not set in backend/.env - cannot run a live trace."
             )
 
-        query = {
-            **params,
-            "chainid": config.chain(chain_id)["chain_id"],
-            "apikey": config.ETHERSCAN_API_KEY,
-        }
+        resolved_chain_id = config.chain(chain_id)["chain_id"]
+        base_url, api_key, send_chainid = config.chain_api(resolved_chain_id)
+        if not api_key:
+            raise EtherscanError(
+                f"No explorer API key is configured for {config.chain(chain_id)['name']}."
+            )
 
-        async with self._lock:
-            elapsed = time.monotonic() - self._last_request_at
-            if elapsed < config.ETHERSCAN_REQUEST_DELAY_SEC:
-                await asyncio.sleep(config.ETHERSCAN_REQUEST_DELAY_SEC - elapsed)
+        query = {**params, "apikey": api_key}
+        if send_chainid:
+            query["chainid"] = resolved_chain_id
 
-            client = await self._get_client()
-            try:
-                response = await client.get(config.ETHERSCAN_BASE_URL, params=query)
-            except httpx.HTTPError as exc:
-                raise EtherscanError(f"Network error talking to Etherscan: {exc}") from exc
-            finally:
-                self._last_request_at = time.monotonic()
-            self.api_calls += 1
+        # A transient network failure (a DNS blip, a dropped connection) is
+        # retried with backoff before it becomes an error. Otherwise one blip on
+        # one wallet mid-trace silently shrinks the graph, and the same input at
+        # the same height would not give the same output.
+        for attempt in range(config.NETWORK_RETRIES + 1):
+            async with self._lock:
+                elapsed = time.monotonic() - self._last_request_at
+                if elapsed < config.ETHERSCAN_REQUEST_DELAY_SEC:
+                    await asyncio.sleep(config.ETHERSCAN_REQUEST_DELAY_SEC - elapsed)
+
+                client = await self._get_client()
+                try:
+                    response = await client.get(base_url, params=query)
+                    network_error = None
+                except httpx.HTTPError as exc:
+                    network_error = exc
+                finally:
+                    self._last_request_at = time.monotonic()
+                self.api_calls += 1
+            if network_error is None:
+                break
+            if attempt == config.NETWORK_RETRIES:
+                raise EtherscanError(
+                    f"Network error talking to the explorer API (after {attempt + 1} tries): {network_error}"
+                ) from network_error
+            await asyncio.sleep(2 ** attempt * 2)
 
         if response.status_code != 200:
             raise EtherscanError(f"Etherscan returned HTTP {response.status_code}")
@@ -189,6 +233,11 @@ class EtherscanClient:
         status = str(payload.get("status", ""))
         result = payload.get("result")
 
+        # The proxy module (eth_getCode and friends) answers in JSON-RPC form,
+        # with no status field.
+        if "jsonrpc" in payload and "result" in payload and "error" not in payload:
+            return result
+
         if status == "1":
             return result
 
@@ -200,8 +249,166 @@ class EtherscanClient:
         # result field usually carries the human-readable reason.
         raise EtherscanError(f"Etherscan error: {message or 'unknown'} / {result}")
 
+    async def _history(self, action: str, wallet: str, chain_id: int, end_block: int | None) -> tuple[list, dict]:
+        """
+        One endpoint's rows for a wallet, newest first, paged BACK from `end_block`.
+
+        WHY PAGED. A single call returns at most MAX_TXNS_PER_ADDRESS rows. Taking
+        the newest window and stopping made the answer depend on WHEN a trace ran:
+        as a busy wallet kept transacting, older transfers fell out of the window
+        and a finding could vanish. Each further page asks for the window ending
+        at the oldest block already seen (inclusive, so a block split across the
+        boundary is read whole; duplicates are dropped). It stops when a page is
+        not full - the history is exhausted - or after MAX_HISTORY_PAGES, in which
+        case the wallet is reported as truncated at the oldest block reached.
+        """
+        cap = config.MAX_TXNS_PER_ADDRESS
+        top = 99999999 if end_block is None else int(end_block)
+        rows, seen, pages, truncated = [], set(), 0, False
+        while True:
+            page = await self._request(
+                {
+                    "module": "account",
+                    "action": action,
+                    "address": wallet,
+                    "startblock": 0,
+                    "endblock": top,
+                    "page": 1,
+                    "offset": cap,
+                    "sort": "desc",
+                },
+                chain_id=chain_id,
+            )
+            page = page if isinstance(page, list) else []
+            pages += 1
+            fresh = 0
+            for r in page:
+                k = (r.get("hash"), r.get("from"), r.get("to"), r.get("contractAddress"),
+                     r.get("value"), r.get("logIndex"), r.get("tokenID"))
+                if k not in seen:
+                    seen.add(k)
+                    rows.append(r)
+                    fresh += 1
+            if len(page) < cap:
+                break  # the history before `top` is exhausted
+            oldest = min(int(r.get("blockNumber", 0) or 0) for r in page)
+            if fresh == 0 or pages >= config.MAX_HISTORY_PAGES or oldest <= 0:
+                truncated = True
+                break
+            top = oldest
+        stamps = [int(r.get("timeStamp", 0) or 0) for r in rows]
+        blocks = [int(r.get("blockNumber", 0) or 0) for r in rows]
+        return rows, {
+            "rows": len(rows),
+            "pages": pages,
+            "truncated": truncated,
+            "oldest": min(stamps) if stamps else None,
+            "oldest_block": min(blocks) if blocks else None,
+            "end_block": end_block,
+        }
+
+    async def get_inbound_senders(
+        self, address: str, chain_id: int, as_of_block: int | None = None
+    ) -> dict:
+        """
+        How many distinct addresses have sent to `address`, as of the height.
+
+        COST: two calls (one txlist page, one tokentx page, newest first, up to the
+        as-of height). Etherscan has no "count distinct senders" endpoint; this is
+        the cheapest query that separates "7 senders" from "hundreds". If both
+        pages are short, the wallet's whole history was read and the count is
+        EXACT; otherwise it is a lower bound from the most recent rows.
+        """
+        resolved = config.chain(chain_id)["chain_id"]
+        wallet = normalize_address(address)
+        key = ("senders", resolved, wallet, as_of_block)
+        cached = self._window_cache.get(key)
+        if cached is not None:
+            self.cache_hits += 1
+            return cached
+        cap = config.MAX_TXNS_PER_ADDRESS
+        common = {"module": "account", "address": wallet, "startblock": 0,
+                  "endblock": 99999999 if as_of_block is None else int(as_of_block),
+                  "page": 1, "offset": cap, "sort": "desc"}
+        native = await self._request({**common, "action": "txlist"}, chain_id=resolved) or []
+        token = await self._request({**common, "action": "tokentx"}, chain_id=resolved) or []
+        native_symbol = config.chain(resolved)["native"]
+
+        def _value(r, is_token) -> float:
+            """Amount in a FOLLOWED asset above its dust floor, else 0. Spam is 0."""
+            try:
+                if not is_token:
+                    amount = int(r.get("value") or 0) / 1e18
+                    return amount if amount >= config.dust_threshold_for(native_symbol) else 0.0
+                entry = config.token_asset(resolved, r.get("contractAddress") or "")
+                if entry is None:  # an unverified token, e.g. address-poisoning spam
+                    return 0.0
+                amount = int(r.get("value") or 0) / (10 ** entry[1])
+                return amount if amount >= config.dust_threshold_for(entry[0]) else 0.0
+            except (TypeError, ValueError):
+                return 0.0
+
+        senders, recipients, rows, out_rows = set(), set(), 0, 0
+        v_senders, v_recipients = set(), set()
+        for is_token, page in ((False, native), (True, token)):
+            for r in page:
+                to = (r.get("to") or "").strip().lower()
+                frm = (r.get("from") or "").strip().lower()
+                if to == wallet:
+                    rows += 1
+                    if frm and frm != wallet:
+                        senders.add(frm)
+                        if _value(r, is_token) > 0:
+                            v_senders.add(frm)
+                elif frm == wallet:
+                    # The same two pages also say how the wallet SPENDS, at no
+                    # extra cost.
+                    out_rows += 1
+                    if to:
+                        recipients.add(to)
+                        if _value(r, is_token) > 0:
+                            v_recipients.add(to)
+        out = {"senders": len(senders), "rows": rows, "calls": 2,
+               "recipients": len(recipients), "out_rows": out_rows,
+               # Counted only over non-dust transfers of assets we follow, so
+               # zero-value spam and fake tokens cannot inflate a wallet's fan-in.
+               "value_senders": len(v_senders), "value_recipients": len(v_recipients),
+               "complete": len(native) < cap and len(token) < cap}
+        self._window_cache[key] = out
+        return out
+
+    async def is_contract(self, address: str, chain_id: int) -> bool:
+        """Whether an address holds contract code (one eth_getCode call, cached)."""
+        resolved = config.chain(chain_id)["chain_id"]
+        wallet = normalize_address(address)
+        key = ("code", resolved, wallet)
+        if key not in self._window_cache:
+            code = await self._request(
+                {"module": "proxy", "action": "eth_getCode", "address": wallet, "tag": "latest"},
+                chain_id=resolved,
+            )
+            self._window_cache[key] = isinstance(code, str) and code not in ("0x", "0x0", "")
+        else:
+            self.cache_hits += 1
+        return self._window_cache[key]
+
+    async def latest_block(self, chain_id: int) -> int:
+        """The chain head now: the last block at or before the current time."""
+        return await self.block_at(int(time.time()), chain_id, "before")
+
+    async def block_timestamp(self, block: int, chain_id: int) -> int | None:
+        """The unix timestamp of one block (Etherscan getblockreward)."""
+        result = await self._request(
+            {"module": "block", "action": "getblockreward", "blockno": int(block)},
+            chain_id=chain_id,
+        )
+        try:
+            return int(result.get("timeStamp"))
+        except (AttributeError, TypeError, ValueError):
+            return None
+
     async def get_wallet_transfers(
-        self, address: str, chain_id: int | None = None
+        self, address: str, chain_id: int | None = None, as_of_block: int | None = None
     ) -> list[Transfer]:
         """
         Every ETH transfer SENT BY `address`, most recent first.
@@ -231,25 +438,16 @@ class EtherscanClient:
         chain = config.chain(chain_id)
         resolved = chain["chain_id"]
         native_symbol = chain["native"]
-        key = (resolved, normalize_address(address))
+        # PINNED TO A HEIGHT. Nothing after `as_of_block` is fetched, so a trace
+        # re-run at the same height sees the same history. The height is part of
+        # the cache key: one wallet at two heights is two different answers.
+        key = (resolved, normalize_address(address), as_of_block)
         if key in self._cache:
             self.cache_hits += 1
             self._count_skipped(key)
             return self._cache[key]
 
-        raw = await self._request(
-            {
-                "module": "account",
-                "action": "txlist",
-                "address": key[1],
-                "startblock": 0,
-                "endblock": 99999999,
-                "page": 1,
-                "offset": config.MAX_TXNS_PER_ADDRESS,
-                "sort": "desc",
-            },
-            chain_id=resolved,
-        )
+        raw, native_reach = await self._history("txlist", key[1], resolved, as_of_block)
 
         transfers: list[Transfer] = []
         if isinstance(raw, list):
@@ -258,22 +456,10 @@ class EtherscanClient:
                 if transfer is not None:
                     transfers.append(transfer)
 
-        # Second call: ERC-20 movements out of the same wallet. This doubles the
+        # Second endpoint: ERC-20 movements of the same wallet. This doubles the
         # calls per wallet, which the throttle already covers - it serialises on
         # elapsed time, not on call count, so the 5/sec ceiling still holds.
-        token_raw = await self._request(
-            {
-                "module": "account",
-                "action": "tokentx",
-                "address": key[1],
-                "startblock": 0,
-                "endblock": 99999999,
-                "page": 1,
-                "offset": config.MAX_TXNS_PER_ADDRESS,
-                "sort": "desc",
-            },
-            chain_id=resolved,
-        )
+        token_raw, token_reach = await self._history("tokentx", key[1], resolved, as_of_block)
 
         if isinstance(token_raw, list):
             for tx in token_raw:
@@ -291,9 +477,87 @@ class EtherscanClient:
                     wallet_tally = self._skipped_by_wallet.setdefault(key, {})
                     wallet_tally[skipped_symbol] = wallet_tally.get(skipped_symbol, 0) + 1
 
+        self.history_reach[key] = {"native": native_reach, "token": token_reach}
         self._cache[key] = transfers
         self._count_skipped(key)
         return transfers
+
+    async def block_at(self, timestamp: int, chain_id: int, closest: str = "before") -> int:
+        """The block number at a unix time on one chain (Etherscan getblocknobytime)."""
+        result = await self._request(
+            {
+                "module": "block",
+                "action": "getblocknobytime",
+                "timestamp": int(max(0, timestamp)),
+                "closest": closest,
+            },
+            chain_id=chain_id,
+        )
+        return int(result)
+
+    async def get_wallet_transfers_window(
+        self, address: str, chain_id: int, start_ts: int, end_ts: int,
+        as_of_block: int | None = None,
+    ) -> tuple[list[Transfer], dict]:
+        """
+        One wallet's transfers within a TIME WINDOW, both directions, oldest first.
+
+        WHY THIS EXISTS. get_wallet_transfers returns a wallet's most recent rows,
+        which is right for walking forward but wrong for answering "did this
+        specific thing happen at that time?". A busy wallet's newest 1,000 rows
+        can all post-date a bridge deposit made weeks ago, so its credit is never
+        in the data. Here the request is bounded by the block range covering the
+        window instead, so the answer is about the window that matters.
+
+        Returns (transfers, reach). `reach` says whether the window itself hit the
+        row cap, in which case it is still incomplete and the caller must say so.
+        Cached per (chain, address, block range); never mixed into the forward-walk
+        cache, which describes a different slice of history.
+        """
+        chain = config.chain(chain_id)
+        resolved = chain["chain_id"]
+        wallet = normalize_address(address)
+        start_block = await self.block_at(start_ts, resolved, "before")
+        end_block = await self.block_at(end_ts, resolved, "after")
+        if as_of_block is not None:
+            # The window never reaches past the investigation's as-of height.
+            end_block = min(end_block, int(as_of_block))
+        key = (resolved, wallet, start_block, end_block)
+        cached = self._window_cache.get(key)
+        if cached is not None:
+            self.cache_hits += 1
+            return cached
+
+        common = {
+            "module": "account",
+            "address": wallet,
+            "startblock": start_block,
+            "endblock": end_block,
+            "page": 1,
+            "offset": config.MAX_TXNS_PER_ADDRESS,
+            "sort": "asc",
+        }
+        raw = await self._request({**common, "action": "txlist"}, chain_id=resolved)
+        token_raw = await self._request({**common, "action": "tokentx"}, chain_id=resolved)
+
+        transfers: list[Transfer] = []
+        for tx in raw if isinstance(raw, list) else []:
+            transfer = _parse_native_transfer(tx, wallet=wallet, asset=chain["native"])
+            if transfer is not None:
+                transfers.append(transfer)
+        for tx in token_raw if isinstance(token_raw, list) else []:
+            transfer, _ = _parse_token_transfer(tx, wallet=wallet, chain_id=resolved)
+            if transfer is not None:
+                transfers.append(transfer)
+
+        cap = config.MAX_TXNS_PER_ADDRESS
+        reach = {
+            "start_block": start_block,
+            "end_block": end_block,
+            "complete": (len(raw or []) < cap) and (len(token_raw or []) < cap),
+        }
+        self._window_cache[key] = (transfers, reach)
+        return transfers, reach
 
     def _count_skipped(self, key: tuple[int, str]) -> None:
         """
@@ -312,7 +576,7 @@ class EtherscanClient:
             self.skipped_tokens[tally_key] = self.skipped_tokens.get(tally_key, 0) + count
 
     async def get_outgoing_transfers(
-        self, address: str, chain_id: int | None = None
+        self, address: str, chain_id: int | None = None, as_of_block: int | None = None
     ) -> list[Transfer]:
         """
         Only the transfers this wallet SENT - what the forward walk expands on.
@@ -320,7 +584,7 @@ class EtherscanClient:
         A filtered view of `get_wallet_transfers`, so it costs no extra API call
         and cannot disagree with the data the taint pass replays.
         """
-        transfers = await self.get_wallet_transfers(address, chain_id=chain_id)
+        transfers = await self.get_wallet_transfers(address, chain_id=chain_id, as_of_block=as_of_block)
         wallet = normalize_address(address)
         return [t for t in transfers if t.from_addr == wallet]
 

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Search, Sliders, X, Clipboard, ArrowRight, ShieldAlert } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { looksLikeAddress, describeAddressFormat } from '../utils/address';
 
 gsap.registerPlugin(useGSAP);
 
@@ -18,6 +19,9 @@ export default function SearchBar({
   setMode,
   saveDemo,
   setSaveDemo,
+  chainId,
+  asOfBlock = '',
+  setAsOfBlock = () => {},
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const containerRef = useRef(null);
@@ -33,7 +37,8 @@ export default function SearchBar({
     });
   }, { scope: containerRef });
 
-  const isValidAddress = (addr) => /^0x[a-fA-F0-9]{40}$/.test(addr.trim());
+  // Per chain family: never assume 0x. The backend verifies the checksum.
+  const isValidAddress = (addr) => looksLikeAddress(addr, chainId);
 
   const handlePaste = async () => {
     try {
@@ -148,7 +153,7 @@ export default function SearchBar({
         {address && !valid && (
           <div className="flex items-center gap-1.5 px-3 text-xs text-amber-600 dark:text-amber-400 font-sans">
             <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-            <span>Expected a 42-character hexadecimal EVM address beginning with 0x.</span>
+            <span>Expected {describeAddressFormat(chainId)}.</span>
           </div>
         )}
 
@@ -177,7 +182,11 @@ export default function SearchBar({
             <div>
               <div className="flex justify-between text-xs mb-1.5 font-mono">
                 <span className="text-[#52525b] dark:text-[#a3a3a3] font-medium">Dust Floor (Native)</span>
-                <span className="text-[#627EEA] font-bold">{dustThreshold} ETH</span>
+                <span className="text-[#627EEA] font-bold">
+                  {/* The dust setting is in the EVM native coin. Tron's assets have their
+                      own floors (10 TRX, 1 USDT), set per asset in the backend. */}
+                  {chainId === 728126428 ? 'fixed per asset on Tron (10 TRX, 1 USDT)' : `${dustThreshold} native`}
+                </span>
               </div>
               <input
                 type="number"
@@ -206,6 +215,27 @@ export default function SearchBar({
                 ))}
               </div>
               <span className="text-[10px] text-[#71717a] dark:text-[#666666] font-mono mt-0.5 block">Standard: 0.01 ETH (~₹2,500)</span>
+            </div>
+
+            {/* As-of height: pin the trace to a past block. Empty = the chain head
+                when the trace starts. The same height always reproduces the same trace. */}
+            <div>
+              <div className="flex justify-between text-xs mb-1.5 font-mono">
+                <span className="text-[#52525b] dark:text-[#a3a3a3] font-medium">As-of Block (optional)</span>
+                <span className="text-[#627EEA] font-bold">{asOfBlock ? `#${asOfBlock}` : 'chain head'}</span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="e.g. 23500000"
+                value={asOfBlock}
+                onChange={(e) => setAsOfBlock(e.target.value.replace(/[^0-9]/g, ''))}
+                className="w-full bg-[#f4f4f5] dark:bg-[#0a0a0a] border border-[#d4d4d8] dark:border-[#262626] px-2.5 py-1 text-xs font-mono text-[#09090b] dark:text-[#f5f5f5] focus:outline-none focus:border-[#627EEA]"
+              />
+              <span className="text-[10px] text-[#71717a] dark:text-[#666666] font-mono mt-0.5 block">
+                Re-running at the same height reproduces the result
+              </span>
             </div>
 
             {/* Execution Mode */}

@@ -31,11 +31,12 @@ WHICH method produced a claim in order to weigh it. That is why `method` and
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import networkx as nx
 
 from app import config
+from core import addresses
 from services import graph_store
 
 # --- Tunables -----------------------------------------------------------------
@@ -69,6 +70,51 @@ LABEL_CONFIDENCE = 0.95
 # collection point", never "this is Binance".
 CONSOLIDATION_MAX_CONFIDENCE = 0.70
 
+# CHAIN-WIDE FAN-IN. The subgraph count above only sees senders this trace
+# walked, so "several of the suspect's own paths reconverge" and "an exchange
+# collects deposits from hundreds of unrelated customers" look identical to it.
+# A candidate that passes the subgraph gates is therefore checked against how
+# many distinct addresses have sent to it chain-wide. Below the minimum it is
+# not a collection point, whatever the subgraph shows.
+#
+# CALIBRATED, not chosen: see docs/fan-in-calibration.md and
+# data/calibration/fanin_sample.json (70 labelled exchange wallets, 9 known
+# attacker re-pooling wallets, measured at one pinned block). Senders are
+# counted only over NON-DUST transfers of FOLLOWED assets, because zero-value
+# "address poisoning" spam gave an OFAC-listed Lazarus wallet 204 raw senders.
+# On that measure the attacker wallets reach at most 9; a floor of 20 sits above
+# all of them with a 2x margin and keeps 44 of the 50 genuine deposit-collecting
+# exchange wallets in the sample.
+CONSOLIDATION_GLOBAL_MIN_SENDERS = 20
+CONSOLIDATION_GLOBAL_STRONG_SENDERS = 200
+# SECOND CONDITION: a collection point receives from many and pays out in
+# sweeps; an attacker's pool receives from a few and fans out. Distinct value
+# senders per outgoing transaction below this is the attacker shape (Ronin's
+# 0xee009faf: 9 senders over ~1,300 outgoing rows = 0.007). Calibrated on the
+# same sample: costs 3 of 50 genuine collecting wallets.
+CONSOLIDATION_MIN_SENDERS_PER_OUT_TX = 0.01
+
+# What every fan-in finding must say about itself (surfaced on the lead and in
+# the PDF). The calibration is the reason, so the tool states it.
+FAN_IN_WEAK_SIGNAL = (
+    "Fan-in is a weak signal, not a reliable detector: calibrated against verified exchange "
+    "wallets, attacker pools reached 9 senders and the smallest genuine collecting exchange 10. "
+    "That near-overlap is why a fan-in-only identification is capped at 67% and never names a company."
+)
+FAN_IN_ETHEREUM_ONLY = (
+    "The fan-in thresholds were calibrated on Ethereum only; applying them on {chain} is an "
+    "assumption, not a measurement, until {chain} has enough labelled exchange wallets to re-calibrate."
+)
+# Where the label coverage note lives: what no structural method can find.
+STRUCTURAL_LIMIT = (
+    "Fan-in can only find wallets that are currently collecting deposits. In calibration, 20 of 70 "
+    "labelled exchange wallets were dormant or withdrawal-only, so no structural method would find "
+    "them; only a label names such a wallet."
+)
+# Where the chain-wide count cannot be obtained, the finding rests on subgraph
+# structure alone and its confidence is scaled by this factor.
+CONSOLIDATION_SUBGRAPH_ONLY_FACTOR = 0.5
+
 
 @dataclass(frozen=True)
 class Identification:
@@ -86,6 +132,9 @@ class Identification:
     method: str  # known_label | consolidation
     confidence: float
     evidence: str
+    # For a consolidation finding: senders observed in this trace and senders
+    # chain-wide (see apply_global_fan_in). None for a label match.
+    fan_in: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -127,12 +176,18 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
     mid-demo rather than now. Caching on mtime keeps lookups free while making
     an edit to labels.json take effect on the next request.
     """
-    global _labels, _labels_mtime
+    global _labels, _labels_mtime, label_origin_counts
 
-    try:
-        mtime = config.LABELS_PATH.stat().st_mtime
-    except OSError:
-        mtime = None
+    def _mtime(path):
+        try:
+            return path.stat().st_mtime
+        except OSError:
+            return None
+
+    # Both files are watched: the committed labels.json and the gitignored
+    # labels.local.json (rows we may use but not redistribute).
+    local_path = getattr(config, "LABELS_LOCAL_PATH", None)
+    mtime = (_mtime(config.LABELS_PATH), _mtime(local_path) if local_path else None)
 
     if _labels is not None and not force_reload and mtime == _labels_mtime:
         return _labels
@@ -143,13 +198,27 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
     except FileNotFoundError:
         # A missing labels file disables method (a) but must not break a trace;
         # the consolidation heuristic still works.
-        _labels = {}
-        return _labels
+        raw = {}
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"data/labels.json is not valid JSON: {exc}") from exc
 
+    # The local file only ADDS rows. On a clash the committed row wins, so a
+    # local copy can never silently override a published, cited label.
+    local_raw = {}
+    if local_path is not None and local_path.exists():
+        try:
+            local_raw = json.loads(local_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"data/labels.local.json is not valid JSON: {exc}") from exc
+    label_origin_counts = {"committed": 0, "local": 0, "local_file_present": bool(local_raw)}
+    merged = dict(raw)
+    for key, meta in local_raw.items():
+        if not str(key).startswith("_") and key not in raw:
+            merged[key] = meta
+
     index: dict[tuple[str, str], dict] = {}
-    for key, meta in raw.items():
+    rejected: list[str] = []
+    for key, meta in merged.items():
         key = str(key).strip()
         if key.startswith("_") or not isinstance(meta, dict):
             continue
@@ -159,10 +228,48 @@ def load_labels(force_reload: bool = False) -> dict[str, dict]:
         # rewriting every key.
         chain_from_key, _, address = key.rpartition(":")
         chain_name = str(meta.get("chain") or chain_from_key or DEFAULT_CHAIN).strip().lower()
-        index[(chain_name, address.strip().lower())] = meta
+        # FORMAT GUARD. Keyed by the chain's own rule (core/addresses.py): never
+        # lowercased where case carries meaning, and a row whose address does not
+        # parse for its chain is refused here rather than indexed - so an
+        # Ethereum-shaped address filed under Tron, or the reverse, can never
+        # match anything.
+        canonical = addresses.try_normalize(address, chain_name)
+        if canonical is None:
+            rejected.append(key)
+            continue
+        index[(chain_name, canonical)] = meta
+        label_origin_counts["local" if key in local_raw and key not in raw else "committed"] += 1
 
+    global rejected_label_keys
+    rejected_label_keys = rejected
     _labels = index
     return _labels
+
+
+# Label rows refused by the format guard on the last load, for diagnostics.
+rejected_label_keys: list[str] = []
+# How many indexed rows came from the committed file and from the local one.
+label_origin_counts: dict = {"committed": 0, "local": 0, "local_file_present": False}
+
+
+def label_stats() -> dict:
+    """Label counts for /health: committed vs local, and per chain, type and evidence tier."""
+    labels = load_labels()
+    by_chain, by_type, by_tier = {}, {}, {}
+    for (chain_name, _), meta in labels.items():
+        by_chain[chain_name] = by_chain.get(chain_name, 0) + 1
+        t = str(meta.get("type", "unknown"))
+        by_type[t] = by_type.get(t, 0) + 1
+        tier = str(meta.get("evidence_tier") or "unrecorded")
+        by_tier[tier] = by_tier.get(tier, 0) + 1
+    return {
+        "total": len(labels),
+        **label_origin_counts,
+        "refused_by_format_guard": len(rejected_label_keys),
+        "by_chain": by_chain,
+        "by_type": by_type,
+        "by_evidence_tier": by_tier,
+    }
 
 
 def label_count(chain: str | None = None) -> int:
@@ -176,6 +283,23 @@ def label_count(chain: str | None = None) -> int:
     if chain is None:
         return len(labels)
     return sum(1 for (chain_name, _) in labels if chain_name == chain)
+
+
+def inferred_label_count(chain: str) -> int:
+    """How many of a chain's labels are same-address inferences, not direct labels."""
+    return sum(
+        1
+        for (chain_name, _), meta in load_labels().items()
+        if chain_name == chain and meta.get("source") == INFERRED_LABEL_SOURCE
+    )
+
+
+# Labels carried over from the same address on Ethereum by
+# scripts/infer_cross_chain_labels.py. They name a company on the strength of an
+# inference (same key, active EOA on this chain), so they are identified under
+# their own method and scored below a direct label match.
+INFERRED_LABEL_SOURCE = "inferred_cross_chain_same_address"
+INFERRED_LABEL_CONFIDENCE = 0.6
 
 
 # --- (a) Known-label lookup — WORKS -------------------------------------------
@@ -197,21 +321,50 @@ def known_label_lookup(address: str, chain: str | None = None) -> Identification
     since most wallets in a trace are the criminal's own anonymous ones.
     """
     chain_name = (chain or DEFAULT_CHAIN).strip().lower()
-    meta = load_labels().get((chain_name, address.strip().lower()))
+    # An address that does not parse for this chain cannot match a label on it -
+    # the format guard on the lookup side.
+    key = addresses.try_normalize(address, chain_name)
+    if key is None:
+        return None
+    meta = load_labels().get((chain_name, key))
     if meta is None:
         return None
 
     entity = str(meta.get("entity", "Unknown entity"))
     entity_type = str(meta.get("type", "unknown"))
 
+    if meta.get("source") == INFERRED_LABEL_SOURCE:
+        origin = meta.get("inferred_from") or {}
+        evidence = meta.get("evidence") or {}
+        return Identification(
+            address=key,
+            entity=entity,
+            entity_type=entity_type,
+            method="inferred_label",
+            confidence=INFERRED_LABEL_CONFIDENCE,
+            evidence=(
+                f"INFERRED, not a direct label: this address is labelled {entity} on "
+                f"{origin.get('chain', 'ethereum')}, and on {chain_name} it is an ordinary "
+                f"account (not a contract) with {evidence.get('nonce', '?')} outgoing "
+                "transactions. The same key controls the same address on every EVM chain, "
+                f"so it is probably {entity} here too - but no label for {chain_name} "
+                "says so."
+            ),
+        )
+
+    role = meta.get("role")
     return Identification(
-        address=address.strip().lower(),
+        address=key,
         entity=entity,
         entity_type=entity_type,
         method="known_label",
         confidence=LABEL_CONFIDENCE,
         evidence=(
-            f"Exact match in labels.json: {entity} ({entity_type}) on {chain_name}."
+            f"Label: {entity} ({entity_type}"
+            + (f", {role}" if role else "")
+            + f") on {chain_name}. Source: "
+            + (meta.get("citation") or "not recorded")
+            + "."
         ),
     )
 
@@ -235,7 +388,9 @@ def _as_store(graph):
 # --- (b) Deposit-consolidation clustering — WORKS -----------------------------
 
 
-def consolidation_score(address: str, graph: nx.DiGraph) -> float:
+def consolidation_score(
+    address: str, graph: nx.DiGraph, node: str | None = None
+) -> float:
     """
     Method (b): score how much this address looks like a collection point.
 
@@ -275,14 +430,15 @@ def consolidation_score(address: str, graph: nx.DiGraph) -> float:
     API call per candidate.
     """
     store = _as_store(graph)
-    if not store.has(address):
+    node = node or address
+    if not store.has(node):
         return 0.0
 
     # Distinct senders. The store collapses repeat payments between the same
     # pair into one edge, so this is a distinct-counterparty count by
     # construction. Self-loops do not count - a wallet paying itself is not a
     # third party, and both backends exclude them.
-    fan_in = len(store.predecessors(address))
+    fan_in = len(store.predecessors(node))
 
     if fan_in < CONSOLIDATION_MIN_SENDERS:
         return 0.0
@@ -293,15 +449,18 @@ def consolidation_score(address: str, graph: nx.DiGraph) -> float:
     return (fan_in - CONSOLIDATION_MIN_SENDERS) / span
 
 
-def consolidation_fan_in(address: str, graph: nx.DiGraph) -> int:
+def consolidation_fan_in(
+    address: str, graph: nx.DiGraph, node: str | None = None
+) -> int:
     """Distinct third-party senders into this address, within the traced graph."""
     store = _as_store(graph)
-    if not store.has(address):
+    node = node or address
+    if not store.has(node):
         return 0
-    return len(store.predecessors(address))
+    return len(store.predecessors(node))
 
 
-def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95) -> int:
+def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95, chain: str | None = None) -> int:
     """
     The fan-in a node must beat to count as UNUSUAL *for this particular graph*.
 
@@ -315,12 +474,22 @@ def adaptive_fan_in_floor(graph: nx.DiGraph, percentile: float = 0.95) -> int:
     store = _as_store(graph)
     if store.wallet_count() == 0:
         return CONSOLIDATION_FLAG_SENDERS
-    degrees = sorted(store.in_degrees())
+    # PER CHAIN. Measured over the whole multi-chain graph, a large Ethereum leg
+    # set the bar for a small Polygon leg. With `chain`, only that chain's
+    # wallets define what is unusual on it.
+    try:
+        degrees = sorted(store.in_degrees(chain=chain)) if chain else sorted(store.in_degrees())
+    except TypeError:  # a store without per-chain support
+        degrees = sorted(store.in_degrees())
+    if not degrees:
+        return CONSOLIDATION_FLAG_SENDERS
     index = int(percentile * (len(degrees) - 1))
     return degrees[index]
 
 
-def consolidation_identify(address: str, graph: nx.DiGraph) -> Identification | None:
+def consolidation_identify(
+    address: str, graph: nx.DiGraph, node: str | None = None, chain: str | None = None
+) -> Identification | None:
     """
     Wrap the consolidation pattern into an Identification, or None if too weak.
 
@@ -330,18 +499,26 @@ def consolidation_identify(address: str, graph: nx.DiGraph) -> Identification | 
     outlier. The gates are sender COUNTS, not the normalised score: scoring is
     for expressing confidence, but the decision to make an accusation at all
     should rest on a number an investigator can check by eye.
+
+    `node` is the graph key for this wallet, which differs from `address` once a
+    trace crosses a chain: the same address on two chains is two different
+    wallets and gets two different nodes. It defaults to `address`, so a
+    single-chain caller is unaffected.
     """
-    fan_in = consolidation_fan_in(address, graph)
+    fan_in = consolidation_fan_in(address, graph, node=node)
     if fan_in < CONSOLIDATION_FLAG_SENDERS:
         return None
-    if fan_in < adaptive_fan_in_floor(graph):
+    floor = adaptive_fan_in_floor(graph, chain=chain)
+    if fan_in < floor:
         return None
 
-    score = consolidation_score(address, graph)
+    score = consolidation_score(address, graph, node=node)
     confidence = CONSOLIDATION_MAX_CONFIDENCE * max(score, 0.5)
 
     return Identification(
-        address=address.strip().lower(),
+        # Already the canonical graph key; lowercasing it would corrupt a Tron
+        # or legacy Bitcoin address.
+        address=address.strip(),
         entity="Unknown exchange (consolidation pattern)",
         # NOT "exchange" - we have not named anyone. This is a behavioural
         # suspicion, and the label keeps that distinction visible downstream.
@@ -350,11 +527,69 @@ def consolidation_identify(address: str, graph: nx.DiGraph) -> Identification | 
         confidence=confidence,
         evidence=(
             f"{fan_in} distinct traced wallets funnel into this address "
-            f"(fan-in score {score:.2f}; unusual for this graph, where the 95th "
-            f"percentile is {adaptive_fan_in_floor(graph)}), matching the "
+            f"(fan-in score {score:.2f}; unusual for this chain's part of the graph, "
+            f"where the 95th percentile is {floor}), matching the "
             f"deposit-consolidation pattern exchanges produce when sweeping "
             f"customer deposits. UNCONFIRMED - a criminal re-pooling their own "
             f"split funds produces the same shape."
+        ),
+        fan_in={"subgraph_senders": fan_in, "subgraph_floor": floor},
+    )
+
+
+def apply_global_fan_in(ident: Identification, chain_wide: dict | None) -> Identification | None:
+    """
+    Decide a subgraph consolidation candidate on its CHAIN-WIDE sender count.
+
+    `chain_wide` is {"senders": n, "complete": bool, ...} from the tracer, or
+    None when the count could not be obtained. Returns:
+      * None - fewer than CONSOLIDATION_GLOBAL_MIN_SENDERS distinct senders ever
+        paid this address: it is a reconvergence point, not a collection point;
+      * the identification, scored on the chain-wide number, with both figures;
+      * where the count could not be obtained, the identification at reduced
+        confidence, saying it rests on subgraph structure only. Never the old
+        behaviour silently.
+    """
+    sub = (ident.fan_in or {}).get("subgraph_senders", 0)
+    if chain_wide is None or chain_wide.get("senders") is None:
+        reason = (chain_wide or {}).get("error") or "the client cannot count senders chain-wide"
+        return replace(
+            ident,
+            confidence=round(ident.confidence * CONSOLIDATION_SUBGRAPH_ONLY_FACTOR, 4),
+            fan_in={**(ident.fan_in or {}), "global_checked": False, "chain_senders": None,
+                    "global_note": reason},
+            evidence=ident.evidence + (
+                f" The chain-wide sender count could not be obtained ({reason}), so this rests on "
+                "subgraph structure only and its confidence is halved."
+            ),
+        )
+
+    # The calibrated measure: distinct senders of non-dust value in followed
+    # assets. Older callers that only supply raw senders fall back to those.
+    n = int(chain_wide.get("value_senders", chain_wide["senders"]))
+    complete = bool(chain_wide.get("complete"))
+    if n < CONSOLIDATION_GLOBAL_MIN_SENDERS:
+        return None
+    out_rows = chain_wide.get("out_rows")
+    per_out = (n / out_rows) if out_rows else None
+    if per_out is not None and per_out < CONSOLIDATION_MIN_SENDERS_PER_OUT_TX:
+        return None
+    span = CONSOLIDATION_GLOBAL_STRONG_SENDERS - CONSOLIDATION_GLOBAL_MIN_SENDERS
+    strength = min(1.0, max(0.0, (n - CONSOLIDATION_GLOBAL_MIN_SENDERS) / span))
+    bound = "exactly" if complete else "at least"
+    return replace(
+        ident,
+        confidence=round(CONSOLIDATION_MAX_CONFIDENCE * max(strength, 0.5), 4),
+        fan_in={**(ident.fan_in or {}), "global_checked": True, "chain_senders": n,
+                "chain_senders_raw": chain_wide.get("senders"),
+                "chain_out_rows": out_rows, "senders_per_out_tx": None if per_out is None else round(per_out, 4),
+                "chain_senders_complete": complete, "rows_read": chain_wide.get("rows")},
+        evidence=(
+        f"{sub} distinct wallets in this trace and {bound} {n} distinct addresses chain-wide have "
+        f"sent non-dust value to this address" + ("" if complete else
+                                   " (counted from its most recent transactions before the as-of height)")
+        + ", matching the deposit-consolidation pattern exchanges produce when sweeping customer "
+        "deposits. UNCONFIRMED - no label names it."
         ),
     )
 
@@ -414,13 +649,20 @@ def cospend_cluster(address: str, graph: nx.DiGraph) -> None:
 # --- Combined entry point -----------------------------------------------------
 
 
-def identify(address: str, graph: nx.DiGraph, chain: str | None = None) -> Identification | None:
+def identify(
+    address: str, graph: nx.DiGraph, chain: str | None = None, node: str | None = None
+) -> Identification | None:
     """
     Run the available methods against one address, best evidence first.
 
     Order matters: a label match names an actual company and outranks any
     statistical pattern, so it is checked first and returned immediately. The
     consolidation heuristic only speaks when the label list is silent.
+
+    `address` is the bare wallet address, which is what labels are keyed by. `node`
+    is the graph key for it, supplied separately because a trace that crosses a
+    chain stores the same address on two chains as two distinct nodes. Defaults to
+    `address`, so single-chain callers are unaffected.
 
     Returns None when nothing recognises the address - the expected outcome for
     the criminal's own wallets, and the reason the trace keeps walking.
@@ -431,7 +673,7 @@ def identify(address: str, graph: nx.DiGraph, chain: str | None = None) -> Ident
 
     # Deliberately chain-agnostic: fan-in is a shape in the traced graph, and
     # that graph is already confined to one chain by the tracer.
-    hit = consolidation_identify(address, graph)
+    hit = consolidation_identify(address, graph, node=node, chain=chain)
     if hit is not None:
         return hit
 

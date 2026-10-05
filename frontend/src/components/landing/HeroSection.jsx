@@ -115,7 +115,7 @@ export default function HeroSection() {
               <FileCheck className="w-4 h-4" />
               <span>Cybercrime Law</span>
             </div>
-            <p className="text-[#09090b] dark:text-[#f5f5f5] font-bold text-sm">IPC Compliance</p>
+            <p className="text-[#09090b] dark:text-[#f5f5f5] font-bold text-sm">BNSS &amp; IT Act</p>
             <p className="text-[11px] text-[#71717a] dark:text-[#777777]">
               Generates legal notices to freeze accounts and compel KYC.
             </p>

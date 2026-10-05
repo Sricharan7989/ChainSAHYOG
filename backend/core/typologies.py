@@ -46,6 +46,7 @@ import statistics
 from dataclasses import dataclass, field
 
 from app import config
+from core import addresses
 from core import taint as taint_engine
 
 
@@ -184,7 +185,9 @@ def build_flow_view(fetched: dict[str, list], store, taint=None, start=None) -> 
             if flow.tainted_received > 0
         }
         if start:
-            view.tainted.add(start.lower())
+            # The canonical key, not a lowercased one: case matters on Tron and
+            # legacy Bitcoin addresses.
+            view.tainted.add(addresses.try_normalize(start, getattr(taint, "chain", None) or None) or start)
     for event in taint_engine.build_events(fetched):
         view.assets.add(event.asset)
         view.out_by.setdefault((event.from_addr, event.asset), []).append(event)

@@ -24,3 +24,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app", "core", "services", "scripts"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+# Run from backend/:  uv run pytest
+# The suites import `app`, `core` and `services` as top-level packages.
+testpaths = ["tests"]
+pythonpath = ["."]
+

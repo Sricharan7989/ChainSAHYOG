@@ -159,7 +159,10 @@ async def main():
 
     s = tracer.summarize(r)
     check("summary found", s["found"], True)
-    check("summary names SAHYOG action", "SAHYOG" in s["recommended_action"], True)
+    check("summary names a request route (BNSS 94, or LE channel + MLAT for a foreign VASP)",
+          "Bharatiya Nagarik Suraksha Sanhita" in s["recommended_action"] or "MLAT" in s["recommended_action"], True)
+    check("and states the jurisdiction it used", s.get("jurisdiction") in ("india", "foreign_fiu_registered", "foreign", "unknown"), True)
+    check("and names the VASP to serve", (s.get("recommended_vasp") or {}).get("entity"), s.get("exchange"))
     check("termination reason reported", s["termination"]["reason"], "exchange_reached")
 
     # HONESTY OF THE CLAIM. Phase 2 required the headline to state connectivity
@@ -210,7 +213,7 @@ async def main():
     check("mixer marked", r2.graph.nodes[TORNADO]["is_mixer"], True)
     s2 = tracer.summarize(r2)
     check("no exchange -> found False", s2["found"], False)
-    check("mixer listed in summary", s2["mixers_or_bridges_crossed"], ["Tornado Cash (100 ETH pool)"])
+    check("mixer listed in summary", s2["mixers_or_bridges_crossed"], ["Tornado Cash"])
 
     # nearest exchange wins when two are reachable
     book3 = {
@@ -228,6 +231,11 @@ async def main():
     book4 = {A(0): [tx(A(0), A(i), 10.0) for i in range(1, 7)]}
     for i in range(1, 7):
         book4[A(i)] = [tx(A(i), sink, 9.0)]
+    # Outside depositors: a collection point is paid by many wallets the trace
+    # never visits. With only the 6 traced senders the calibrated chain-wide
+    # rule would correctly refuse it (docs/fan-in-calibration.md).
+    for k in range(25):
+        book4[A(300 + k)] = [tx(A(300 + k), sink, 5.0)]
     c4 = FakeClient(book4)
     r4 = await tracer.trace(A(0), max_depth=4, dust_threshold=0.001, client=c4)
     check("sink fan-in detected", r4.graph.nodes[sink].get("is_vasp"), True)
@@ -235,8 +243,88 @@ async def main():
     check("sink attributed by consolidation", sink_attr[0].method, "consolidation")
     check("sink not named as a company", sink_attr[0].entity_type, "suspected_exchange")
 
+    print("\n--- same-address labels inferred from Ethereum are marked and scored as inferences ---")
+    from core import scoring
+    from types import SimpleNamespace as NS
+
+    eth_addr = "0x28c6c06298d514db089934071355e5743bf21d60"  # Binance 14 on Ethereum
+    real_load = identify.load_labels
+    labels = dict(real_load())
+    baseline_inferred = sum(
+        1 for (c, _), m in labels.items()
+        if c == "polygon" and m.get("source") == identify.INFERRED_LABEL_SOURCE
+        and _ != eth_addr
+    )
+    labels[("polygon", eth_addr)] = {
+        "entity": "Binance", "type": "exchange", "chain": "polygon",
+        "source": identify.INFERRED_LABEL_SOURCE,
+        "inferred_from": {"chain": "ethereum", "address": eth_addr, "entity": "Binance"},
+        "evidence": {"is_contract": False, "nonce": 1234},
+    }
+    identify.load_labels = lambda *a, **k: labels
+    try:
+        hit = identify.known_label_lookup(eth_addr, chain="polygon")
+        check("an inferred label is found on its chain", hit is not None, True)
+        check("under its own method, not as a direct label", hit.method if hit else None, "inferred_label")
+        check("its evidence says it is an inference", "INFERRED" in (hit.evidence if hit else ""), True)
+        check("the Ethereum label is still a direct match on Ethereum",
+              identify.known_label_lookup(eth_addr, chain="ethereum").method, "known_label")
+        check("and an Ethereum label never matches on a chain with no entry for it",
+              identify.known_label_lookup(eth_addr, chain="arbitrum"), None)
+        check("inferred labels are counted separately",
+              identify.inferred_label_count("polygon"), baseline_inferred + 1)
+    finally:
+        identify.load_labels = real_load
+
+    def score(method):
+        return scoring.compute_confidence(NS(method=method, hop_distance=1, path_risk_types=set(),
+                                             handoff_scores=[])).score
+    check("inferred scores below a direct label", score("inferred_label") < score("known_label"), True)
+    check("and above the fan-in pattern", score("inferred_label") > score("consolidation"), True)
+    check("best case for an inferred label is 80", score("inferred_label"), 80)
+
+    print("\n--- label names: the company as entity, the wallet's role kept apart ---")
+    from core import label_names
+    import json as _json
+    from app import config as _config
+
+    def norm(name, type_="exchange"):
+        row = {"entity": name, "type": type_}
+        label_names.apply(row)
+        return row
+
+    row = norm("binance reserve wallets ETH")
+    check("a GraphSense role suffix becomes the company", row["entity"], "Binance")
+    check("with the role kept as metadata", row.get("role"), "ETH reserve wallet")
+    check("and the original string preserved", row.get("source_name"), "binance reserve wallets ETH")
+    check("a misspelt company is corrected", norm("swisborg reserve wallets")["entity"], "SwissBorg")
+    check("casing is normalised", norm("Kucoin")["entity"], "KuCoin")
+    check("an Etherscan 'Company: role' label is split", norm("Coinbase: Miscellaneous")["entity"], "Coinbase")
+    check("a token wallet keeps its token as the role", norm("Poloniex: BAT").get("role"), "BAT wallet")
+    check("an ambiguous name is left exactly as it is",
+          norm("Wintermute: Binance Deposit")["entity"], "Wintermute: Binance Deposit")
+    check("a separate legal entity is not merged", norm("Binance US")["entity"], "Binance US")
+    check("OFAC SDN names are never rewritten",
+          norm("LAZARUS GROUP", "sanctioned")["entity"], "LAZARUS GROUP")
+    check("applying twice changes nothing more", label_names.apply(row), False)
+    raw = _json.loads(_config.LABELS_PATH.read_text(encoding="utf-8"))
+    leftovers = [
+        m["entity"] for k, m in raw.items()
+        if not k.startswith("_") and isinstance(m, dict) and label_names.normalise(m.get("entity", "")) is not None
+    ]
+    check("labels.json holds no name the rules would still rewrite", leftovers, [])
+
     print("\n" + ("ALL CHECKS PASSED" if fail == 0 else f"{fail} CHECK(S) FAILED"))
     return fail
+
+def test_suite():
+    """
+    The pytest entry point. Each suite is a script of named checks that prints
+    PASS/FAIL per check and returns its failure count; pytest runs the whole
+    script once and fails if any check failed. Run it directly for the per-check
+    listing:  python -m tests.test_identify
+    """
+    assert asyncio.run(main()) == 0
 
 
 if __name__ == '__main__':

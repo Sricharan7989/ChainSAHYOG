@@ -86,13 +86,21 @@ For complete technical specifications, mathematical definitions, and API schemas
 
 ## Running Verification Tests
 
+All suites, through pytest (one pytest test per suite; each suite runs its own
+named checks and fails if any check fails):
+
 ```bash
-uv run python -m tests.test_tracer
-uv run python -m tests.test_tokens
-uv run python -m tests.test_taint
-uv run python -m tests.test_typologies
-uv run python -m tests.test_clustering
-uv run python -m tests.test_identify
-uv run python -m tests.test_scoring
-uv run python -m tests.test_backends_agree
+uv sync --group dev
+uv run pytest
 ```
+
+One suite with its per-check PASS/FAIL listing:
+
+```bash
+uv run python -m tests.test_cross_chain
+```
+
+Suites: test_tracer, test_tokens, test_taint, test_typologies, test_clustering,
+test_identify, test_scoring, test_bridges, test_cross_chain, test_report,
+test_routes, test_backends_agree (the last compares against Neo4j and skips if
+it is not running).

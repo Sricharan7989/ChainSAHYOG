@@ -1,10 +1,38 @@
 import { ShieldAlert, ShieldCheck, AlertOctagon, GitFork, Shuffle, ExternalLink } from 'lucide-react';
 import { shortAddress, getRiskBadgeConfig, getExplorerUrl } from '../../utils/formatters';
 
-export default function RiskFlagsCard({ riskFlags, explorerBase }) {
-  const hasFlags = riskFlags && riskFlags.length > 0;
+export default function RiskFlagsCard({ riskFlags, explorerBase, labelCoverage }) {
+  const hasFlags = Array.isArray(riskFlags) && riskFlags.length > 0;
+
+  // THREE STATES, NOT TWO. A payload without `risk_flags` was never screened
+  // (the recording predates the risk-label pass); an empty list means the
+  // screen ran and matched no LABELLED risk entity. Neither is a "clean trail":
+  // the screen can only recognise addresses in our label set, so on a chain
+  // where we hold few or no labels an empty list says very little.
+  if (!Array.isArray(riskFlags)) {
+    return (
+      <div className="bg-white dark:bg-[#111111] border border-[#d4d4d8] dark:border-[#262626] p-4 flex items-center gap-3 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
+        <div className="w-8 h-8 bg-[#f4f4f5] dark:bg-[#1a1a1a] border border-[#d4d4d8] dark:border-[#262626] flex items-center justify-center text-[#71717a] shrink-0">
+          <ShieldAlert className="w-4 h-4" />
+        </div>
+        <div className="space-y-0.5">
+          <h4 className="font-bold text-xs text-[#09090b] dark:text-[#f5f5f5]">
+            Risk Screening Not Performed
+          </h4>
+          <p className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] leading-snug">
+            This result carries no risk-label screen (the recording predates it), so
+            nothing here says the trail avoided mixers or sanctioned addresses. Re-run
+            the trace live to screen it.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!hasFlags) {
+    const unlabelled = Object.entries(labelCoverage || {})
+      .filter(([, info]) => info && !info.identification_possible)
+      .map(([slug]) => slug);
     return (
       <div className="bg-white dark:bg-[#111111] border border-[#d4d4d8] dark:border-[#262626] p-4 transition-all flex items-center gap-3 shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#000000]">
         <div className="w-8 h-8 bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -12,10 +40,14 @@ export default function RiskFlagsCard({ riskFlags, explorerBase }) {
         </div>
         <div className="space-y-0.5">
           <h4 className="font-bold text-xs text-[#09090b] dark:text-[#f5f5f5]">
-            Clean Forward Money Trail
+            No Labelled Risk Entities Met
           </h4>
           <p className="text-[11px] text-[#52525b] dark:text-[#a3a3a3] leading-snug">
-            No privacy mixers, tumblers, or blacklisted addresses were encountered between the suspect and the exchange.
+            No address in our label set for mixers, bridges, scams or sanctions
+            appeared anywhere in the traced graph. Only labelled addresses can be
+            flagged, so an unlabelled mixer would not show here.
+            {unlabelled.length > 0 &&
+              ` We hold no labels for ${unlabelled.join(', ')}, so that part of the trace was effectively not screened.`}
           </p>
         </div>
       </div>
@@ -96,6 +128,20 @@ export default function RiskFlagsCard({ riskFlags, explorerBase }) {
                   {flag.hop_distance} {flag.hop_distance === 1 ? 'hop' : 'hops'} out
                 </span>
               </div>
+
+              {/* Sanctions status, in one plain sentence: a current SDN listing, or
+                  a past designation since removed ("... Not a current sanction."). */}
+              {flag.sanctions_status && (
+                <p
+                  className={`text-[11px] leading-snug font-sans font-semibold px-1.5 py-1 border ${
+                    flag.sanctions_status.includes('Not a current sanction')
+                      ? 'border-amber-500/40 text-amber-700 dark:text-amber-400'
+                      : 'border-red-500/40 text-red-700 dark:text-red-400'
+                  }`}
+                >
+                  {flag.sanctions_status}
+                </p>
+              )}
 
               {/* Note */}
               {flag.note && (
